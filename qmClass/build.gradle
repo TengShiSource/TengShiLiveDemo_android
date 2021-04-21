@@ -1,0 +1,75 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 28
+    buildToolsVersion "29.0.2"
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters "armeabi", "armeabi-v7a", "arm64-v8a"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            buildConfigField 'String', 'SERVER_URL', '"http://jledu.f3322.net:9208/live"'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            buildConfigField 'String', 'SERVER_URL', '"http://jledu.f3322.net:9208/live"'
+        }
+        dev {
+            buildConfigField 'String', 'SERVER_URL', '"http://jledu.f3322.net:9208/live"'
+            debuggable true
+        }
+    }
+    sourceSets {
+        main {
+            //在 AS 中它会自动去加载 jniLibs 目录中的 *.so 文件。如果你放在了其它任何目录，你必须要告诉它你将这些文件放在那里了（重定向）。
+            //jni库的调用会到资源文件夹下libs里面找so文件
+            jniLibs.srcDirs = ['libs']
+        }
+    }
+    packagingOptions {
+        pickFirst '**/libc++_shared.so'
+        doNotStrip "*/armeabi/libYTCommon.so"
+        doNotStrip "*/armeabi-v7a/libYTCommon.so"
+        doNotStrip "*/x86/libYTCommon.so"
+        doNotStrip "*/arm64-v8a/libYTCommon.so"
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    //TRTC
+    implementation(name:'LiteAVSDK_Professional_8.4.9947', ext:'aar')
+    //IMSDK
+//    implementation "com.tencent.imsdk:imsdk:5.1.50"
+    implementation (name: "imsdk-5.1.56", ext: "aar")
+    //TEduBoard
+//    implementation "com.tencent.teduboard:TEduBoardSdk:2.5.5.70"
+    implementation (name: "TEduBoardSdk-release", ext: "aar")
+    implementation 'com.tencent.tiw.logger:TIWLogger:1.0.1.26'
+//    implementation 'com.tencent.tbs.tbssdk:sdk:43939'
+    implementation files('libs/tbs_sdk_thirdapp_v4.3.0.93.jar')
+    implementation files('libs/fastjson-1.2.68.jar')
+
+    implementation "com.squareup.okhttp3:okhttp:3.6.0"
+    implementation 'com.google.code.gson:gson:2.6.2'
+    implementation "me.jessyan:autosize:1.2.1"
+    implementation 'androidx.recyclerview:recyclerview:1.2.0-alpha02'
+
+}
