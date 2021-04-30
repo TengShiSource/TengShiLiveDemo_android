@@ -14,8 +14,10 @@ public class StudentInfor implements Serializable {
     private String avatarUrl;
     private int expValue;
     private int studyCoin;
-    private boolean isLianMai=false;
+    private int lianMaiState=3;//1 已连麦 2连麦中 3未连麦
     private boolean isHuabiOn=false;
+    private boolean isCameraOn=false;//学生摄像头状态
+    private boolean isMaikeOn=false;//学生麦克风状态
 
     public String getUserCode() {
         return userCode;
@@ -65,12 +67,12 @@ public class StudentInfor implements Serializable {
         this.studyCoin = studyCoin;
     }
 
-    public boolean isLianMai() {
-        return isLianMai;
+    public int getLianMaiState() {
+        return lianMaiState;
     }
 
-    public void setLianMai(boolean lianMai) {
-        isLianMai = lianMai;
+    public void setLianMaiState(int lianMaiState) {
+        this.lianMaiState = lianMaiState;
     }
 
     public boolean isHuabiOn() {
@@ -79,5 +81,21 @@ public class StudentInfor implements Serializable {
 
     public void setHuabiOn(boolean huabiOn) {
         isHuabiOn = huabiOn;
+    }
+
+    public boolean isCameraOn() {
+        return isCameraOn;
+    }
+
+    public void setCameraOn(boolean cameraOn) {
+        isCameraOn = cameraOn;
+    }
+
+    public boolean isMaikeOn() {
+        return isMaikeOn;
+    }
+
+    public void setMaikeOn(boolean maikeOn) {
+        isMaikeOn = maikeOn;
     }
 }

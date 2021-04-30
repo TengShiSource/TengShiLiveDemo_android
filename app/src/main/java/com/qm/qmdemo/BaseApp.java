@@ -10,6 +10,7 @@ import com.android.tony.defenselib.handler.IExceptionHandler;
 import com.qm.qmclass.qmmanager.QMClassManager;
 import com.qm.qmclass.utils.CrashHandler;
 
+
 /**
  * Created by lz on 2020/11/12.
  */
@@ -32,7 +33,6 @@ public class BaseApp extends Application implements IExceptionHandler {
         DefenseCrash.initialize();
         // 安装防火墙
         DefenseCrash.install(this);
-
     }
     public static QMClassManager getQMClassManager() {
         return qmClassManager;

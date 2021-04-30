@@ -58,10 +58,12 @@ public class StudentStateAdpter extends BaseAdapter {
             shangkeHolderView.maike= (ImageView) convertView.findViewById(R.id.maike);
             shangkeHolderView.tichu= (ImageView) convertView.findViewById(R.id.tichu);
             convertView.setTag(shangkeHolderView);
-            if (liveDataManager.getOnLineStudentsMap().get(mlist.get(position).getUserCode()).isLianMai()){
+            if (liveDataManager.getAllStudentsMap().get(mlist.get(position).getUserCode()).getLianMaiState()==1){
                 shangkeHolderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.guamai));
-            }else {
+            }else if (liveDataManager.getAllStudentsMap().get(mlist.get(position).getUserCode()).getLianMaiState()==3){
                 shangkeHolderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.videolist));
+            }else if (liveDataManager.getAllStudentsMap().get(mlist.get(position).getUserCode()).getLianMaiState()==2){
+                shangkeHolderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.onlianmai));
             }
             shangkeHolderView.studentname.setText(mlist.get(position).getNickName());
             shangkeHolderView.maike.setOnClickListener(new View.OnClickListener() {

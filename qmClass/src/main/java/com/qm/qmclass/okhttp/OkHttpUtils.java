@@ -1,5 +1,7 @@
 package com.qm.qmclass.okhttp;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -10,6 +12,10 @@ import com.alibaba.fastjson.parser.ParserConfig;
 import com.google.gson.Gson;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -213,5 +219,4 @@ public class OkHttpUtils {
             }
         });
     }
-
 }

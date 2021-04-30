@@ -171,6 +171,8 @@
             android:layout_alignParentBottom="true"
             android:fadingEdge="none"
             android:scrollbars="none"
+            android:stackFromBottom="true"
+            android:transcriptMode="alwaysScroll"
             android:listSelector="@android:color/transparent" />
     </RelativeLayout>
     <RelativeLayout
@@ -226,7 +228,7 @@
                 android:gravity="center"
                 android:padding="@dimen/dp_2"
                 android:textColor="@color/colorWhite"
-                android:text="3/3"/>
+                android:text="1/1"/>
             <ImageView
                 android:id="@+id/iv_jiaye"
                 android:layout_width="@dimen/dp_40"
@@ -291,8 +293,8 @@
                 android:orientation="horizontal">
                 <ImageView
                     android:id="@+id/iv_huabi"
-                    android:layout_width="@dimen/dp_20"
-                    android:layout_height="@dimen/dp_20"
+                    android:layout_width="@dimen/dp_18"
+                    android:layout_height="@dimen/dp_18"
                     android:src="@mipmap/huabi"/>
                 <ImageView
                     android:layout_width="@dimen/dp_7"

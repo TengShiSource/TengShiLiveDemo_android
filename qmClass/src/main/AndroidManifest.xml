@@ -45,14 +45,6 @@
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="landscape"
             android:windowSoftInputMode="stateAlwaysHidden"></activity>
-        <!-- 屏幕适配 开始 -->
-        <meta-data
-            android:name="design_width_in_dp"
-            android:value="750" />
-        <meta-data
-            android:name="design_height_in_dp"
-            android:value="1334" />
-        <!-- 屏幕适配 结束 -->
     </application>
 
 </manifest>

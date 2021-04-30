@@ -1,17 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_85"
         android:background="@color/livecolorBack">
-            <com.qm.qmclass.tencent.TICVideoRootView
-                android:id="@+id/teacher_videoview"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+        <RelativeLayout
+            android:id="@+id/teacher_videoview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true">
+
+        </RelativeLayout>
+        <com.qm.qmclass.utils.RoundImageView
+            android:id="@+id/teacher_icon"
+            app:roundHeight="@dimen/dp_20"
+            app:roundWidth="@dimen/dp_20"
+            android:scaleType="fitXY"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_centerInParent="true"/>
             <TextView
                 android:id="@+id/teachername"
                 android:layout_width="wrap_content"
@@ -28,10 +39,22 @@
         android:layout_height="@dimen/dp_85"
         android:layout_marginTop="@dimen/dp_5"
         android:background="@color/livecolorBack">
-        <com.qm.qmclass.tencent.TICVideoRootView
+        <RelativeLayout
             android:id="@+id/myself_videoview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true">
+
+        </RelativeLayout>
+        <com.qm.qmclass.utils.RoundImageView
+            android:id="@+id/myself_icon"
+            app:roundHeight="@dimen/dp_20"
+            app:roundWidth="@dimen/dp_20"
+            android:scaleType="fitXY"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_centerInParent="true"
+            android:visibility="visible"/>
         <TextView
             android:id="@+id/myselfname"
             android:layout_width="wrap_content"

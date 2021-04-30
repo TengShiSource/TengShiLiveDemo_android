@@ -1,19 +1,28 @@
 package com.qm.qmclass.utils;
 
 import android.app.Activity;
+import android.graphics.Rect;
 import android.os.CountDownTimer;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.util.TimeUtils;
 
 import com.qm.qmclass.R;
+import com.qm.qmclass.base.LiveDataManager;
+import com.tencent.rtmp.ui.TXCloudVideoView;
 
 
 public class DialogUtil {
     private static AlertDialog dialog;
+    private static AlertDialog jkdialog;
     private static CountDownTimer timer;
 
     /**
@@ -172,6 +181,37 @@ public class DialogUtil {
         dialog.show();
     }
 
+    public static void showJianKongQPDialog(Activity activity, final String userCode,
+                                             boolean cancelableTouchOut, final AlertDialogBtnClickListener
+                                                   alertDialogBtnClickListener) {
+        View view = LayoutInflater.from(activity).inflate(R.layout.liveteacher_qp, null);
+        RelativeLayout quanpingVideoview=(RelativeLayout) view.findViewById(R.id.quanpingview);
+        LinearLayout videoQuanping=(LinearLayout) view.findViewById(R.id.video_quanping);
+        TXCloudVideoView trtcView= LiveDataManager.getInstance().getTrtcViewmap().get(userCode);
+        if (trtcView!=null){
+            ViewGroup trtcViewParent=(ViewGroup) trtcView.getParent();
+            if (trtcViewParent!=null){
+                trtcViewParent.removeAllViews();
+            }
+            quanpingVideoview.addView(trtcView);
+        }
+        videoQuanping.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                quanpingVideoview.removeAllViews();
+                alertDialogBtnClickListener.clickNegative();
+                jkdialog.dismiss();
+            }
+        });
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity,R.style.Dialog_Fullscreen);
+        builder.setView(view);
+        builder.setCancelable(false);   //返回键dismiss
+        //创建对话框
+        jkdialog = builder.create();
+        jkdialog.setCanceledOnTouchOutside(cancelableTouchOut);   //失去焦点dismiss
+        jkdialog.show();
+    }
     public interface AlertDialogBtnClickListener {
         void clickPositive();
 

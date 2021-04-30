@@ -60,13 +60,18 @@ public class QMClassManagerImpl extends QMClassManager {
     }
 
     private static void initSomething() {
-        //init something
+
         if (SdkUtil.isMainProcess(mContext)) {    // 仅在主线程初始化
             // 初始化TIC
             mticManager = TICManager.getInstance();
             QMSDK.setTicManager(mticManager);
             QMSDK.setContext(mContext);
         }
+//        直播推流licence
+        String licenceURL = "http://license.vod2.myqcloud.com/license/v1/d7e6e335a169e562588f30880ee20988/TXLiveSDK.licence"; // 获取到的 licence url
+        String licenceKey = "83412b67ef1fe4172492048db09c29bc"; // 获取到的 licence key
+        TXLiveBase.getInstance().setLicence(mContext, licenceURL, licenceKey);
+
         SharedPreferencesUtils.getInstance(mContext,"qm_data");
         dataManager=DataManager.getInstance();
     }
@@ -138,6 +143,11 @@ public class QMClassManagerImpl extends QMClassManager {
                     dataManager.setUserid(result.getData().getUserid());
                     dataManager.setUserCode(userCode);
                     dataManager.setUserName(result.getData().getUsername());
+                    dataManager.setUserIcon(result.getData().getAvatar());
+                    if (result.getData().getUserRole().equals("s")){
+                        dataManager.setExpValue(result.getData().getExpValue());
+                        dataManager.setStudyCoin(result.getData().getStudyCoin());
+                    }
                     if (result.getData().getUserRole()!=null&&!result.getData().getUserRole().equals("")){
                         Login(userCode,userSig);
                     }

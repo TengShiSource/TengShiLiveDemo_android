@@ -1,24 +1,22 @@
 package com.qm.qmclass.utils;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.CountDownTimer;
-import android.text.InputType;
 import android.util.DisplayMetrics;
-import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -34,44 +32,52 @@ import androidx.core.widget.PopupWindowCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.qm.qmclass.R;
-import com.qm.qmclass.adpter.ChatAdpter;
+import com.qm.qmclass.activitys.TeacherLiveActivity;
+import com.qm.qmclass.adpter.AddStudentAdpter;
+import com.qm.qmclass.adpter.ChatContentAdpter;
 import com.qm.qmclass.adpter.ColorAdpter;
-import com.qm.qmclass.adpter.DanmuAdpter;
 import com.qm.qmclass.adpter.HudongAdpter;
 import com.qm.qmclass.adpter.JushouAdpter;
 import com.qm.qmclass.adpter.XzAdpter;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
-import com.qm.qmclass.model.ChatContent;
-import com.tencent.rtmp.TXLiveConstants;
-import com.tencent.rtmp.TXLivePlayConfig;
-import com.tencent.rtmp.TXLivePlayer;
+import com.qm.qmclass.model.StudentInfor;
 import com.tencent.rtmp.ui.TXCloudVideoView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
-public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismissListener {
-    private Activity mactivity;
+public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismissListener , GestureDetector.OnGestureListener, RefreshJianKongListener {
+    private TeacherLiveActivity mactivity;
     private PopupWindowListener mpopupWindowListener;
     private ChangeStudentListener mchangeStudentListener;
     private CountDownTimer timer;
     private boolean muteChecked;
     private boolean forcemuteChecked;
-    private ChatAdpter chatAdpter;
+    private ChatContentAdpter chatContentAdpter;
     private ColorAdpter colorAdpter;
     private XzAdpter xzAdpter;
     private LiveDataManager liveDataManager;
     private String[] xz = {"shifang","shituo","kongfang","kongtuo"};
+    private LinearLayout jiankongpage;
+    private RelativeLayout jk1;
+    private RelativeLayout jk2;
+    private RelativeLayout jk3;
+    private RelativeLayout jk4;
+    private JianaKongUtils jianaKongUtils;
+    private GestureDetector gestureDetector;
+    private int pageNum=1;
+    private List<StudentInfor> pageList=null;
 
-    public LivePopupWindow(Activity activity) {
+    public LivePopupWindow(TeacherLiveActivity activity) {
         mactivity=activity;
         liveDataManager=LiveDataManager.getInstance();
     }
    //    聊天
-    public void showChatPopupWindow(View view,List<ChatContent> chatContentList){
+    public void showChatPopupWindow(View view,List<String> chatContentList){
 
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_chat,
                 null, false);
@@ -82,8 +88,11 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         final LinearLayout chatTip=(LinearLayout)contentView.findViewById(R.id.chat_tip);
         final LinearLayout llChatinput=(LinearLayout)contentView.findViewById(R.id.ll_chatinput);
         final ListView chatlistView=(ListView)contentView.findViewById(R.id.chatlistView);
-        chatAdpter=new ChatAdpter(mactivity,chatContentList);
-        chatlistView.setAdapter(chatAdpter);
+        // 使用ArrayAdapter适配器
+        if (chatContentAdpter==null){
+            chatContentAdpter = new ChatContentAdpter(mactivity, R.layout.chat_content_item, chatContentList);
+        }
+        chatlistView.setAdapter(chatContentAdpter);
         yincang.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -118,7 +127,6 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
                     chatlistView.setVisibility(View.VISIBLE);
                     llChatinput.setVisibility(View.VISIBLE);
                     chatTip.setVisibility(View.GONE);
-                    chatAdpter.refresh(liveDataManager.getChatContentList());
                 }
             }
         });
@@ -152,9 +160,14 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         setContentView(contentView);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
     }
-    public void refreshChatContent(List<ChatContent> list){
-        if (chatAdpter!=null){
-            chatAdpter.refresh(list);
+    public void refreshChatContent(){
+        if (chatContentAdpter!=null){
+            chatContentAdpter.refresh();
+        }
+    }
+    public void addChatContent(String data){
+        if (chatContentAdpter!=null){
+            chatContentAdpter.add(data);
         }
     }
     //弹幕
@@ -181,6 +194,15 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
     public void showSetPopupWindow(View view){
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_set,
                 null, false);
+        ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
+        yincang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        TextView courseId=(TextView)contentView.findViewById(R.id.courseId);
+        courseId.setText(String.valueOf(DataManager.getInstance().getCourseId()));
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
         setWidth(DensityUtil.dp2px(mactivity, 255));
         setOutsideTouchable(true);
@@ -568,8 +590,8 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         //需要先测量，PopupWindow还未弹出时，宽高为0
         contentView.measure(makeDropDownMeasureSpec(this.getWidth()),
                 makeDropDownMeasureSpec(this.getHeight()));
-        int offsetX = -Math.abs(this.getContentView().getMeasuredWidth()-view.getWidth());
-        int offsetY = -(this.getContentView().getMeasuredHeight()+view.getHeight()+DensityUtil.dp2px(mactivity, 15));
+        int offsetX = -(this.getContentView().getMeasuredWidth()-view.getWidth());
+        int offsetY = -(this.getContentView().getMeasuredHeight()+view.getHeight()+DensityUtil.dp2px(mactivity, 5));
         PopupWindowCompat.showAsDropDown(this, view, offsetX, offsetY, Gravity.START);
     }
     //选择画笔颜色
@@ -630,9 +652,6 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
                 //把点击的position传递到adapter里面去
                 colorAdpter.changeState(position);
                 mpopupWindowListener.colorItemOnclick(position);
-                if (xzAdpter!=null){
-                    xzAdpter.changeState(liveDataManager.getXingzhuang());
-                }
             }
         });
         //形状
@@ -674,7 +693,6 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             xian.setVisibility(View.GONE);
             xingzhuang.setVisibility(View.VISIBLE);
             line.setVisibility(View.VISIBLE);
-            seekBar.setMax(120);
             tvprogress.setText(String.valueOf(liveDataManager.getLineProgress()));
             seekBar.setProgress(liveDataManager.getLineProgress());
             //        两列
@@ -692,7 +710,6 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
                 quxian.setBackgroundResource(0);
                 zhixian.setBackgroundResource(R.drawable.tool_bg);
             }
-            seekBar.setMax(120);
             tvprogress.setText(String.valueOf(liveDataManager.getLineProgress()));
             seekBar.setProgress(liveDataManager.getLineProgress());
             //        一列
@@ -700,10 +717,6 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         }else if (liveDataManager.getWitchTools().equals("3")) {
             penstyle.setVisibility(View.GONE);
             line.setVisibility(View.GONE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                seekBar.setMin(20);
-            }
-            seekBar.setMax(500);
             tvprogress.setText(String.valueOf(liveDataManager.getTextProgress()));
             seekBar.setProgress(liveDataManager.getTextProgress());
             setWidth(DensityUtil.dp2px(mactivity, 130));
@@ -711,7 +724,6 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             penstyle.setVisibility(View.GONE);
             line.setVisibility(View.GONE);
             tvprogress.setText(String.valueOf(liveDataManager.getLineProgress()));
-            seekBar.setMax(120);
             seekBar.setProgress(liveDataManager.getLineProgress());
             setWidth(DensityUtil.dp2px(mactivity, 130));
         }
@@ -759,108 +771,21 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         int offsetX = Math.abs(this.getContentView().getMeasuredWidth()-view.getWidth()) / 2;
         PopupWindowCompat.showAsDropDown(this,view, offsetX, 0, Gravity.START);
     }
-    private TXLivePlayer mLivePlayer1;
-    private TXLivePlayer mLivePlayer2;
-    private TXLivePlayer mLivePlayer3;
-    private TXLivePlayer mLivePlayer4;
-    private TXCloudVideoView video1;
-    private TXCloudVideoView video2;
-    private TXCloudVideoView video3;
-    private TXCloudVideoView video4;
+
     //视频监控
-    public void showJianKongPopupWindow(View view,List list){
-        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_jiankong,
+    public void showJianKongPopupWindow(View view){
+        View jiankongView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_jiankong,
                 null, false);
-
-        LinearLayout line1=(LinearLayout) contentView.findViewById(R.id.line1);
-        video1=(TXCloudVideoView) contentView.findViewById(R.id.video1);
-        TextView name1=(TextView) contentView.findViewById(R.id.name1);
-        LinearLayout maike1=(LinearLayout) contentView.findViewById(R.id.maike1);
-        ImageView ivmaike1=(ImageView)contentView.findViewById(R.id.ivmaike1);
-        video2=(TXCloudVideoView) contentView.findViewById(R.id.video2);
-        TextView name2=(TextView) contentView.findViewById(R.id.name2);
-        LinearLayout maike2=(LinearLayout) contentView.findViewById(R.id.maike2);
-        ImageView ivmaike2=(ImageView)contentView.findViewById(R.id.ivmaike2);
-        LinearLayout line2=(LinearLayout) contentView.findViewById(R.id.line2);
-        video3=(TXCloudVideoView) contentView.findViewById(R.id.video3);
-        TextView name3=(TextView) contentView.findViewById(R.id.name3);
-        LinearLayout maike3=(LinearLayout) contentView.findViewById(R.id.maike3);
-        ImageView ivmaike3=(ImageView)contentView.findViewById(R.id.ivmaike3);
-        video4=(TXCloudVideoView) contentView.findViewById(R.id.video4);
-        TextView name4=(TextView) contentView.findViewById(R.id.name4);
-        LinearLayout maike4=(LinearLayout) contentView.findViewById(R.id.maike4);
-        ImageView ivmaike4=(ImageView)contentView.findViewById(R.id.ivmaike4);
-
-        TXLivePlayConfig mPlayConfig = new TXLivePlayConfig();
-        //极速模式
-        mPlayConfig.setAutoAdjustCacheTime(true);
-        mPlayConfig.setMinAutoAdjustCacheTime(1);
-        mPlayConfig.setMaxAutoAdjustCacheTime(1);
-
-        if (mLivePlayer1==null){
-            //创建 player 对象
-            mLivePlayer1 = new TXLivePlayer(mactivity);
-        }
-        mLivePlayer1.setConfig(mPlayConfig);
-        //关键 player 对象与界面 view
-        mLivePlayer1.setPlayerView(video1);
-        // 设置填充模式
-        mLivePlayer1.setRenderMode(TXLiveConstants.RENDER_MODE_ADJUST_RESOLUTION);
-        mLivePlayer1.startPlay(list.get(0).toString(), TXLivePlayer.PLAY_TYPE_LIVE_FLV); //推荐 FLV
-
-        if (mLivePlayer2==null) {
-            //创建 player 对象
-            mLivePlayer2 = new TXLivePlayer(mactivity);
-        }
-        TXLivePlayConfig mPlayConfig2 = new TXLivePlayConfig();
-        //极速模式
-        mPlayConfig2.setAutoAdjustCacheTime(true);
-        mPlayConfig2.setMinAutoAdjustCacheTime(1);
-        mPlayConfig2.setMaxAutoAdjustCacheTime(1);
-        mLivePlayer2.setConfig(mPlayConfig2);
-        //关键 player 对象与界面 view
-        mLivePlayer2.setPlayerView(video2);
-        // 设置填充模式
-        mLivePlayer2.setRenderMode(TXLiveConstants.RENDER_MODE_ADJUST_RESOLUTION);
-        // 设置画面渲染方向
-//        mLivePlayer2.setRenderRotation(TXLiveConstants.RENDER_ROTATION_LANDSCAPE);
-        mLivePlayer2.startPlay(list.get(1).toString(), TXLivePlayer.PLAY_TYPE_LIVE_FLV); //推荐 FLV
-
-        if (mLivePlayer3==null) {
-            //创建 player 对象
-            mLivePlayer3 = new TXLivePlayer(mactivity);
-        }
-        TXLivePlayConfig mPlayConfig3 = new TXLivePlayConfig();
-        //极速模式
-        mPlayConfig3.setAutoAdjustCacheTime(true);
-        mPlayConfig3.setMinAutoAdjustCacheTime(1);
-        mPlayConfig3.setMaxAutoAdjustCacheTime(1);
-        mLivePlayer3.setConfig(mPlayConfig3);
-        //关键 player 对象与界面 view
-        mLivePlayer3.setPlayerView(video3);
-        // 设置填充模式
-        mLivePlayer3.setRenderMode(TXLiveConstants.RENDER_MODE_ADJUST_RESOLUTION);
-        // 设置画面渲染方向
-//        mLivePlayer3.setRenderRotation(TXLiveConstants.RENDER_ROTATION_LANDSCAPE);
-        mLivePlayer3.startPlay(list.get(2).toString(), TXLivePlayer.PLAY_TYPE_LIVE_FLV); //推荐 FLV
-
-        if (mLivePlayer4==null) {
-            //创建 player 对象
-            mLivePlayer4 = new TXLivePlayer(mactivity);
-        }
-        TXLivePlayConfig mPlayConfig4 = new TXLivePlayConfig();
-        //极速模式
-        mPlayConfig4.setAutoAdjustCacheTime(true);
-        mPlayConfig4.setMinAutoAdjustCacheTime(1);
-        mPlayConfig4.setMaxAutoAdjustCacheTime(1);
-        mLivePlayer4.setConfig(mPlayConfig4);
-        //关键 player 对象与界面 view
-        mLivePlayer4.setPlayerView(video4);
-        // 设置填充模式
-        mLivePlayer4.setRenderMode(TXLiveConstants.RENDER_MODE_ADJUST_RESOLUTION);
-        // 设置画面渲染方向
-//        mLivePlayer4.setRenderRotation(TXLiveConstants.RENDER_ROTATION_LANDSCAPE);
-        mLivePlayer4.startPlay(list.get(3).toString(), TXLivePlayer.PLAY_TYPE_LIVE_FLV); //推荐 FLV
+        gestureDetector = new GestureDetector(this);
+        jianaKongUtils=JianaKongUtils.getInstance(mactivity);
+        jiankongpage=(LinearLayout) jiankongView.findViewById(R.id.jiankongpage);
+        jk1=(RelativeLayout) jiankongView.findViewById(R.id.jk1);
+        jk2=(RelativeLayout) jiankongView.findViewById(R.id.jk2);
+        jk3=(RelativeLayout) jiankongView.findViewById(R.id.jk3);
+        jk4=(RelativeLayout) jiankongView.findViewById(R.id.jk4);
+        liveDataManager.getVideoListFragment().setRefreshJianKongListener(this);
+        jianaKongUtils.setRefreshJianKongListener(this);
+        showJianKong("show","");
 
         WindowManager windowManager = mactivity.getWindowManager();
         DisplayMetrics outMetrics = new DisplayMetrics();
@@ -872,10 +797,278 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        setContentView(contentView);
+        setContentView(jiankongView);
         this.setOnDismissListener(this);
+        this.setTouchInterceptor(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event);
+            }
+        });
         this.showAtLocation(view, Gravity.LEFT, 0, 0);
     }
+
+    @Override
+    public void onDismiss() {
+        pageNum=1;
+        jianaKongUtils.destroyInstance();
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        if (e1.getX()-e2.getX() > 50 && Math.abs(velocityX) > 0) {
+            if (pageNum==liveDataManager.getPageCount()){
+                Toast.makeText(mactivity, "当前为最后一页", Toast.LENGTH_SHORT).show();
+            }else {
+                if (liveDataManager.getPageCount()>pageNum){
+                    showAnimation();
+                    pageNum=pageNum+1;
+                    showJianKong("show","");
+                }
+            }
+        } else if (e2.getX()-e1.getX() > 50 && Math.abs(velocityX) > 0) {
+            if (pageNum>1){
+                pageNum=pageNum-1;
+                hidenAnimation();
+                showJianKong("show","");
+            }else {
+                Toast.makeText(mactivity, "当前为第一页", Toast.LENGTH_SHORT).show();
+            }
+        }
+        return false;
+    }
+
+    public void showJianKong(String state,String userCode){
+        List<StudentInfor> allStudentsList = new ArrayList(liveDataManager.getAllStudentsMap().values());
+        pageList=PageUtils.getPage(allStudentsList,pageNum,4);
+        if (pageList!=null){
+            for (int i=0;i<pageList.size();i++){
+                if (state.equals("show")){
+                    showJKItem(i);
+                }else if (state.equals("Join")){
+                    if (pageList.get(i).getUserCode().equals(userCode)){
+                        showJKItem(i);
+                    }
+                }else if (state.equals("Exit")){
+                    if (pageList.get(i).getUserCode().equals(userCode)){
+                        showJKItem(i);
+                    }
+                }
+
+            }
+        }
+    }
+
+    @Override
+    public void refreshSomeOne(String userCode) {
+        if (pageList!=null){
+            for (int i=0;i<pageList.size();i++){
+                if (pageList.get(i).getUserCode().equals(userCode)){
+                    showJKItem(i);
+                }
+            }
+        }
+    }
+
+    private void showJKItem(int position){
+        String userCode=pageList.get(position).getUserCode();
+        View jkItemView=jianaKongUtils.createJKItemView(userCode);
+        //找到里面需要动态改变的控件
+        RelativeLayout jiankongItem= (RelativeLayout) jkItemView.findViewById(R.id.jiankong_item);
+        RoundImageView jiankongIcon=(RoundImageView) jkItemView.findViewById(R.id.jiankong_icon);
+
+        LinearLayout onlianmai = (LinearLayout) jkItemView.findViewById(R.id.onlianmai);
+
+        TextView lmtips=(TextView) jkItemView.findViewById(R.id.lmtips);
+
+        LinearLayout lianmaiTool = (LinearLayout) jkItemView.findViewById(R.id.lianmai_tools);
+
+        LinearLayout laliuTool = (LinearLayout) jkItemView.findViewById(R.id.laliu_tool);
+        LinearLayout shangketixing = (LinearLayout) jkItemView.findViewById(R.id.shangketixing);
+        LinearLayout quxiaolm = (LinearLayout) jkItemView.findViewById(R.id.quxiaolm);
+
+        if (position==0){
+            jk1.removeAllViews();
+            jk1.addView(jkItemView);
+        }else if (position==1){
+            jk2.removeAllViews();
+            jk2.addView(jkItemView);
+        }else if (position==2){
+            jk3.removeAllViews();
+            jk3.addView(jkItemView);
+        }else if (position==3){
+            jk4.removeAllViews();
+            jk4.addView(jkItemView);
+        }
+
+
+        if (liveDataManager.getOnLineStudentsMap().get(userCode)==null){
+            shangketixing.setVisibility(View.VISIBLE);
+            lianmaiTool.setVisibility(View.GONE);
+            laliuTool.setVisibility(View.GONE);
+            lmtips.setVisibility(View.GONE);
+            onlianmai.setVisibility(View.GONE);
+            quxiaolm.setVisibility(View.GONE);
+            jiankongIcon.setVisibility(View.VISIBLE);
+            Glide.with(mactivity).load(liveDataManager.getAllStudentsMap().get(userCode).getAvatarUrl()).skipMemoryCache(true).into(jiankongIcon);
+        }else {
+            shangketixing.setVisibility(View.GONE);
+            if (!liveDataManager.getAllStudentsMap().isEmpty()&&liveDataManager.getAllStudentsMap().get(userCode)!=null){
+                if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==1){
+                    lmtips.setVisibility(View.VISIBLE);
+                    lianmaiTool.setVisibility(View.VISIBLE);
+                    laliuTool.setVisibility(View.GONE);
+                    onlianmai.setVisibility(View.GONE);
+                    quxiaolm.setVisibility(View.GONE);
+                    if (liveDataManager.getAllStudentsMap().get(userCode).isCameraOn()){
+                        jiankongItem.setVisibility(View.VISIBLE);
+                        jiankongIcon.setVisibility(View.GONE);
+                        TXCloudVideoView trtcView=liveDataManager.getTrtcViewmap().get(userCode);
+                        if (trtcView!=null){
+                            ViewGroup parent=(ViewGroup) trtcView.getParent();
+                            if (parent!=null){
+                                parent.removeAllViews();
+                            }
+                            jiankongItem.addView(trtcView);
+                        }
+                    }else {
+                        jiankongItem.setVisibility(View.GONE);
+                        jiankongIcon.setVisibility(View.VISIBLE);
+                        Glide.with(mactivity).load(liveDataManager.getAllStudentsMap().get(userCode).getAvatarUrl()).skipMemoryCache(true).into(jiankongIcon);
+                    }
+
+                }else if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==3){
+                    lmtips.setVisibility(View.GONE);
+                    lianmaiTool.setVisibility(View.GONE);
+                    laliuTool.setVisibility(View.VISIBLE);
+                    onlianmai.setVisibility(View.GONE);
+                    quxiaolm.setVisibility(View.GONE);
+                    if (liveDataManager.getAllStudentsMap().get(userCode).isCameraOn()){
+                        jiankongItem.setVisibility(View.VISIBLE);
+                        jiankongIcon.setVisibility(View.GONE);
+                        jiankongItem.addView(jianaKongUtils.createVideoView(userCode));
+                    }else {
+                        jiankongItem.setVisibility(View.GONE);
+                        jiankongIcon.setVisibility(View.VISIBLE);
+                        Glide.with(mactivity).load(liveDataManager.getAllStudentsMap().get(userCode).getAvatarUrl()).skipMemoryCache(true).into(jiankongIcon);
+                    }
+
+                }else if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==2){
+                    onlianmai.setVisibility(View.VISIBLE);
+                    quxiaolm.setVisibility(View.VISIBLE);
+                    shangketixing.setVisibility(View.GONE);
+                    lianmaiTool.setVisibility(View.GONE);
+                    laliuTool.setVisibility(View.GONE);
+                    lmtips.setVisibility(View.GONE);
+                    jiankongIcon.setVisibility(View.GONE);
+                }
+            }
+        }
+
+    }
+    //连麦学生列表
+    public void showAddSTPopupWindow(View view,List list){
+
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_addstudent,
+                null, false);
+        ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
+        yincang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        ListView addstlistView=(ListView)contentView.findViewById(R.id.addstlistView);
+        AddStudentAdpter addStudentAdpter=new AddStudentAdpter(mactivity,list, new AddStudentAdpter.AddStudentClickListener() {
+            @Override
+            public void addStudentOnClick(String userCode, View v) {
+                mpopupWindowListener.addStudentOnclick(userCode);
+                dismiss();
+            }
+        });
+        addstlistView.setAdapter(addStudentAdpter);
+
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(true);
+        setFocusable(true);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+    //视频全屏
+    public void showQPPopupWindow(View view,String userCode){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_qp,
+                null, false);
+        RelativeLayout quanpingVideoview=(RelativeLayout) contentView.findViewById(R.id.quanpingview);
+        LinearLayout videoQuanping=(LinearLayout) contentView.findViewById(R.id.video_quanping);
+        TXCloudVideoView trtcView=liveDataManager.getTrtcViewmap().get(userCode);
+        if (trtcView!=null){
+            ViewGroup trtcViewParent=(ViewGroup) trtcView.getParent();
+            if (trtcViewParent!=null){
+                trtcViewParent.removeAllViews();
+            }
+            quanpingVideoview.addView(trtcView);
+        }
+        videoQuanping.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mactivity.sendGroupCustomMessage("cameraBack","",userCode);
+                quanpingVideoview.removeAllViews();
+                dismiss();
+            }
+        });
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
+        setOutsideTouchable(false);
+        setFocusable(false);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.LEFT, 0, 0);
+    }
+    private void showAnimation() {
+        TranslateAnimation show = new TranslateAnimation(Animation.RELATIVE_TO_SELF,
+                1.0f, Animation.RELATIVE_TO_SELF, 0.0f,
+                Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF,
+                0.0f);
+        show.setDuration(500);
+        jiankongpage.startAnimation(show);
+    }
+
+    private void hidenAnimation() {
+        TranslateAnimation hiden = new TranslateAnimation(Animation.RELATIVE_TO_SELF,
+                -1.0f, Animation.RELATIVE_TO_SELF, 0.0f,
+                Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF,
+                0.0f);
+        hiden.setDuration(500);
+        jiankongpage.startAnimation(hiden);
+    }
+
     @SuppressWarnings("ResourceType")
     private static int makeDropDownMeasureSpec(int measureSpec) {
         int mode;
@@ -887,30 +1080,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         return View.MeasureSpec.makeMeasureSpec(View.MeasureSpec.getSize(measureSpec), mode);
     }
 
-    @Override
-    public void onDismiss() {
-        if (mLivePlayer1!=null){
-            mLivePlayer1.stopPlay(true); // true 代表清除最后一帧画面
-            video1.onDestroy();
-            mLivePlayer1=null;
-        }
-        if (mLivePlayer2!=null){
-            mLivePlayer2.stopPlay(true); // true 代表清除最后一帧画面
-            video2.onDestroy();
-            mLivePlayer2=null;
-        }
-        if (mLivePlayer3!=null){
-            mLivePlayer3.stopPlay(true); // true 代表清除最后一帧画面
-            video3.onDestroy();
-            mLivePlayer3=null;
-        }
-        if (mLivePlayer4!=null){
-            mLivePlayer4.stopPlay(true); // true 代表清除最后一帧画面
-            video4.onDestroy();
-            mLivePlayer4=null;
-        }
 
-    }
 
     public interface PopupWindowListener {
         void chatSendOnclick(String data);
@@ -928,7 +1098,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         void showDanmu();
         void juShouOnclick(int position,String action);
         void huDongOnclick(int position);
-        void jianKongOnclick(int position);
+        void addStudentOnclick(String userCode);
 
     }
     public void setPopupWindowListener(PopupWindowListener popupWindowListener) {
@@ -937,5 +1107,4 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
     public static abstract class ChangeStudentListener{
         public abstract void changeStudentList(int state);
     }
-
 }

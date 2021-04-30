@@ -20,6 +20,9 @@ public class LoginInfor {
     private String userCode;
     private String userSig;
     private String userRole;
+    private String avatar;
+    private String studyCoin;
+    private String expValue;
 
     public String getToken() {
         return token;
@@ -115,5 +118,29 @@ public class LoginInfor {
 
     public void setUserCode(String userCode) {
         this.userCode = userCode;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getStudyCoin() {
+        return studyCoin;
+    }
+
+    public void setStudyCoin(String studyCoin) {
+        this.studyCoin = studyCoin;
+    }
+
+    public String getExpValue() {
+        return expValue;
+    }
+
+    public void setExpValue(String expValue) {
+        this.expValue = expValue;
     }
 }

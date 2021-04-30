@@ -4,13 +4,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
-import android.text.InputType;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -20,7 +19,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -30,13 +28,13 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qm.qmclass.BuildConfig;
 import com.qm.qmclass.R;
-import com.qm.qmclass.adpter.DanmuAdpter;
+import com.qm.qmclass.adpter.DanmuContentAdpter;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.base.QMSDK;
 import com.qm.qmclass.fragment.StudentListFragment;
 import com.qm.qmclass.fragment.VideoListFragment;
-import com.qm.qmclass.model.ChatContent;
+import com.qm.qmclass.model.ClassOver;
 import com.qm.qmclass.model.Hudong;
 import com.qm.qmclass.model.StudentInfor;
 import com.qm.qmclass.okhttp.BaseResponse;
@@ -66,7 +64,6 @@ import java.util.stream.Collectors;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_CIRCLE;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_ERASER;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_LINE;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_OVAL;
@@ -75,7 +72,6 @@ import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_B
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_POINT_SELECT;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_RECT;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_RECT_SOLID;
-import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_SQUARE;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_TEXT;
 
 /*
@@ -112,13 +108,12 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private ImageView ivJiaye;
     private LinearLayout tools;
     private FragmentManager fragmentManager;
+    private FragmentTransaction fragmentTransaction;
     private VideoListFragment videoListFragment;
     private StudentListFragment studentListFragment;
-    private LivePopupWindow livePopupWindow;
     private List<Integer> colorList=null;
     private List jushouList=null;
     private List<Hudong> huDongList;
-    private List jiankongList=null;
 
     private TICManager mTicManager;
     static TEduBoardController mBoard = null;
@@ -140,13 +135,14 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private LivePopupWindow classOverAtOncePopupWindow;
     private LivePopupWindow huDongPopupWindow;
     private LivePopupWindow jiankongPopupWindow;
+    private LivePopupWindow addSTPopupWindow;
 
-    private static Activity mactivity;
+    private static TeacherLiveActivity mactivity;
     private boolean isquitClass=false;
     private boolean jiankongisshow=false;
 //    private VideoFragmentListener mvideoFragmentListener;
     private StudentlistFragmentListener mstudentlistFragmentListener;
-    private DanmuAdpter danmuAdpter;
+    private DanmuContentAdpter danmuContentAdpter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -218,14 +214,14 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         danmuInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int actionId, KeyEvent event) {
-                sendGroupCustomMessage("msg",dataManager.getUserName(),textView.getText().toString());
-                ChatContent chatContent=new ChatContent();
-                chatContent.setChatName(dataManager.getUserName());
-                chatContent.setChatContent(textView.getText().toString());
-                liveDataManager.getChatContentList().add(chatContent);
-                danmuAdpter.refresh(liveDataManager.getChatContentList());
-//                danmuPopupWindow.refreshChatContent(liveDataManager.getChatContentList());
-                danmuInput.setText("");
+                if (textView.getText().toString().equals("")||textView.getText()==null){
+                    ToastUtil.showToast1(TeacherLiveActivity.this,"","请输入内容");
+                }else {
+                    sendGroupCustomMessage("msg", dataManager.getUserName(), textView.getText().toString());
+                    String chatContent = dataManager.getUserName() + ": " + textView.getText().toString();
+                    danmuContentAdpter.add(chatContent);
+                    danmuInput.setText("");
+                }
                 return true;
             }
         });
@@ -281,6 +277,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         mTicManager.joinClassroom(classroomOption, new TICManager.TICCallback() {
             @Override
             public void onSuccess(Object data) {
+                Map<String, String> map = new HashMap<>();
+                map.put("username", dataManager.getUserName());
+                map.put("avatar", dataManager.getUserIcon());
+                String str = JSON.toJSONString(map);
+                sendGroupCustomMessage("teacherJoin",dataManager.getUserCode(),str);
                 Log.e("TeacherLiveActivity","加入课堂成功");
             }
 
@@ -301,18 +302,18 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         mTicManager.quitClassroom(true, new TICManager.TICCallback() {
             @Override
             public void onSuccess(Object data) {
-                if (videoListFragment!=null){
-                    videoListFragment=null;
-                }
-                if (studentListFragment!=null){
-                    studentListFragment=null;
-                }
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                liveDataManager.destroyInstance();
+                removeAllFragment();
                 if (mTicManager!=null){
                     mTicManager.removeIMMessageListener(TeacherLiveActivity.this);
                     mTicManager.removeIMStatusListener(TeacherLiveActivity.this);
                 }
 //                销毁白板
                 removeBoardView();
+
+                File file = new File(mactivity.getExternalFilesDir(null).getPath()+"jieping/");
+                deleteAllFiles(file);
 //                退出IM
                 logout();
             }
@@ -324,6 +325,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
         });
     }
+
     /*
     *退出IM
     */
@@ -333,7 +335,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             public void onSuccess(Object data) {
                 isquitClass=true;
                 Log.e("生命周期","TeacherLiveActivity-quitClass");
-                finish();
+                classOver();
             }
 
             @Override
@@ -453,12 +455,34 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                 toolsPopupWindow=new LivePopupWindow(mactivity);
                 toolsPopupWindow.setPopupWindowListener(this);
             }
-            toolsPopupWindow.showToolsPopupWindow(ivHuabi);
+            toolsPopupWindow.showToolsPopupWindow(tools);
         }  else if (view.getId() == R.id.iv_fanye) {
-
+            if (mBoard!=null) {
+                if (liveDataManager.getBoardNum() > 1) {
+                    mBoard.prevBoard();
+                    liveDataManager.setBoardNum(liveDataManager.getBoardNum() - 1);
+                    tvYeshu.setText(liveDataManager.getBoardNum() + "/" + mBoard.getBoardList().size());
+                    ivJiaye.setImageDrawable(getResources().getDrawable(R.mipmap.fanyeright));
+                }
+            }
         } else if (view.getId() == R.id.iv_jiaye) {
-         mBoard.addBoard(null);
-         tvYeshu.setText(mBoard.getBoardList().size()+"/"+mBoard.getBoardList().size());
+            if (mBoard!=null){
+                if (liveDataManager.getBoardNum()==mBoard.getBoardList().size()){
+                    mBoard.addBoard(null);
+                    liveDataManager.setBoardNum(liveDataManager.getBoardNum()+1);
+                    ivJiaye.setImageDrawable(getResources().getDrawable(R.mipmap.jiaye));
+                    tvYeshu.setText(liveDataManager.getBoardNum()+"/"+mBoard.getBoardList().size());
+                }else if (liveDataManager.getBoardNum()<mBoard.getBoardList().size()){
+                    mBoard.nextBoard();
+                    liveDataManager.setBoardNum(liveDataManager.getBoardNum()+1);
+                    if (liveDataManager.getBoardNum()==mBoard.getBoardList().size()){
+                        ivJiaye.setImageDrawable(getResources().getDrawable(R.mipmap.jiaye));
+                    }else {
+                        ivJiaye.setImageDrawable(getResources().getDrawable(R.mipmap.fanyeright));
+                    }
+                    tvYeshu.setText(liveDataManager.getBoardNum()+"/"+mBoard.getBoardList().size());
+                }
+            }
         }else if (view.getId() == R.id.iv_videolist) {
             ivVideolist.setImageDrawable(getResources().getDrawable(R.mipmap.videolist_lv));
             ivStudentlist.setImageDrawable(getResources().getDrawable(R.mipmap.studentlist));
@@ -489,21 +513,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             setFragmentSelection(0,"JK");
             if (!jiankongisshow){
                 jiankongisshow=true;
-                jiankongList=new ArrayList();
-                jiankongList.add(0, "http://live.jledu.com/live/board_"+ DataManager.getInstance().getCourseId()+".flv");
-                jiankongList.add(1, "http://live.jledu.com/live/board_"+ DataManager.getInstance().getCourseId()+".flv");
-                jiankongList.add(2, "http://live.jledu.com/live/board_"+ DataManager.getInstance().getCourseId()+".flv");
-                jiankongList.add(3, "http://live.jledu.com/live/board_"+ DataManager.getInstance().getCourseId()+".flv");
-                jiankongList.add(4, "http://live.jledu.com/live/board_"+ DataManager.getInstance().getCourseId()+".flv");
-                jiankongList.add(5, "http://live.jledu.com/live/board_"+ DataManager.getInstance().getCourseId()+".flv");
-                jiankongList.add(6, "http://live.jledu.com/live/board_"+ DataManager.getInstance().getCourseId()+".flv");
-                jiankongList.add(7, "http://live.jledu.com/live/board_"+ DataManager.getInstance().getCourseId()+".flv");
-                jiankongList.add(8, "http://live.jledu.com/live/board_"+ DataManager.getInstance().getCourseId()+".flv");
                 if (jiankongPopupWindow==null){
                     jiankongPopupWindow=new LivePopupWindow(mactivity);
                     jiankongPopupWindow.setPopupWindowListener(this);
                 }
-                jiankongPopupWindow.showJianKongPopupWindow(view,jiankongList);
+                jiankongPopupWindow.showJianKongPopupWindow(view);
             }
         }
     }
@@ -511,7 +525,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
      *切换fragment
      */
     private void setFragmentSelection(int index,String type) {
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction = fragmentManager.beginTransaction();
         switch (index) {
             case 0:
                 if (videoListFragment == null) {
@@ -552,16 +566,30 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         }
     }
     /*
+     *移除所有的fragment
+     */
+    private void removeAllFragment(){
+        if (videoListFragment!=null){
+            fragmentTransaction.remove(videoListFragment);
+            videoListFragment=null;
+        }
+        if (studentListFragment!=null){
+            fragmentTransaction.remove(studentListFragment);
+            studentListFragment=null;
+        }
+    }
+    /*
      *点击聊天发送按钮
      */
     @Override
     public void chatSendOnclick(String data) {
-        sendGroupCustomMessage("msg",dataManager.getUserName(),data);
-        ChatContent chatContent=new ChatContent();
-        chatContent.setChatName(dataManager.getUserName());
-        chatContent.setChatContent(data);
-        liveDataManager.getChatContentList().add(chatContent);
-        chatPopupWindow.refreshChatContent(liveDataManager.getChatContentList());
+        if (data.equals("")||data==null){
+            ToastUtil.showToast1(this,"","请输入内容");
+        }else {
+            sendGroupCustomMessage("msg",dataManager.getUserName(),data);
+            String chatContent=dataManager.getUserName()+": "+data;
+            chatPopupWindow.addChatContent(chatContent);
+        }
     }
     /*
      *点击聊天静音按钮
@@ -576,7 +604,9 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             sendGroupCustomMessage("talkEnable",dataManager.getUserCode(),"");
         }
     }
-
+    /*
+     *点击画笔工具
+     */
     @Override
     public void toolItemOnclick(String witch) {
         if (witch.equals("1")){
@@ -585,12 +615,21 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
 //         ivColor.setImageDrawable(getDrawable(R.mipmap.color));
          liveDataManager.setWitchTools("1");
          ivColor.setVisibility(View.VISIBLE);
+         LinearLayout.LayoutParams lp=(LinearLayout.LayoutParams)ivColor.getLayoutParams();
+         lp.width= getResources().getDimensionPixelSize(R.dimen.dp_20);
+         lp.height=getResources().getDimensionPixelSize(R.dimen.dp_20);
+         ivColor.setLayoutParams(lp);
          ivColor.setImageDrawable(getResources().getDrawable(R.mipmap.color));
          ivColor.setBackgroundResource(0);
          tvText.setVisibility(View.GONE);
         if (mBoard!=null){
-            mBoard.setDrawEnable(true);
-            mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_PEN);
+            if (liveDataManager.getXian()==1){
+                //曲线
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_PEN);
+            }else if (liveDataManager.getXian()==2){
+                //直线
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_LINE);
+            }
         }
         }else if (witch.equals("2")){
 //            形状
@@ -606,6 +645,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             liveDataManager.setWitchTools("3");
             ivColor.setVisibility(View.GONE);
             tvText.setVisibility(View.VISIBLE);
+            tvText.setText(String.valueOf(liveDataManager.getTextProgress()));
             chooseTextColor();
             if (mBoard!=null){
                 mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_TEXT);
@@ -658,7 +698,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_red));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(253, 64, 64, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_red));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_red));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_red));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(253, 64, 64, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(253, 64, 64, 255));
@@ -668,7 +712,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_pink));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(250, 173, 123, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_pink));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_pink));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_pink));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(250, 173, 123, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(250, 173, 123, 255));
@@ -678,7 +726,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_yellow));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(224, 255, 164, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_yellow));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_yellow));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_yellow));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(224, 255, 164, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(224, 255, 164, 255));
@@ -688,7 +740,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_green));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(40, 178, 139, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_green));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_green));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_green));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(40, 178, 139, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(40, 178, 139, 255));
@@ -698,7 +754,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_skublue));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(91, 171, 230, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_skublue));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_skublue));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_skublue));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(91, 171, 230, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(91, 171, 230, 255));
@@ -708,7 +768,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_blue));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(63, 90, 202, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_blue));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_blue));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_blue));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(63, 90, 202, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(63, 90, 202, 255));
@@ -718,7 +782,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_violet));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(163, 62, 201, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_violet));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_violet));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_violet));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(163, 62, 201, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(163, 62, 201, 255));
@@ -728,7 +796,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_pinkr));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(244, 91, 148, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_pinkr));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_pinkr));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_pinkr));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(244, 91, 148, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(244, 91, 148, 255));
@@ -738,7 +810,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_orange));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(255, 162, 0, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_orange));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_orange));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_orange));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 162, 0, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 162, 0, 255));
@@ -748,7 +824,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_white));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(255, 255, 255, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_white));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_white));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_white));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 255, 255, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 255, 255, 255));
@@ -758,7 +838,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_gray));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(80, 84, 92, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_gray));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_gray));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_gray));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(80, 84, 92, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(80, 84, 92, 255));
@@ -768,7 +852,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     tvText.setTextColor(getResources().getColor(R.color.b_black));
                     mBoard.setTextColor(new TEduBoardController.TEduBoardColor(0, 0, 0, 255));
                 }else if (liveDataManager.getWitchTools().equals("2")){
-                    myGrad.setColor(getResources().getColor(R.color.b_black));
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_black));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_black));
+                    }
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(0, 0, 0, 255));
                 }else {
                     mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(0, 0, 0, 255));
@@ -852,29 +940,85 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
             GradientDrawable myGrad = (GradientDrawable)ivColor.getBackground();
             if (liveDataManager.getLineColor()==0){
-                myGrad.setColor(getResources().getColor(R.color.b_red));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_red));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_red));
+                }
             }else if (liveDataManager.getLineColor()==1){
-                myGrad.setColor(getResources().getColor(R.color.b_pink));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_pink));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_pink));
+                }
             }else if (liveDataManager.getLineColor()==2){
-                myGrad.setColor(getResources().getColor(R.color.b_yellow));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_yellow));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_yellow));
+                }
             }else if (liveDataManager.getLineColor()==3){
-                myGrad.setColor(getResources().getColor(R.color.b_green));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_green));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_green));
+                }
+
             }else if (liveDataManager.getLineColor()==4){
-                myGrad.setColor(getResources().getColor(R.color.b_skublue));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_skublue));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_skublue));
+                }
+
             }else if (liveDataManager.getLineColor()==5){
-                myGrad.setColor(getResources().getColor(R.color.b_blue));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_blue));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_blue));
+                }
+
             }else if (liveDataManager.getLineColor()==6){
-                myGrad.setColor(getResources().getColor(R.color.b_violet));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_violet));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_violet));
+                }
+
             }else if (liveDataManager.getLineColor()==7){
-                myGrad.setColor(getResources().getColor(R.color.b_pinkr));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_pinkr));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_pinkr));
+                }
+
             }else if (liveDataManager.getLineColor()==8){
-                myGrad.setColor(getResources().getColor(R.color.b_orange));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_orange));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_orange));
+                }
+
             }else if (liveDataManager.getLineColor()==9){
-                myGrad.setColor(getResources().getColor(R.color.b_white));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_white));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_white));
+                }
+
             }else if (liveDataManager.getLineColor()==10){
-                myGrad.setColor(getResources().getColor(R.color.b_gray));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_gray));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_gray));
+                }
+
             }else if (liveDataManager.getLineColor()==11){
-                myGrad.setColor(getResources().getColor(R.color.b_black));
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_black));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_black));
+                }
             }
         }
         ivColor.setLayoutParams(lp);
@@ -916,14 +1060,16 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         if (liveDataManager.isOpenDanmu()){
             llDanmu.setVisibility(View.VISIBLE);
             rlDanmu.setVisibility(View.VISIBLE);
-            danmuAdpter=new DanmuAdpter(this,liveDataManager.getChatContentList());
-            danmulistView.setAdapter(danmuAdpter);
+            if (danmuContentAdpter==null){
+                danmuContentAdpter=new DanmuContentAdpter(this,R.layout.danmu_content_item,liveDataManager.getChatContentList());
+            }
+            danmulistView.setAdapter(danmuContentAdpter);
         }else {
             llDanmu.setVisibility(View.GONE);
             rlDanmu.setVisibility(View.GONE);
-            if (chatPopupWindow!=null){
-                chatPopupWindow.refreshChatContent(liveDataManager.getChatContentList());
-            }
+//            if (chatPopupWindow!=null){
+//                chatPopupWindow.refreshChatContent();
+//            }
         }
     }
     /*
@@ -948,9 +1094,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     @Override
     public void timeCountDown(final String time) {
         if (time.equals("0")){
-            Toast.makeText(this,"退出",Toast.LENGTH_SHORT).show();
             classOverPopupWindow.dismiss();
-            classOver();
+            quitClass();
         }else {
             DialogUtil.showClassoverDialog(this, time,
                 "回来",  false, new DialogUtil.AlertDialogBtnClickListener() {
@@ -1037,15 +1182,46 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         Toast.makeText(TeacherLiveActivity.this,huDongList.get(position).getName(),Toast.LENGTH_SHORT).show();
     }
 
+    /*
+     *连麦学生
+     */
     @Override
-    public void jianKongOnclick(int position) {
-
+    public void addStudentOnclick(String userCode) {
+        if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==3){
+            //老师向学生发起连麦
+            Map<String, String> map = new HashMap<>();
+            map.put("action", "micOpen");
+            String str = JSON.toJSONString(map);
+            final byte msg[] = str.getBytes();
+            sendCustomMessage(userCode,msg);
+            liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(2);
+            changeStudentVideoLMstate(userCode);
+            changeStudentListLMstate(userCode,2);
+        }
+    }
+    /*
+     *显示连麦学生列表
+     */
+    public void showAddStudent(View view){
+        List<StudentInfor> onLineStudentsList = new ArrayList(liveDataManager.getOnLineStudentsMap().values());
+        for (int i=0;i<onLineStudentsList.size();i++){
+            if (onLineStudentsList.get(i).getLianMaiState()!=3){
+                onLineStudentsList.remove(i);
+            }
+        }
+        if (addSTPopupWindow==null){
+            addSTPopupWindow=new LivePopupWindow(this);
+            addSTPopupWindow.setPopupWindowListener(this);
+        }
+        addSTPopupWindow.showAddSTPopupWindow(view,onLineStudentsList);
     }
     /*
      *更改学生列表连麦状态
      */
-    public void changeStudentListLMstate(String userCode,boolean isLianmai){
-        mstudentlistFragmentListener.lianMai(userCode,isLianmai);
+    public void changeStudentListLMstate(String userCode,int lianMaistate){
+        if(mstudentlistFragmentListener!=null){
+            mstudentlistFragmentListener.lianMai(userCode,lianMaistate);
+        }
     }
     /*
      *发送单独数据
@@ -1083,10 +1259,16 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         if (jo.getString("action").equals("micOpenRequestResult")) {
 //         老师请求与你连麦反馈
             if (jo.getString("result").equals("2")){
-                ToastUtil.showToast(this,"",liveDataManager.getOnLineStudentsMap().get(fromUserId).getNickName()+"拒绝了连麦请求");
-                changeStudentListLMstate(fromUserId,false);
+                ToastUtil.showToast1(this,"",liveDataManager.getOnLineStudentsMap().get(fromUserId).getNickName()+"拒绝了连麦请求");
+                if (liveDataManager.getAllStudentsMap().get(fromUserId)!=null) {
+                    liveDataManager.getAllStudentsMap().get(fromUserId).setLianMaiState(3);
+                    //刷新学生列表
+                    changeStudentListLMstate(fromUserId, 3);
+                    //删除连麦学生
+                    refuseLianMai(fromUserId);
+                }
             }else if (jo.getString("result").equals("1")){
-                changeStudentListLMstate(fromUserId,true);
+                changeStudentListLMstate(fromUserId, 1);
             }
 
         }else if (jo.getString("action").equals("micOpenRequest")){
@@ -1101,8 +1283,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                             String str = JSON.toJSONString(map);
                             final byte msg[] = str.getBytes();
                             sendCustomMessage(fromUserId,msg);
-//                            liveDataManager.getOnLineStudentsMap().get(fromUserId).setLianMai(true);
-                            changeStudentListLMstate(fromUserId,true);
+//                            刷新学生列表
+                            changeStudentListLMstate(fromUserId, 1);
                         }
 
                         @Override
@@ -1113,10 +1295,28 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                             String str = JSON.toJSONString(map);
                             final byte msg[] = str.getBytes();
                             sendCustomMessage(fromUserId,msg);
-//                            liveDataManager.getOnLineStudentsMap().get(fromUserId).setLianMai(false);
-                            changeStudentListLMstate(fromUserId,false);
+                            if (liveDataManager.getAllStudentsMap().get(fromUserId)!=null){
+                                liveDataManager.getAllStudentsMap().get(fromUserId).setLianMaiState(3);
+                                changeStudentListLMstate(fromUserId,3);
+                            }
                         }
                     });
+        }else if (jo.getString("action").equals("studentPushOpen")){
+         //学生开启推流
+            if (liveDataManager.getAllStudentsMap().get(fromUserId)!=null){
+                liveDataManager.getAllStudentsMap().get(fromUserId).setCameraOn(true);
+                if (jiankongPopupWindow!=null){
+                    jiankongPopupWindow.refreshSomeOne(fromUserId);
+                }
+            }
+        }else if (jo.getString("action").equals("studentPushClose")){
+            //学生关闭推流
+            if (liveDataManager.getAllStudentsMap().get(fromUserId)!=null){
+                liveDataManager.getAllStudentsMap().get(fromUserId).setCameraOn(false);
+                if (jiankongPopupWindow!=null){
+                    jiankongPopupWindow.refreshSomeOne(fromUserId);
+                }
+            }
         }
     }
     /*
@@ -1144,6 +1344,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                 }
             }
         });
+        if (action.equals("cameraBack")){
+            if (videoListFragment!=null){
+                videoListFragment.cameraBack(info);
+            }
+        }
     }
 
 
@@ -1155,32 +1360,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         Log.e("接收IM", "接收群组GroupText--IM"+text);
 //        String str = new String(data);
         JSONObject jo = JSON.parseObject(text);
-        if (jo.getString("action").equals("studentJoin")) {
-//            List<StudentInfor> list= mGson.fromJson(jo.getString("students"), new TypeToken<List<StudentInfor>>(){}.getType());
-            List<StudentInfor> list = JSON.parseArray(jo.getString("students"),StudentInfor.class);
-            Map<String, StudentInfor> joinStudentsMap;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                joinStudentsMap = list.stream().collect(Collectors.toMap(StudentInfor::getUserCode, Function.identity(), (key1, key2) -> key2));
-            }else {
-                joinStudentsMap= new HashMap<String, StudentInfor>();
-                for (StudentInfor studentInfor : list) {
-                    joinStudentsMap.put(studentInfor.getUserCode(), studentInfor);
-                }
-            }
-            liveDataManager.getOnLineStudentsMap().putAll(joinStudentsMap);
-            liveDataManager.getAllStudentsMap().putAll(joinStudentsMap);
-            for (int i=0;i<list.size();i++){
-                liveDataManager.getOffLineStudentsMap().remove(list.get(i).getUserCode());
-            }
-            if (studentListFragment!=null){
-                if (liveDataManager.getTeacher_StudentListState()==0){
-                    studentListFragment.showShangKeList();
-                }else if (liveDataManager.getTeacher_StudentListState()==1){
-                    studentListFragment.showWeiShangKeList();
-                }
-            }
-
-        } else if (jo.getString("action").equals("studentExit")) {
+      if (jo.getString("action").equals("studentExit")) {
             String exitStudent=jo.getString("studentIds").toString();
             List<String> list = Arrays.asList(exitStudent.split(","));
             HashMap<String, StudentInfor> exitStudentsMap = new HashMap<>();
@@ -1188,6 +1368,10 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                 StudentInfor exitStudentInfor=liveDataManager.getOnLineStudentsMap().get(list.get(i));
                 exitStudentsMap.put(list.get(i),exitStudentInfor);
                 liveDataManager.getOnLineStudentsMap().remove(list.get(i));
+                // 更新监控
+                if (jiankongPopupWindow!=null){
+                    jiankongPopupWindow.showJianKong("Exit",list.get(i));
+                }
             }
             liveDataManager.getOffLineStudentsMap().putAll(exitStudentsMap);
             if (studentListFragment!=null){
@@ -1197,6 +1381,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     studentListFragment.showWeiShangKeList();
                 }
             }
+
         }
     }
     /*
@@ -1208,18 +1393,52 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         String str = new String(data);
         JSONObject jo = JSON.parseObject(str);
         if (jo.getString("action").equals("msg")) {
-            ivChat.setImageDrawable(getDrawable(R.mipmap.chat_red));
-            ChatContent chatContent=new ChatContent();
-            chatContent.setChatName(jo.getString("sender"));
-            chatContent.setChatContent(jo.getString("info"));
-            liveDataManager.getChatContentList().add(chatContent);
+            String chatContent=jo.getString("sender")+": "+jo.getString("info");
             if (liveDataManager.isOpenDanmu()){
-                danmuAdpter.refresh(liveDataManager.getChatContentList());
+                danmuContentAdpter.add(chatContent);
             }else {
                 if(chatPopupWindow!=null){
-                    chatPopupWindow.refreshChatContent(liveDataManager.getChatContentList());
+                    if (!chatPopupWindow.isShowing()){
+                        ivChat.setImageDrawable(getDrawable(R.mipmap.chat_red));
+                    }
+                    chatPopupWindow.addChatContent(chatContent);
+                }else {
+                    liveDataManager.getChatContentList().add(chatContent);
+                    ivChat.setImageDrawable(getDrawable(R.mipmap.chat_red));
                 }
             }
+        }else if (jo.getString("action").equals("studentVideoClose")){
+            //学生关闭摄像头
+            liveDataManager.getAllStudentsMap().get(fromUserId).setCameraOn(false);
+            if (videoListFragment!=null) {
+                videoListFragment.studentCameraState(fromUserId);
+            }
+        }else if (jo.getString("action").equals("studentVideoOpen")){
+           //学生开启摄像头
+            liveDataManager.getAllStudentsMap().get(fromUserId).setCameraOn(true);
+            if (videoListFragment!=null) {
+                videoListFragment.studentCameraState(fromUserId);
+            }
+
+        }else if (jo.getString("action").equals("studentJoin")) {
+            String info=jo.getString("info");
+            StudentInfor studentInfor = JSONObject.parseObject(info,StudentInfor.class);
+            liveDataManager.getOnLineStudentsMap().put(fromUserId,studentInfor);
+            liveDataManager.getAllStudentsMap().put(fromUserId,studentInfor);
+            liveDataManager.getOffLineStudentsMap().remove(fromUserId);
+            // 更新监控
+            if (jiankongPopupWindow!=null){
+                jiankongPopupWindow.showJianKong("Join",fromUserId);
+            }
+            if (studentListFragment!=null){
+                if (liveDataManager.getTeacher_StudentListState()==0){
+                    studentListFragment.showShangKeList();
+                }else if (liveDataManager.getTeacher_StudentListState()==1){
+                    studentListFragment.showWeiShangKeList();
+                }
+            }
+
+
         }
     }
 
@@ -1239,7 +1458,18 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     public void onTICUserSigExpired() {
 
     }
-
+    //添加连麦学生
+    public void changeStudentVideoLMstate(String userCode){
+        if (videoListFragment!=null){
+            videoListFragment.addStudentItem(userCode);
+        }
+    }
+    //学生或老师拒绝连麦
+    public void refuseLianMai(String userCode){
+        if (videoListFragment!=null){
+            videoListFragment.refuseLianMai(userCode);
+        }
+    }
     /*
      *白板回调
      */
@@ -1392,7 +1622,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
 
         @Override
         public void onTEBSnapshot(String s, int i, String s1) {
-           Toast.makeText(mactivity,"截屏成功",Toast.LENGTH_SHORT).show();
+            ToastUtil.showToast1(mactivity,"","截屏成功");
             File file = new File(s);
             // 把file里面的图片插入到系统相册中
             String fileName = System.currentTimeMillis() + ".jpg";
@@ -1470,7 +1700,6 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         tvYeshu.setText("1/"+mBoard.getBoardList().size());
         startPushBoardStream();
         Log.e("Board", "历史数据同步完成");
-        Toast.makeText(mactivity,"历史数据同步完成",Toast.LENGTH_SHORT).show();
     }
     /*
      *启动白板推流
@@ -1504,26 +1733,24 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
      *关闭课堂
      */
     private void classOver(){
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/lvbcourse/classOver","",new MyCallBack<BaseResponse<String>>() {
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/lvbcourse/classOver","",new MyCallBack<BaseResponse<ClassOver>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
             }
 
             @Override
-            public void onSuccess(BaseResponse result) {
-                quitClass();
+            public void onSuccess(BaseResponse<ClassOver> result) {
+                finish();
             }
 
             @Override
             public void onFailure(Request request, Exception e) {
-                isquitClass=false;
                 finish();
             }
 
             @Override
             public void onError(Response response) {
-                isquitClass=false;
                 finish();
             }
         });
@@ -1552,15 +1779,38 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         Log.e("生命周期","TeacherLiveActivity-onStop");
         super.onStop();
     }
+    /**
+     * 监听Back键按下事件,方法2:
+     * 注意:
+     * 返回值表示:是否能完全处理该事件
+     * 在此处返回false,所以会继续传播该事件.
+     * 在具体项目中此处的返回值视情况而定.
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+            DialogUtil.showDialog(this, "退出后本节课将结束，确定要退出课堂吗？",
+                    "确定",  "取消",false, new DialogUtil.AlertDialogBtnClickListener() {
+                        @Override
+                        public void clickPositive() {
+                            quitClass();
+                        }
 
+                        @Override
+                        public void clickNegative() {
+                        }
+                    });
+            return true;
+        }else {
+            return super.onKeyDown(keyCode, event);
+        }
+    }
     @Override
     protected void onDestroy() {
         Log.e("生命周期","TeacherLiveActivity-onDestroy");
         if (!isquitClass){
-            classOver();
+           quitClass();
         }
-        liveDataManager.destroyInstance();
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         super.onDestroy();
 
     }
@@ -1668,9 +1918,34 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
 //        this.mvideoFragmentListener = videoFragmentListener;
 //    }
     public interface StudentlistFragmentListener{
-        void lianMai(String userCode,boolean isLianmai);
+        void lianMai(String userCode,int lianMaistate);
     }
     public void setStudentlistFragmentListener(StudentlistFragmentListener studentlistFragmentListener) {
         this.mstudentlistFragmentListener = studentlistFragmentListener;
+    }
+    /**
+     * 清除目录下文件
+     *
+     */
+    private void deleteAllFiles(File root) {
+        File files[] = root.listFiles();
+        if (files != null)
+            for (File f : files) {
+                if (f.isDirectory()) { // 判断是否为文件夹
+                    deleteAllFiles(f);
+                    try {
+                        f.delete();
+                    } catch (Exception e) {
+                    }
+                } else {
+                    if (f.exists()) { // 判断是否存在
+                        deleteAllFiles(f);
+                        try {
+                            f.delete();
+                        } catch (Exception e) {
+                        }
+                    }
+                }
+            }
     }
 }

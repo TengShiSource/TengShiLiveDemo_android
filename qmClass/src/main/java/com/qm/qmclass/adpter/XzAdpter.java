@@ -55,19 +55,19 @@ public class XzAdpter extends BaseAdapter {
         }
         LinearLayout.LayoutParams lp=(LinearLayout.LayoutParams)holderView.xingzhuang.getLayoutParams();
         if (position==0){
-            holderView.xingzhuang.setBackgroundResource(R.drawable.changfangxing);
+            holderView.xingzhuang.setBackgroundResource(R.drawable.changfangxing_item);
             lp.width= mcontext.getResources().getDimensionPixelSize(R.dimen.dp_20);
             lp.height=mcontext.getResources().getDimensionPixelSize(R.dimen.dp_20);
         }else if (position==1){
-            holderView.xingzhuang.setBackgroundResource(R.drawable.tuoyuan_bg);
+            holderView.xingzhuang.setBackgroundResource(R.drawable.tuoyuan_bg_item);
             lp.width= mcontext.getResources().getDimensionPixelSize(R.dimen.dp_23);
             lp.height=mcontext.getResources().getDimensionPixelSize(R.dimen.dp_17);
         }else if (position==2){
-            holderView.xingzhuang.setBackgroundResource(R.drawable.zhengfangxing_bg);
+            holderView.xingzhuang.setBackgroundResource(R.drawable.zhengfangxing_bg_item);
             lp.width= mcontext.getResources().getDimensionPixelSize(R.dimen.dp_20);
             lp.height=mcontext.getResources().getDimensionPixelSize(R.dimen.dp_20);
         }else if (position==3){
-            holderView.xingzhuang.setBackgroundResource(R.drawable.yuan);
+            holderView.xingzhuang.setBackgroundResource(R.drawable.yuan_item);
             lp.width= mcontext.getResources().getDimensionPixelSize(R.dimen.dp_23);
             lp.height=mcontext.getResources().getDimensionPixelSize(R.dimen.dp_17);
         }
@@ -78,33 +78,6 @@ public class XzAdpter extends BaseAdapter {
         }else {
             holderView.llxingzhuang.setBackgroundResource(0);
         }
-        GradientDrawable myGrad = (GradientDrawable)holderView.xingzhuang.getBackground();
-        if (liveDataManager.getLineColor()==0){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_red));
-        }else if (liveDataManager.getLineColor()==1){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_pink));
-        }else if (liveDataManager.getLineColor()==2){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_yellow));
-        }else if (liveDataManager.getLineColor()==3){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_green));
-        }else if (liveDataManager.getLineColor()==4){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_skublue));
-        }else if (liveDataManager.getLineColor()==5){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_blue));
-        }else if (liveDataManager.getLineColor()==6){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_violet));
-        }else if (liveDataManager.getLineColor()==7){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_pinkr));
-        }else if (liveDataManager.getLineColor()==8){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_orange));
-        }else if (liveDataManager.getLineColor()==9){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_white));
-        }else if (liveDataManager.getLineColor()==10){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_gray));
-        }else if (liveDataManager.getLineColor()==11){
-            myGrad.setColor(mcontext.getResources().getColor(R.color.b_black));
-        }
-
         return convertView;
     }
     public void changeState(int pos) {

@@ -64,22 +64,25 @@ public class StudentListFragment extends Fragment implements TeacherLiveActivity
             @Override
             public void shangkeOnClick(String userCode, View v) {
                 if (v.getId()==R.id.maike){
-                    if (liveDataManager.getOnLineStudentsMap().get(userCode).isLianMai()){
+                    if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==1){
 //                    老师发起让学生挂麦
                         Map<String, String> map = new HashMap<>();
                         map.put("action", "micClose");
                         String str = JSON.toJSONString(map);
                         final byte msg[] = str.getBytes();
                         teacherLiveActivity.sendCustomMessage(userCode,msg);
-                        lianMai(userCode,false);
+                        lianMai(userCode,3);
                         Toast.makeText(teacherLiveActivity,userCode+"挂麦",Toast.LENGTH_SHORT).show();
-                    }else {
+                    }else if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==3){
                         //老师向学生发起连麦
                         Map<String, String> map = new HashMap<>();
                         map.put("action", "micOpen");
                         String str = JSON.toJSONString(map);
                         final byte msg[] = str.getBytes();
                         teacherLiveActivity.sendCustomMessage(userCode,msg);
+                        liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(2);
+                        teacherLiveActivity.changeStudentVideoLMstate(userCode);
+                        lianMai(userCode,2);
                         Toast.makeText(teacherLiveActivity,userCode+"连麦",Toast.LENGTH_SHORT).show();
                     }
 
@@ -156,18 +159,12 @@ public class StudentListFragment extends Fragment implements TeacherLiveActivity
     }
 
     @Override
-    public void lianMai(String userCode, boolean isLianmai) {
-        if (isLianmai){
-            liveDataManager.getOnLineStudentsMap().get(userCode).setLianMai(true);
-            if (liveDataManager.getTeacher_StudentListState()==0){
-                showShangKeList();
-            }
-        }else {
-            liveDataManager.getOnLineStudentsMap().get(userCode).setLianMai(false);
-            if (liveDataManager.getTeacher_StudentListState()==0){
-                showShangKeList();
-            }
+    public void lianMai(String userCode, int lianMaistate) {
+        if (liveDataManager.getAllStudentsMap().get(userCode)!=null){
+            liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(lianMaistate);
         }
-
+        if (liveDataManager.getTeacher_StudentListState()==0){
+            showShangKeList();
+        }
     }
 }

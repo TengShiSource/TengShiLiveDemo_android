@@ -13,17 +13,21 @@ public class DataManager {
 
     private String token = "";
     private String courseName;//课堂名称
-    private String userName;//用户名
     private String startTime;//课堂开始时间
     private String endTime;//课堂结束时间
     private String appid;//应用ID
     private int courseId;//课堂ID
     private String role;//角色
-    private int userid;
     private String teacherCode;//学生端教师code
     private String teacherName;//学生端教师Name
     private String teacherIcon;//学生端教师头像
+
     private String userCode;//用户课堂code
+    private String userIcon;//用户头像
+    private String userName;//用户名
+    private int userid;
+    private String expValue;
+    private String studyCoin;
 
 //    private HashMap<String, StudentInfor> allStudentsMap = new HashMap<>();
 //    private HashMap<String, StudentInfor> onLineStudentsMap = new HashMap<>();
@@ -153,5 +157,29 @@ public class DataManager {
 
     public void setTeacherIcon(String teacherIcon) {
         this.teacherIcon = teacherIcon;
+    }
+
+    public String getUserIcon() {
+        return userIcon;
+    }
+
+    public void setUserIcon(String userIcon) {
+        this.userIcon = userIcon;
+    }
+
+    public String getExpValue() {
+        return expValue;
+    }
+
+    public void setExpValue(String expValue) {
+        this.expValue = expValue;
+    }
+
+    public String getStudyCoin() {
+        return studyCoin;
+    }
+
+    public void setStudyCoin(String studyCoin) {
+        this.studyCoin = studyCoin;
     }
 }

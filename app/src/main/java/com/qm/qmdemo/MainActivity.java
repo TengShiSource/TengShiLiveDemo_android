@@ -240,7 +240,6 @@ public class MainActivity extends AppCompatActivity {
         map.put("originExpValue", "4");
         map.put("nickName", name);
         map.put("deviceToken", "22");
-        map.put("avatarUrl", "11111");
         String jsonObject=new JSONObject(map).toString();
 
         OkHttpUtils.getInstance().PostWithJson(baseurl+"/member/registUser",jsonObject,new MyCallBack<BaseResponse<String>>() {

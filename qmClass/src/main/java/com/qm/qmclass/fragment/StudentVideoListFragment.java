@@ -21,16 +21,20 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.alibaba.fastjson.JSON;
+import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.qm.qmclass.R;
 import com.qm.qmclass.activitys.StudentLiveActivity;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.base.QMSDK;
+import com.qm.qmclass.okhttp.OkHttpUtils;
 import com.qm.qmclass.tencent.TICManager;
 import com.qm.qmclass.tencent.TICVideoRootView;
+import com.qm.qmclass.utils.GetPictureUtil;
 import com.qm.qmclass.utils.PermissionUtils;
 import com.qm.qmclass.utils.PushUtils;
+import com.qm.qmclass.utils.RoundImageView;
 import com.qm.qmclass.utils.ToastUtil;
 import com.tencent.rtmp.ITXLivePlayListener;
 import com.tencent.rtmp.ITXLivePushListener;
@@ -47,6 +51,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +65,9 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
     private DataManager dataManager;
     private LiveDataManager liveDataManager;
     private StudentLiveActivity studentLiveActivity;
-    TXCloudVideoView teacherVideoView;
+    private RelativeLayout teacherVideoView;
+    private RoundImageView teacherIcon;
+    private RoundImageView classmateIcon;
     TXCloudVideoView myselfVideoview;
     private TextView teachername;
     private TextView myselfname;
@@ -69,19 +76,21 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
     private LinearLayout llTool;
     private LinearLayout myselfShexiangtou;
     private LinearLayout myselfLianmai;
-    private LinearLayout myselfMaike;
+//    private LinearLayout myselfMaike;
     private LinearLayout myselfQiehuan;
     private LinearLayout classmateVideo;
     private ImageView ivShexiangtou;
     private ImageView ivLianmai;
-    private ImageView ivMaike;
+//    private ImageView ivMaike;
+    private RoundImageView myselfIcon;
     private static TXLivePlayer mLivePlayer;
-    private static TXLivePlayer classmatePlayer;
-    TXCloudVideoView classMateVideoview;
+    TXCloudVideoView videoItem;
+//    private static TXLivePlayer classmatePlayer;
+
+    private RelativeLayout classMateVideoview;
     private TXLivePusher mLivePusher;
     private TXLivePushConfig mLivePushConfig;
-
-    private HashMap<String, Object> map = new HashMap<>();
+    private LinkedHashMap<String, View> classmateItemMap = new LinkedHashMap<>();
     private int teachercount=0;
     private int classmatecount=0;
     private boolean isVideoToolShow=true;
@@ -96,7 +105,9 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
         studentLiveActivity=(StudentLiveActivity) getActivity();
         studentLiveActivity.setVideoFragmentListener(this);
         teachername=(TextView) view.findViewById(R.id.teachername);
-        teacherVideoView=(TXCloudVideoView) view.findViewById(R.id.teacher_videoview);
+        teacherVideoView=(RelativeLayout) view.findViewById(R.id.teacher_videoview);
+        teacherIcon=(RoundImageView) view.findViewById(R.id.teacher_icon);
+        myselfIcon=(RoundImageView) view.findViewById(R.id.myself_icon);
         myselfVideoview=(TXCloudVideoView) view.findViewById(R.id.myself_videoview);
         myselfname=(TextView) view.findViewById(R.id.myselfname);
         myselfname.setText(dataManager.getUserName());
@@ -107,17 +118,20 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
         ivShexiangtou=(ImageView) view.findViewById(R.id.iv_shexiangtou);
         myselfLianmai=(LinearLayout) view.findViewById(R.id.myself_lianmai);
         ivLianmai=(ImageView) view.findViewById(R.id.iv_lianmai);
-        myselfMaike=(LinearLayout) view.findViewById(R.id.myself_maike);
-        ivMaike=(ImageView) view.findViewById(R.id.iv_maike);
+//        myselfMaike=(LinearLayout) view.findViewById(R.id.myself_maike);
+//        ivMaike=(ImageView) view.findViewById(R.id.iv_maike);
         myselfQiehuan=(LinearLayout) view.findViewById(R.id.myself_qiehuan);
         shouqi.setOnClickListener(this);
         myselfShexiangtou.setOnClickListener(this);
         myselfLianmai.setOnClickListener(this);
-        myselfMaike.setOnClickListener(this);
+//        myselfMaike.setOnClickListener(this);
         myselfQiehuan.setOnClickListener(this);
         classmateVideo=(LinearLayout) view.findViewById(R.id.classmate_video);
+//        getPictureUtil=new GetPictureUtil();
+//        myselfIcon.setImageBitmap(getPictureUtil.getNetPicture("https://s1.ax1x.com/2020/05/05/YkGcqg.png"));
         CheckPermission();
         hidenAnimation();
+        teachername.setText(dataManager.getTeacherName());
         return view;
     }
 
@@ -138,12 +152,24 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
         }else if (v.getId()==R.id.myself_shexiangtou){
             if (liveDataManager.isCameraOn()){
                 liveDataManager.setCameraOn(false);
+                myselfIcon.setVisibility(View.VISIBLE);
                 mLivePusher.stopCameraPreview(true);
-                mLivePusher.pausePusher();
+                mLivePusher.stopPusher();
+                Glide.with(studentLiveActivity).load(dataManager.getUserIcon()).skipMemoryCache(true).into(myselfIcon);
+                Map<String, String> map = new HashMap<>();
+                map.put("action", "studentPushClose");
+                String str = JSON.toJSONString(map);
+                final byte msg[] = str.getBytes();
+                studentLiveActivity.sendCustomMessage(dataManager.getTeacherCode(),msg);
             }else {
+                PushMyselfVideo();
                 liveDataManager.setCameraOn(true);
-                mLivePusher.startCameraPreview(myselfVideoview);
-                mLivePusher.resumePusher();
+                myselfIcon.setVisibility(View.GONE);
+                Map<String, String> map = new HashMap<>();
+                map.put("action", "studentPushOpen");
+                String str = JSON.toJSONString(map);
+                final byte msg[] = str.getBytes();
+                studentLiveActivity.sendCustomMessage(dataManager.getTeacherCode(),msg);
             }
 
         }else if (v.getId()==R.id.myself_lianmai){
@@ -154,61 +180,49 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
             final byte msg[] = str.getBytes();
             studentLiveActivity.sendCustomMessage(dataManager.getTeacherCode(),msg);
             ToastUtil.showToast1(getActivity(), "", "连麦请求发送成功");
-        }else if (v.getId()==R.id.myself_maike){
-
         }else if (v.getId()==R.id.myself_qiehuan){
             mLivePusher.switchCamera();
         }
     }
-    private void ShowTeacherVideo(){
-        //mPlayerView 添加的界面 view
-        if (mLivePlayer==null){
-            //创建 player 对象
-            mLivePlayer = new TXLivePlayer(getActivity());
+    /**
+     * 显示老师拉流视频
+     */
+    public void ShowTeacherVideo(){
+        if (dataManager.getTeacherCode()==null||dataManager.getTeacherCode().equals("")){
+            teacherVideoView.setVisibility(View.GONE);
+            teacherIcon.setVisibility(View.VISIBLE);
+            teacherIcon.setImageDrawable(getResources().getDrawable(R.mipmap.defu_icon));
+        }else {
+            teacherVideoView.setVisibility(View.VISIBLE);
+            teacherIcon.setVisibility(View.GONE);
+            teacherVideoView.addView(createVideoView(dataManager.getTeacherCode()));
         }
-        TXLivePlayConfig mPlayConfig = new TXLivePlayConfig();
-        //极速模式
-        mPlayConfig.setAutoAdjustCacheTime(true);
-        mPlayConfig.setMinAutoAdjustCacheTime(1);
-        mPlayConfig.setMaxAutoAdjustCacheTime(1);
-        mLivePlayer.setConfig(mPlayConfig);
-        if (mLivePlayer != null) {
-            //关键 player 对象与界面 view
-            mLivePlayer.setPlayerView(teacherVideoView);
-            mLivePlayer.setRenderMode(TXLiveConstants.RENDER_MODE_ADJUST_RESOLUTION);
-            //            静音播放
-            mLivePlayer.setMute(true);
-            String flvUrl = "http://live.jledu.com/live/camera_"+dataManager.getTeacherCode()+".flv";
-            Log.e("ShowBroadcastVideo",dataManager.getAppid()+flvUrl);
-            mLivePlayer.startPlay(flvUrl, TXLivePlayer.PLAY_TYPE_LIVE_FLV); //推荐 FLV
-            mLivePlayer.setPlayListener(new ITXLivePlayListener() {
-                @Override
-                public void onPlayEvent(int event, Bundle param) {
-                    Log.e("joinOpenClass",String.valueOf(event));
-                    if (event == TXLiveConstants.PLAY_ERR_NET_DISCONNECT) {
-                        Log.e("joinOpenClass","DISCONNECT");
-                        ShowTeacherVideo();
-//                        Log.e("joinOpenClass",String.valueOf(count));
-                        if (teachercount==0){
-                            teachercount=1;
-                            Log.e("joinOpenClass",String.valueOf(teachercount));
-                            ToastUtil.showToast1(getActivity(), "", "当前课堂没有教师，请耐心等待");
-                        }
-                    }else if (event == TXLiveConstants.PLAY_EVT_PLAY_BEGIN) {
-                        Log.e("joinOpenClass","BEGIN");
-                        teacherVideoView.setVisibility(View.VISIBLE);
-                    }else if (event == TXLiveConstants.PLAY_EVT_PLAY_LOADING){
-                        Log.e("joinOpenClass","LOADING");
-                    }
-                }
 
-                @Override
-                public void onNetStatus(Bundle status) {
-                }
-            });
+    }
+    /**
+     * 老师摄像头状态改变
+     */
+    public void teacherCameraState(){
+        if (liveDataManager.isTCameraOn()){
+            teacherIcon.setVisibility(View.GONE);
+            teacherVideoView.setVisibility(View.VISIBLE);
+            teacherVideoView.addView(createVideoView(dataManager.getTeacherCode()));
+        }else {
+            teacherVideoView.setVisibility(View.GONE);
+            View teacherView=liveDataManager.getVideoViewMap().get(dataManager.getTeacherCode());
+            teacherVideoView.removeView(teacherView);
+            liveDataManager.getVideoViewMap().remove(dataManager.getTeacherCode());
+            teacherIcon.setVisibility(View.VISIBLE);
+            if (dataManager.getTeacherIcon()!=null&&!dataManager.getTeacherIcon().equals("")){
+                Glide.with(studentLiveActivity).load(dataManager.getTeacherIcon()).skipMemoryCache(true).into(teacherIcon);
+            }else {
+                teacherIcon.setImageDrawable(getResources().getDrawable(R.mipmap.defu_icon));
+            }
         }
     }
-
+    /**
+     * 推流自己摄像头
+     */
     private void PushMyselfVideo(){
         if (mLivePushConfig==null){
             mLivePushConfig  = new TXLivePushConfig();
@@ -219,15 +233,16 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
         }
 // 一般情况下不需要修改 config 的默认配置
 //        横屏推流
-        mLivePushConfig.setHomeOrientation(TXLiveConstants.VIDEO_ANGLE_HOME_DOWN);
-        mLivePushConfig.setPauseImg(BitmapFactory.decodeResource(getResources(), R.mipmap.maike, null));
+        mLivePushConfig.setHomeOrientation(TXLiveConstants.VIDEO_ANGLE_HOME_RIGHT);
         mLivePushConfig.setPauseFlag(PAUSE_FLAG_PAUSE_VIDEO);
         mLivePusher.setConfig(mLivePushConfig);
-        mLivePusher.setRenderRotation(-90);
-
+        mLivePusher.setRenderRotation(0);
+        mLivePusher.setMirror(false);
+        mLivePusher.setMute(true);
 //        设置分辨率
         mLivePusher.setVideoQuality(TXLiveConstants.VIDEO_QUALITY_STANDARD_DEFINITION,true,false);
         mLivePusher.startCameraPreview(myselfVideoview);
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Calendar nowTime = Calendar.getInstance();
         nowTime.add(Calendar.MINUTE, 5);
@@ -278,62 +293,62 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
 
     }
 //    创建一个新学生视频View
-    private View createView(final String userCode) {
+    private void addclassMateVideoView(final String userCode) {
         //首先引入要添加的View
         final View view=View.inflate(getActivity(), R.layout.classmate_video_item, null);
-        map.put(userCode,view);
         //找到里面需要动态改变的控件
-        classMateVideoview = (TXCloudVideoView) view.findViewById(R.id.classmate_videoview);
+        RelativeLayout classMateVideoview = (RelativeLayout) view.findViewById(R.id.classmate_videoview);
         TextView classmatename = (TextView) view.findViewById(R.id.classmatename);
-        if (!liveDataManager.getOnLineStudentsMap().isEmpty()){
+        classmateIcon = (RoundImageView) view.findViewById(R.id.classmate_icon);
+        if (!liveDataManager.getOnLineStudentsMap().isEmpty()&&liveDataManager.getOnLineStudentsMap().get(userCode)!=null){
             //给控件赋值
             classmatename.setText(liveDataManager.getOnLineStudentsMap().get(userCode).getNickName());
         }
-        ShowclassMateVideo(userCode);
-        return view;
+        classMateVideoview.addView(createVideoView(userCode));
+        classmateVideo.addView(view);
+        classmateItemMap.put(userCode,view);
     }
 
-    private void ShowclassMateVideo(final String classMateCode){
+    //    创建一个新学生视频View
+    public View createVideoView(final String userCode) {
+        //首先引入要添加的View
+        final View view=View.inflate(studentLiveActivity, R.layout.livestudent_video_item, null);
+        //找到里面需要动态改变的控件
+        videoItem = (TXCloudVideoView) view.findViewById(R.id.video_item);
         //mPlayerView 添加的界面 view
-        classmatePlayer = null;
-        if (classmatePlayer==null){
+        mLivePlayer = null;
+        if (mLivePlayer==null){
             //创建 player 对象
-            classmatePlayer = new TXLivePlayer(getActivity());
+            mLivePlayer = new TXLivePlayer(studentLiveActivity);
         }
         TXLivePlayConfig mPlayConfig = new TXLivePlayConfig();
         //极速模式
         mPlayConfig.setAutoAdjustCacheTime(true);
         mPlayConfig.setMinAutoAdjustCacheTime(1);
         mPlayConfig.setMaxAutoAdjustCacheTime(1);
-        classmatePlayer.setConfig(mPlayConfig);
-        if (classmatePlayer != null) {
+        mLivePlayer.setConfig(mPlayConfig);
+        if (mLivePlayer != null) {
             //关键 player 对象与界面 view
-            classmatePlayer.setPlayerView(classMateVideoview);
-            classmatePlayer.setRenderMode(TXLiveConstants.RENDER_MODE_ADJUST_RESOLUTION);
-            classmatePlayer.setRenderRotation(-90);
+            mLivePlayer.setPlayerView(videoItem);
+            mLivePlayer.setRenderMode(TXLiveConstants.RENDER_MODE_ADJUST_RESOLUTION);
+            mLivePlayer.setRenderRotation(0);
             //            静音播放
-            classmatePlayer.setMute(true);
-            String flvUrl = "http://live.jledu.com/live/camera_"+classMateCode+".flv?"+safeUrl;
+            mLivePlayer.setMute(true);
+            String flvUrl = "http://live.jledu.com/live/camera_"+userCode+".flv?"+safeUrl;
             Log.e("ShowBroadcastVideo",dataManager.getAppid()+flvUrl);
-            classmatePlayer.startPlay(flvUrl, TXLivePlayer.PLAY_TYPE_LIVE_FLV); //推荐 FLV
-            classmatePlayer.setPlayListener(new ITXLivePlayListener() {
+            mLivePlayer.startPlay(flvUrl, TXLivePlayer.PLAY_TYPE_LIVE_FLV); //推荐 FLV
+            mLivePlayer.setPlayListener(new ITXLivePlayListener() {
                 @Override
                 public void onPlayEvent(int event, Bundle param) {
-                    Log.e("joinOpenClass",String.valueOf(event));
+                    Log.e("拉流",String.valueOf(event));
                     if (event == TXLiveConstants.PLAY_ERR_NET_DISCONNECT) {
-                        Log.e("joinOpenClass","DISCONNECT");
-                        ShowclassMateVideo(classMateCode);
-//                        Log.e("joinOpenClass",String.valueOf(count));
-                        if (classmatecount==0){
-                            classmatecount=1;
-                            Log.e("joinOpenClass",String.valueOf(classmatecount));
-                            ToastUtil.showToast1(getActivity(), "", "当前课堂没有教师，请耐心等待");
-                        }
+                        videoItem.setVisibility(View.GONE);
                     }else if (event == TXLiveConstants.PLAY_EVT_PLAY_BEGIN) {
-                        Log.e("joinOpenClass","BEGIN");
-                        teacherVideoView.setVisibility(View.VISIBLE);
+                        videoItem.setVisibility(View.VISIBLE);
                     }else if (event == TXLiveConstants.PLAY_EVT_PLAY_LOADING){
-                        Log.e("joinOpenClass","LOADING");
+
+                    }else if (event == TXLiveConstants.PLAY_WARNING_VIDEO_PLAY_LAG){
+
                     }
                 }
 
@@ -342,13 +357,37 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
                 }
             });
         }
+        liveDataManager.getVideoViewMap().put(userCode,view);
+        return view;
     }
-//    获取学生视频view
-    private View getVideoView(String studentid) {
-        view=(View) map.get(studentid);
+    //    获取视频view
+    private View getClassmateItemView(String userCode) {
+        view=classmateItemMap.get(userCode);
         return view;
     }
 
+    public void showView(String userCode){
+        View videoView=liveDataManager.getVideoViewMap().get(userCode);
+        if (userCode.equals(dataManager.getTeacherCode())){
+            if (videoView!=null){
+                ViewGroup videoViewParent=(ViewGroup) videoView.getParent();
+                if (videoViewParent!=null){
+                    videoViewParent.removeAllViews();
+                }
+                teacherVideoView.addView(videoView);
+            }
+        }else {
+            View classmateItemView=getClassmateItemView(userCode);
+            RelativeLayout classMateVideoview = (RelativeLayout) classmateItemView.findViewById(R.id.classmate_videoview);
+            if (videoView!=null){
+                ViewGroup videoViewParent=(ViewGroup) videoView.getParent();
+                if (videoViewParent!=null){
+                    videoViewParent.removeAllViews();
+                }
+                classMateVideoview.addView(videoView);
+            }
+        }
+    }
     private void showAnimation() {
         isVideoToolShow=true;
         rlTools.setBackground(getResources().getDrawable(R.mipmap.videotool));
@@ -395,7 +434,11 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
             public void passPermissons() {
 //                通过权限的操作
                 ShowTeacherVideo();
-                PushMyselfVideo();
+                if (!liveDataManager.isCameraOn()){
+                    Glide.with(studentLiveActivity).load(dataManager.getUserIcon()).skipMemoryCache(true).into(myselfIcon);
+                }else {
+                    PushMyselfVideo();
+                }
             }
 
             @Override
@@ -407,8 +450,9 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
     @Override
     public void onHiddenChanged(boolean hidden) {
         if (!hidden){
-            ShowTeacherVideo();
-            PushMyselfVideo();
+//          if (liveDataManager.isCameraOn()){
+//              PushMyselfVideo();
+//          }
         }
         super.onHiddenChanged(hidden);
     }
@@ -417,15 +461,10 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
         StopPushMyselfVideo();
         if (mLivePlayer!=null) {
             mLivePlayer.stopPlay(true); // true 代表清除最后一帧画面
-            teacherVideoView.onDestroy();
+            videoItem.onDestroy();
         }
-
-        if (classmatePlayer!=null){
-            classmatePlayer.stopPlay(true); // true 代表清除最后一帧画面
-            classMateVideoview.onDestroy();
-        }
-
         classmateVideo.removeAllViews();
+        liveDataManager.getVideoViewMap().clear();
         super.onDestroy();
     }
 
@@ -433,9 +472,10 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
     @Override
     public void classmatelianMai(String classmatecode,String type) {
         if (type.equals("1")){
-            createView(classmatecode);
+            addclassMateVideoView(classmatecode);
         }else if (type.equals("2")){
-            classmateVideo.removeView(getVideoView(classmatecode));
+            classmateVideo.removeView(getClassmateItemView(classmatecode));
+            liveDataManager.getVideoViewMap().remove(classmatecode);
         }
 
     }

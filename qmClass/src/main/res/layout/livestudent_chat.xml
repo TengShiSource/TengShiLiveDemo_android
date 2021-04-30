@@ -60,6 +60,8 @@
         android:fadingEdge="none"
         android:scrollbars="none"
         android:visibility="visible"
+        android:stackFromBottom="true"
+        android:transcriptMode="alwaysScroll"
         android:listSelector="@android:color/transparent" />
     <LinearLayout
         android:id="@+id/ll_chatinput"

@@ -2,9 +2,9 @@ package com.qm.qmclass.activitys;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.text.InputType;
 import android.util.Log;
@@ -17,7 +17,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,29 +26,23 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.google.gson.Gson;
 import com.qm.qmclass.BuildConfig;
 import com.qm.qmclass.R;
-import com.qm.qmclass.adpter.DanmuAdpter;
+import com.qm.qmclass.adpter.DanmuContentAdpter;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.base.QMSDK;
 import com.qm.qmclass.fragment.OnLineStudentListFragment;
-import com.qm.qmclass.fragment.StudentListFragment;
 import com.qm.qmclass.fragment.StudentVideoListFragment;
 import com.qm.qmclass.fragment.TimeSDVideoListFragment;
-import com.qm.qmclass.fragment.VideoListFragment;
 import com.qm.qmclass.model.ChatContent;
-import com.qm.qmclass.model.Hudong;
 import com.qm.qmclass.model.StudentInfor;
 import com.qm.qmclass.okhttp.BaseResponse;
 import com.qm.qmclass.okhttp.MyCallBack;
 import com.qm.qmclass.okhttp.OkHttpUtils;
-import com.qm.qmclass.qmmanager.QMClassManagerImpl;
 import com.qm.qmclass.tencent.TICClassroomOption;
 import com.qm.qmclass.tencent.TICManager;
 import com.qm.qmclass.utils.DialogUtil;
-import com.qm.qmclass.utils.LivePopupWindow;
 import com.qm.qmclass.utils.StudentLivePopupWindow;
 import com.qm.qmclass.utils.ToastUtil;
 import com.tencent.imsdk.TIMMessage;
@@ -74,8 +67,15 @@ import java.util.stream.Collectors;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static com.tencent.rtmp.TXLiveConstants.RENDER_ROTATION_LANDSCAPE;
+import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_ERASER;
+import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_LINE;
+import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_OVAL;
+import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_OVAL_SOLID;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_PEN;
+import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_POINT_SELECT;
+import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_RECT;
+import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_RECT_SOLID;
+import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_TEXT;
 
 public class StudentLiveActivity extends AppCompatActivity implements View.OnClickListener,
         StudentLivePopupWindow.PopupWindowListener,
@@ -89,6 +89,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     private FrameLayout llBroadcast;
     private ImageView ivChehui;
     private ImageView ivColor;
+    private TextView tvText;
     private ImageView ivHuabi;
     private FrameLayout flFrament;
     private ImageView ivVideolist;
@@ -99,6 +100,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     private EditText danmuInput;
     private LinearLayout tools;
     private FragmentManager fragmentManager;
+    private FragmentTransaction fragmentTransaction;
     private StudentVideoListFragment studentVideoListFragment;
     private TimeSDVideoListFragment timeSDVideoListFragment;
     private OnLineStudentListFragment onLineStudentListFragment;
@@ -120,13 +122,16 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     private StudentLivePopupWindow danmuPopupWindow;
     private StudentLivePopupWindow setPopupWindow;
     private StudentLivePopupWindow classOverPopupWindow;
+    private StudentLivePopupWindow toolsPopupWindow;
     private StudentLivePopupWindow colorPopupWindow;
+    private StudentLivePopupWindow qpPopupWindow;
 
     private static Activity mactivity;
     private DataManager dataManager;
     private LiveDataManager liveDataManager;
     private VideoFragmentListener mvideoFragmentListener;
-    private DanmuAdpter danmuAdpter;
+    private DanmuContentAdpter danmuContentAdpter;
+    private boolean isquitClass=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,6 +174,8 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         ivChehui.setOnClickListener(this);
         ivColor=(ImageView) findViewById(R.id.iv_color);
         ivColor.setOnClickListener(this);
+        tvText=(TextView) findViewById(R.id.tv_text);
+        tvText.setOnClickListener(this);
         ivHuabi=(ImageView) findViewById(R.id.iv_huabi);
         ivHuabi.setOnClickListener(this);
 //        白板
@@ -187,13 +194,14 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         danmuInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int actionId, KeyEvent event) {
-                sendGroupCustomMessage("msg",dataManager.getUserName(),textView.getText().toString());
-                ChatContent chatContent=new ChatContent();
-                chatContent.setChatName(dataManager.getUserName());
-                chatContent.setChatContent(textView.getText().toString());
-                liveDataManager.getChatContentList().add(chatContent);
-                danmuAdpter.refresh(liveDataManager.getChatContentList());
-                danmuInput.setText("");
+                if (textView.getText().toString().equals("")||textView.getText()==null){
+                    ToastUtil.showToast1(StudentLiveActivity.this,"","请输入内容");
+                }else {
+                    sendGroupCustomMessage("msg", dataManager.getUserName(), textView.getText().toString());
+                    String chatContent = dataManager.getUserName() + ": " + textView.getText().toString();
+                    danmuContentAdpter.add(chatContent);
+                    danmuInput.setText("");
+                }
                 return true;
             }
         });
@@ -206,6 +214,20 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         //学生端进入直播间是拉流观看
         rlVideoView.setVisibility(View.VISIBLE);
         llBroadcast.setVisibility(View.GONE);
+        ivColor.setImageDrawable(getResources().getDrawable(R.mipmap.color));
+        colorList=new ArrayList();
+        colorList.add(0, R.mipmap.red);
+        colorList.add(1, R.mipmap.pink);
+        colorList.add(2, R.mipmap.yellow);
+        colorList.add(3, R.mipmap.green);
+        colorList.add(4, R.mipmap.skublue);
+        colorList.add(5, R.mipmap.blue);
+        colorList.add(6, R.mipmap.violet);
+        colorList.add(7, R.mipmap.pinkr);
+        colorList.add(8, R.mipmap.orange);
+        colorList.add(9, R.mipmap.white);
+        colorList.add(10, R.mipmap.gray);
+        colorList.add(11, R.mipmap.black);
     }
     /**
      * 进去课堂只加入群组
@@ -216,6 +238,15 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             mTicManager.joinGroup(dataManager.getCourseId(), new TICManager.TICCallback() {
                 @Override
                 public void onSuccess(Object data) {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("avatarUrl", dataManager.getUserIcon());
+                    map.put("expValue", dataManager.getExpValue());
+                    map.put("nickName", dataManager.getUserName());
+                    map.put("studyCoin", dataManager.getStudyCoin());
+                    map.put("userCode", dataManager.getUserCode());
+                    map.put("userId", String.valueOf(dataManager.getUserid()));
+                    String str = JSON.toJSONString(map);
+                    sendGroupCustomMessage("studentJoin",dataManager.getUserCode(),str);
                     ShowBroadcastVideo();
                 }
 
@@ -280,7 +311,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
      */
     public void toBroadcastClass() {
         setFragmentSelection(1);
-
+        liveDataManager.setMyselfLianmai(true);
         llBroadcast.setVisibility(View.VISIBLE);
         rlVideoView.setVisibility(View.GONE);
         videoView.setVisibility(View.GONE);
@@ -294,7 +325,8 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         initParam.drawEnable = false;
         initParam.ratio = "16:9";
         initParam.globalBackgroundColor=new TEduBoardController.TEduBoardColor(45,47,50,255);
-        initParam.brushColor = new TEduBoardController.TEduBoardColor(0, 255, 0, 255);
+        initParam.brushColor = new TEduBoardController.TEduBoardColor(253, 64, 64, 255);
+        initParam.brushThin=50;
         initParam.smoothLevel = 0; //用于指定笔迹平滑级别，默认值0.1，取值[0, 1]
         TICClassroomOption classroomOption = new TICClassroomOption();
         classroomOption.classId = dataManager.getCourseId();
@@ -325,7 +357,11 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     public void toOpenClass() {
         //如果是老师，可以清除；
         //如查是学生一般是不要清除数据
-        mTicManager.uninitBoardAndTRTC(false);
+        tools.setVisibility(View.GONE);
+        liveDataManager.setMyselfLianmai(false);
+        if(mTicManager!=null){
+            mTicManager.uninitBoardAndTRTC(false);
+        }
         removeBoardView();
         joinOpenClass(false,false);
     }
@@ -333,26 +369,33 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
      *退出群组
      */
     private void quitOpenGroup() {
-        mTicManager.quitGroup(dataManager.getCourseId(), new TICManager.TICCallback() {
-            @Override
-            public void onSuccess(Object data) {
-                if (mBoard!=null){
-                    removeBoardView();
+        if(mTicManager!=null) {
+            mTicManager.quitGroup(dataManager.getCourseId(), new TICManager.TICCallback() {
+                @Override
+                public void onSuccess(Object data) {
+                    if (mBoard != null) {
+                        removeBoardView();
+                    }
+                    if (mLivePlayer != null) {
+                        mLivePlayer.stopPlay(true); // true 代表清除最后一帧画面
+                        videoView.onDestroy();
+                    }
+                    mTicManager.uninitBoardAndTRTC(false);
+                    mTicManager.removeIMMessageListener(StudentLiveActivity.this);
+                    mTicManager.removeIMStatusListener(StudentLiveActivity.this);
+                    removeAllFragment();
+                    liveDataManager.destroyInstance();
+                    getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                    logout();
                 }
-                if (mLivePlayer!=null){
-                    mLivePlayer.stopPlay(true); // true 代表清除最后一帧画面
-                    videoView.onDestroy();
-                }
-                mTicManager.removeIMMessageListener(StudentLiveActivity.this);
-                mTicManager.removeIMStatusListener(StudentLiveActivity.this);
-                logout();
-            }
 
-            @Override
-            public void onError(String module, int errCode, String errMsg) {
-                finish();
-            }
-        });
+                @Override
+                public void onError(String module, int errCode, String errMsg) {
+                    isquitClass=false;
+                    finish();
+                }
+            });
+        }
     }
     /*
      *退出IM
@@ -362,11 +405,13 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onSuccess(Object data) {
                 Log.e("生命周期","StudentLiveActivity-logout");
+                isquitClass=true;
                 finish();
             }
 
             @Override
             public void onError(String module, int errCode, String errMsg) {
+                isquitClass=false;
                 finish();
             }
         });
@@ -375,7 +420,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
      *切换fragment
      */
     private void setFragmentSelection(int index) {
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction = fragmentManager.beginTransaction();
         switch (index) {
             case 0:
                 if (studentVideoListFragment == null) {
@@ -412,6 +457,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         }
         fragmentTransaction.commitAllowingStateLoss();
     }
+
     /*
      *隐藏所有fragment
      */
@@ -419,8 +465,28 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         if(studentVideoListFragment != null){
             transaction.hide(studentVideoListFragment);
         }
+        if (timeSDVideoListFragment!=null){
+            transaction.hide(timeSDVideoListFragment);
+        }
         if(onLineStudentListFragment != null){
             transaction.hide(onLineStudentListFragment);
+        }
+    }
+    /*
+     *移除所有fragment
+     */
+    private void removeAllFragment(){
+        if (timeSDVideoListFragment!=null){
+            fragmentTransaction.remove(timeSDVideoListFragment);
+            timeSDVideoListFragment=null;
+        }
+        if (studentVideoListFragment!=null){
+            fragmentTransaction.remove(studentVideoListFragment);
+            studentVideoListFragment=null;
+        }
+        if(onLineStudentListFragment != null){
+            fragmentTransaction.remove(onLineStudentListFragment);
+            onLineStudentListFragment=null;
         }
     }
     @Override
@@ -430,6 +496,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 chatPopupWindow=new StudentLivePopupWindow(mactivity);
                 chatPopupWindow.setPopupWindowListener(this);
             }
+            ivChat.setImageDrawable(getDrawable(R.mipmap.liaotian));
             chatPopupWindow.showChatPopupWindow(view,liveDataManager.getChatContentList());
         } else if (view.getId() == R.id.iv_jushou) {
 
@@ -450,24 +517,31 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         } else if (view.getId() == R.id.iv_chehui) {
             mBoard.undo();
         }else if (view.getId() == R.id.iv_color) {
-            colorList=new ArrayList();
-            colorList.add(0, "红");
-            colorList.add(1, "白");
-            colorList.add(2, "黄");
-            colorList.add(3, "蓝");
-            colorList.add(4, "绿");
-            colorList.add(5, "紫");
             if (colorPopupWindow==null){
                 colorPopupWindow=new StudentLivePopupWindow(mactivity);
                 colorPopupWindow.setPopupWindowListener(this);
             }
-            colorPopupWindow.showColorPopupWindow(ivColor,colorList);
-        } else if (view.getId() == R.id.iv_huabi) {
-
+            colorPopupWindow.showColorPopupWindow(tools,colorList);
+        }  else if (view.getId() == R.id.tv_text) {
+            if (colorPopupWindow==null){
+                colorPopupWindow=new StudentLivePopupWindow(mactivity);
+                colorPopupWindow.setPopupWindowListener(this);
+            }
+            colorPopupWindow.showColorPopupWindow(tools,colorList);
+        }else if (view.getId() == R.id.iv_huabi) {
+            if (toolsPopupWindow==null){
+                toolsPopupWindow=new StudentLivePopupWindow(mactivity);
+                toolsPopupWindow.setPopupWindowListener(this);
+            }
+            toolsPopupWindow.showToolsPopupWindow(tools);
         }else if (view.getId() == R.id.iv_videolist) {
             ivVideolist.setImageDrawable(getResources().getDrawable(R.mipmap.videolist_lv));
             ivStudentlist.setImageDrawable(getResources().getDrawable(R.mipmap.studentlist));
-            setFragmentSelection(0);
+            if (liveDataManager.isMyselfLianmai()){
+                setFragmentSelection(1);
+            }else {
+                setFragmentSelection(0);
+            }
         } else if (view.getId() == R.id.iv_studentlist) {
             ivVideolist.setImageDrawable(getResources().getDrawable(R.mipmap.videolist));
             ivStudentlist.setImageDrawable(getResources().getDrawable(R.mipmap.studentlist_lv));
@@ -479,15 +553,133 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
      */
     @Override
     public void chatSendOnclick(String data) {
-        Toast.makeText(this,data,Toast.LENGTH_SHORT).show();
-        sendGroupCustomMessage("msg",dataManager.getUserName(),data);
-        ChatContent chatContent=new ChatContent();
-        chatContent.setChatName(dataManager.getUserName());
-        chatContent.setChatContent(data);
-        liveDataManager.getChatContentList().add(chatContent);
-        chatPopupWindow.refreshChatContent( liveDataManager.getChatContentList());
+        if (data.equals("")||data==null){
+            ToastUtil.showToast1(StudentLiveActivity.this,"","请输入内容");
+        }else {
+            sendGroupCustomMessage("msg", dataManager.getUserName(), data);
+            String chatContent = dataManager.getUserName() + ": " + data;
+            chatPopupWindow.addChatContent(chatContent);
+        }
     }
+    /*
+     *点击画笔工具
+     */
+    @Override
+    public void toolItemOnclick(String witch) {
+        if (witch.equals("1")){
+//            画笔
+            ivHuabi.setImageDrawable(getDrawable(R.mipmap.huabi));
+//         ivColor.setImageDrawable(getDrawable(R.mipmap.color));
+            liveDataManager.setWitchTools("1");
+            ivColor.setVisibility(View.VISIBLE);
+            ivColor.setImageDrawable(getResources().getDrawable(R.mipmap.color));
+            ivColor.setBackgroundResource(0);
+            tvText.setVisibility(View.GONE);
+            if (mBoard!=null){
+                if (liveDataManager.getXian()==1){
+                    //曲线
+                    mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_PEN);
+                }else if (liveDataManager.getXian()==2){
+                    //直线
+                    mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_LINE);
+                }
+            }
+        }else if (witch.equals("2")){
+//            形状
+            ivHuabi.setImageDrawable(getDrawable(R.mipmap.xingzhuang));
+            liveDataManager.setWitchTools("2");
+            ivColor.setVisibility(View.VISIBLE);
+            ivColor.setImageDrawable(null);
+            tvText.setVisibility(View.GONE);
+            xiangZhuangOnclick(liveDataManager.getXingzhuang());
+        }else if (witch.equals("3")){
+//            文字
+            ivHuabi.setImageDrawable(getDrawable(R.mipmap.wenben));
+            liveDataManager.setWitchTools("3");
+            ivColor.setVisibility(View.GONE);
+            tvText.setVisibility(View.VISIBLE);
+            tvText.setText(String.valueOf(liveDataManager.getTextProgress()));
+            chooseTextColor();
+            if (mBoard!=null){
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_TEXT);
+            }
+        }else if (witch.equals("4")){
+//            鼠标
+            ivHuabi.setImageDrawable(getDrawable(R.mipmap.shubiao));
+            liveDataManager.setWitchTools("4");
+            ivColor.setVisibility(View.GONE);
+            tvText.setVisibility(View.GONE);
+            if (mBoard!=null){
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_POINT_SELECT);
+            }
+        }else if (witch.equals("5")){
+//            橡皮
+            ivHuabi.setImageDrawable(getDrawable(R.mipmap.xiangpi));
+            liveDataManager.setWitchTools("5");
+            ivColor.setVisibility(View.GONE);
+            tvText.setVisibility(View.GONE);
+            if (mBoard!=null){
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_ERASER);
+            }
+        }else if (witch.equals("6")){
+//            删除
+            DialogUtil.showDialog(this, "确定要清空吗？打开文档上的涂鸦内容也会被清空。",
+                    "确定",  "取消",false, new DialogUtil.AlertDialogBtnClickListener() {
+                        @Override
+                        public void clickPositive() {
+                            if (mBoard!=null){
+                                mBoard.clear(true);
+                            }
+                        }
 
+                        @Override
+                        public void clickNegative() {
+                        }
+                    });
+        }
+    }
+    /*
+     *选择字体颜色
+     */
+    private void chooseTextColor(){
+        if (liveDataManager.getTextColor()==0){
+            tvText.setTextColor(getResources().getColor(R.color.b_red));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(253, 64, 64, 255));
+        }else if (liveDataManager.getTextColor()==1){
+            tvText.setTextColor(getResources().getColor(R.color.b_pink));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(250, 173, 123, 255));
+        }else if (liveDataManager.getTextColor()==2){
+            tvText.setTextColor(getResources().getColor(R.color.b_yellow));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(224, 255, 164, 255));
+        }else if (liveDataManager.getTextColor()==3){
+            tvText.setTextColor(getResources().getColor(R.color.b_green));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(40, 178, 139, 255));
+        }else if (liveDataManager.getTextColor()==4){
+            tvText.setTextColor(getResources().getColor(R.color.b_skublue));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(91, 171, 230, 255));
+        }else if (liveDataManager.getTextColor()==5){
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(63, 90, 202, 255));
+            tvText.setTextColor(getResources().getColor(R.color.b_blue));
+        }else if (liveDataManager.getTextColor()==6){
+            tvText.setTextColor(getResources().getColor(R.color.b_violet));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(163, 62, 201, 255));
+        }else if (liveDataManager.getTextColor()==7){
+            tvText.setTextColor(getResources().getColor(R.color.b_pinkr));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(244, 91, 148, 255));
+        }else if (liveDataManager.getTextColor()==8){
+            tvText.setTextColor(getResources().getColor(R.color.b_orange));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(255, 162, 0, 255));
+        }else if (liveDataManager.getTextColor()==9){
+            tvText.setTextColor(getResources().getColor(R.color.b_white));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(255, 255, 255, 255));
+        }else if (liveDataManager.getTextColor()==10){
+            tvText.setTextColor(getResources().getColor(R.color.b_gray));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(80, 84, 92, 255));
+        }else if (liveDataManager.getTextColor()==11){
+            tvText.setTextColor(getResources().getColor(R.color.b_black));
+            mBoard.setTextColor(new TEduBoardController.TEduBoardColor(0, 0, 0, 255));
+        }
+    }
     /*
      *显示弹幕
      */
@@ -496,8 +688,10 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         if (liveDataManager.isOpenDanmu()){
             llDanmu.setVisibility(View.VISIBLE);
             rlDanmu.setVisibility(View.VISIBLE);
-            danmuAdpter=new DanmuAdpter(this,liveDataManager.getChatContentList());
-            danmulistView.setAdapter(danmuAdpter);
+            if (danmuContentAdpter==null){
+                danmuContentAdpter=new DanmuContentAdpter(this,R.layout.danmu_content_item,liveDataManager.getChatContentList());
+            }
+            danmulistView.setAdapter(danmuContentAdpter);
 
             if(liveDataManager.isJinYan()){
 //           禁言禁止手机软键盘
@@ -511,9 +705,9 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         }else {
             llDanmu.setVisibility(View.GONE);
             rlDanmu.setVisibility(View.GONE);
-            if (chatPopupWindow!=null){
-                chatPopupWindow.refreshChatContent(liveDataManager.getChatContentList());
-            }
+//            if (chatPopupWindow!=null){
+//                chatPopupWindow.refreshChatContent(liveDataManager.getChatContentList());
+//            }
         }
     }
     /*
@@ -521,18 +715,323 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
      */
     @Override
     public void colorItemOnclick(int position) {
-        if (colorList.get(position).equals("红")){
-            mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 0, 0, 255));
-        }else if (colorList.get(position).equals("白")){
-            mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 255, 255, 255));
-        }else if (colorList.get(position).equals("黄")){
-            mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 165, 0, 255));
-        }else if (colorList.get(position).equals("蓝")){
-            mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(0, 0, 255, 255));
-        }else if (colorList.get(position).equals("绿")){
-            mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(0, 255, 0, 255));
-        }else if (colorList.get(position).equals("紫")){
-            mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(138, 43, 226, 255));
+        if (mBoard!=null){
+            GradientDrawable myGrad = (GradientDrawable)ivColor.getBackground();
+            if (position==0){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_red));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(253, 64, 64, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_red));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_red));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(253, 64, 64, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(253, 64, 64, 255));
+                }
+            }else if (position==1){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_pink));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(250, 173, 123, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_pink));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_pink));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(250, 173, 123, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(250, 173, 123, 255));
+                }
+            }else if (position==2){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_yellow));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(224, 255, 164, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_yellow));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_yellow));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(224, 255, 164, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(224, 255, 164, 255));
+                }
+            }else if (position==3){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_green));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(40, 178, 139, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_green));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_green));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(40, 178, 139, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(40, 178, 139, 255));
+                }
+            }else if (position==4){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_skublue));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(91, 171, 230, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_skublue));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_skublue));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(91, 171, 230, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(91, 171, 230, 255));
+                }
+            }else if (position==5){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_blue));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(63, 90, 202, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_blue));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_blue));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(63, 90, 202, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(63, 90, 202, 255));
+                }
+            }else if (position==6){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_violet));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(163, 62, 201, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_violet));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_violet));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(163, 62, 201, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(163, 62, 201, 255));
+                }
+            }else if (position==7){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_pinkr));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(244, 91, 148, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_pinkr));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_pinkr));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(244, 91, 148, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(244, 91, 148, 255));
+                }
+            }else if (position==8){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_orange));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(255, 162, 0, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_orange));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_orange));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 162, 0, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 162, 0, 255));
+                }
+            }else if (position==9){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_white));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(255, 255, 255, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_white));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_white));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 255, 255, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(255, 255, 255, 255));
+                }
+            }else if (position==10){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_gray));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(80, 84, 92, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_gray));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_gray));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(80, 84, 92, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(80, 84, 92, 255));
+                }
+            }else if (position==11){
+                if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setTextColor(getResources().getColor(R.color.b_black));
+                    mBoard.setTextColor(new TEduBoardController.TEduBoardColor(0, 0, 0, 255));
+                }else if (liveDataManager.getWitchTools().equals("2")){
+                    if (liveDataManager.getXingzhuang()==2||liveDataManager.getXingzhuang()==3){
+                        myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_black));
+                    }else {
+                        myGrad.setColor(getResources().getColor(R.color.b_black));
+                    }
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(0, 0, 0, 255));
+                }else {
+                    mBoard.setBrushColor(new TEduBoardController.TEduBoardColor(0, 0, 0, 255));
+                }
+            }
+        }
+    }
+    /*
+     *选择形状
+     */
+    @Override
+    public void xiangZhuangOnclick(int type) {
+        LinearLayout.LayoutParams lp=(LinearLayout.LayoutParams)ivColor.getLayoutParams();
+        if (mBoard!=null){
+            if (type==0){
+                //实心矩形
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_RECT_SOLID);
+                ivColor.setBackgroundResource(R.drawable.changfangxing);
+                lp.width= getResources().getDimensionPixelSize(R.dimen.dp_20);
+                lp.height=getResources().getDimensionPixelSize(R.dimen.dp_20);
+            }else if (type==1){
+                //实心椭圆
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_OVAL_SOLID);
+                ivColor.setBackgroundResource(R.drawable.tuoyuan_bg);
+                lp.width=getResources().getDimensionPixelSize(R.dimen.dp_23);
+                lp.height=getResources().getDimensionPixelSize(R.dimen.dp_17);
+            }else if (type==2){
+                //空心正方形
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_RECT);
+                ivColor.setBackgroundResource(R.drawable.zhengfangxing_bg);
+                lp.width=getResources().getDimensionPixelSize(R.dimen.dp_20);
+                lp.height=getResources().getDimensionPixelSize(R.dimen.dp_20);
+            }else if (type==3){
+                //空心正圆形
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_OVAL);
+                ivColor.setBackgroundResource(R.drawable.yuan);
+                lp.width=getResources().getDimensionPixelSize(R.dimen.dp_23);
+                lp.height=getResources().getDimensionPixelSize(R.dimen.dp_17);
+            }
+            GradientDrawable myGrad = (GradientDrawable)ivColor.getBackground();
+            if (liveDataManager.getLineColor()==0){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_red));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_red));
+                }
+            }else if (liveDataManager.getLineColor()==1){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_pink));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_pink));
+                }
+            }else if (liveDataManager.getLineColor()==2){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_yellow));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_yellow));
+                }
+            }else if (liveDataManager.getLineColor()==3){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_green));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_green));
+                }
+
+            }else if (liveDataManager.getLineColor()==4){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_skublue));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_skublue));
+                }
+
+            }else if (liveDataManager.getLineColor()==5){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_blue));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_blue));
+                }
+
+            }else if (liveDataManager.getLineColor()==6){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_violet));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_violet));
+                }
+
+            }else if (liveDataManager.getLineColor()==7){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_pinkr));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_pinkr));
+                }
+
+            }else if (liveDataManager.getLineColor()==8){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_orange));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_orange));
+                }
+
+            }else if (liveDataManager.getLineColor()==9){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_white));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_white));
+                }
+
+            }else if (liveDataManager.getLineColor()==10){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_gray));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_gray));
+                }
+
+            }else if (liveDataManager.getLineColor()==11){
+                if (type==2||type==3){
+                    myGrad.setStroke(getResources().getDimensionPixelSize(R.dimen.dp_2),getResources().getColor(R.color.b_black));
+                }else {
+                    myGrad.setColor(getResources().getColor(R.color.b_black));
+                }
+            }
+        }
+        ivColor.setLayoutParams(lp);
+    }
+    /*
+     *选择字体大小或线粗细
+     */
+    @Override
+    public void seekBarOnclick(int progress) {
+        if (mBoard!=null){
+            if (liveDataManager.getWitchTools().equals("1")||liveDataManager.getWitchTools().equals("2")){
+                mBoard.setBrushThin(progress);
+            }else if (liveDataManager.getWitchTools().equals("3")){
+                tvText.setText(String.valueOf(progress));
+                mBoard.setTextSize(progress);
+            }
+        }
+    }
+    /*
+     *选择线条
+     */
+    @Override
+    public void xianOnclick(int type) {
+        if (mBoard!=null){
+            if (type==1){
+                //曲线
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_PEN);
+            }else if (type==2){
+                //直线
+                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_LINE);
+            }
         }
     }
 
@@ -607,12 +1106,11 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
 //            请求与老师连麦反馈
             if (jo.getString("result").equals("1")){
                 toBroadcastClass();
-//                mvideoFragmentListener.lianMai(true);
             }else if (jo.getString("result").equals("2")){
-//                mvideoFragmentListener.lianMai(false);
-                ToastUtil.showToast1(StudentLiveActivity.this, "", "XXX拒绝了连麦请求");
+                ToastUtil.showToast1(StudentLiveActivity.this, "", dataManager.getTeacherName()+"拒绝了连麦请求");
             }
         }else if (jo.getString("action").equals("kickOut")){
+            //踢出直播间
             quitOpenGroup();
         }else if (jo.getString("action").equals("brushEnable")){
 //            开启画笔
@@ -626,14 +1124,13 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             tools.setVisibility(View.GONE);
             if (mBoard!=null) {
                 mBoard.setDrawEnable(false);
-                mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_PEN);
             }
         }
     }
     /*
      *发送群组IM
      */
-    private void sendGroupCustomMessage(String action, String sender, String info) {
+    public void sendGroupCustomMessage(String action, String sender, String info) {
         Map<String, String> map = new HashMap<>();
         map.put("action", action);
         map.put("sender", sender);
@@ -662,24 +1159,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     @Override
     public void onTICRecvGroupTextMessage(String fromUserId, String text) {
         JSONObject jo = JSON.parseObject(text);
-        if (jo.getString("action").equals("studentJoin")) {
-            List<StudentInfor> list = JSON.parseArray(jo.getString("students"),StudentInfor.class);
-            Map<String, StudentInfor> joinStudentsMap;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                joinStudentsMap = list.stream().collect(Collectors.toMap(StudentInfor::getUserCode, Function.identity(), (key1, key2) -> key2));
-            }else {
-                joinStudentsMap= new HashMap<String, StudentInfor>();
-                for (StudentInfor studentInfor : list) {
-                    joinStudentsMap.put(studentInfor.getUserCode(), studentInfor);
-                }
-            }
-            joinStudentsMap.remove(dataManager.getUserCode());
-            liveDataManager.getOnLineStudentsMap().putAll(joinStudentsMap);
-            if (onLineStudentListFragment!=null){
-                onLineStudentListFragment.showShangKeList();
-            }
-
-        } else if (jo.getString("action").equals("studentExit")) {
+        if (jo.getString("action").equals("studentExit")) {
             String exitStudent=jo.getString("studentIds").toString();
             List<String> list = Arrays.asList(exitStudent.split(","));
             for (int i=0;i<list.size();i++){
@@ -689,6 +1169,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 onLineStudentListFragment.showShangKeList();
             }
         }else if (jo.getString("action").equals("classOver")){
+            //课堂结束
             quitOpenGroup();
         }
     }
@@ -715,17 +1196,18 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 }
             }
         } else if (jo.getString("action").equals("msg")) {
-            ChatContent chatContent=new ChatContent();
-            chatContent.setChatName(jo.getString("sender"));
-            chatContent.setChatContent(jo.getString("info"));
-            liveDataManager.getChatContentList().add(chatContent);
+            String chatContent=jo.getString("sender")+": "+jo.getString("info");
             if (liveDataManager.isOpenDanmu()){
-                if (danmuPopupWindow!=null){
-                    danmuPopupWindow.refreshChatContent(liveDataManager.getChatContentList());
-                }
+                danmuContentAdpter.add(chatContent);
             }else {
                 if(chatPopupWindow!=null){
-                    chatPopupWindow.refreshChatContent(liveDataManager.getChatContentList());
+                    if (!chatPopupWindow.isShowing()){
+                        ivChat.setImageDrawable(getDrawable(R.mipmap.chat_red));
+                    }
+                    chatPopupWindow.addChatContent(chatContent);
+                }else {
+                    liveDataManager.getChatContentList().add(chatContent);
+                    ivChat.setImageDrawable(getDrawable(R.mipmap.chat_red));
                 }
             }
         }else if(jo.getString("action").equals("talkDisable")){
@@ -753,8 +1235,80 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 if (chatPopupWindow!=null){
                     EditText messageInput=chatPopupWindow.getContentView().findViewById(R.id.message_input);
                     messageInput.setInputType(InputType.TYPE_CLASS_TEXT);
-                    messageInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_edit));
+                    messageInput.setBackground(getResources().getDrawable(R.drawable.bg_edit));
                 }
+            }
+        }else if (jo.getString("action").equals("teacherJoin")){
+            //老师进入教室
+            JSONObject info = JSON.parseObject(jo.getString("info"));
+            dataManager.setTeacherCode(fromUserId);
+            dataManager.setTeacherIcon(info.getString("avatar"));
+            dataManager.setTeacherName(info.getString("username"));
+            if (studentVideoListFragment!=null){
+                studentVideoListFragment.ShowTeacherVideo();
+            }
+        }else if (jo.getString("action").equals("teacherVideoOpen")){
+            //老师开启摄像头
+            liveDataManager.setTCameraOn(true);
+            if (studentVideoListFragment!=null){
+                studentVideoListFragment.teacherCameraState();
+            }
+            if (timeSDVideoListFragment!=null){
+                timeSDVideoListFragment.teacherCameraState();
+            }
+        }else if (jo.getString("action").equals("teacherVideoClose")){
+            //老师关闭摄像头
+            liveDataManager.setTCameraOn(false);
+            if (studentVideoListFragment!=null){
+                studentVideoListFragment.teacherCameraState();
+            }
+            if (timeSDVideoListFragment!=null){
+                timeSDVideoListFragment.teacherCameraState();
+            }
+        }else if (jo.getString("action").equals("studentVideoClose")){
+            //同学关闭摄像头
+            liveDataManager.getOnLineStudentsMap().get(fromUserId).setCameraOn(false);
+            if (timeSDVideoListFragment!=null){
+                timeSDVideoListFragment.classmateCameraState(fromUserId);
+            }
+        }else if (jo.getString("action").equals("studentVideoOpen")){
+            //同学关闭摄像头
+            liveDataManager.getOnLineStudentsMap().get(fromUserId).setCameraOn(true);
+            if (timeSDVideoListFragment!=null){
+                timeSDVideoListFragment.classmateCameraState(fromUserId);
+            }
+        }else if (jo.getString("action").equals("studentJoin")) {
+            //同学加入课堂
+            String info=jo.getString("info");
+            StudentInfor studentInfor = JSONObject.parseObject(info,StudentInfor.class);
+            liveDataManager.getOnLineStudentsMap().put(fromUserId,studentInfor);
+            if (onLineStudentListFragment!=null){
+                onLineStudentListFragment.showShangKeList();
+            }
+
+        }else if (jo.getString("action").equals("cameraFull")) {
+            //老师发起全屏
+            String info=jo.getString("info");
+            if (qpPopupWindow==null){
+                qpPopupWindow=new StudentLivePopupWindow(this);
+            }
+            if (timeSDVideoListFragment!=null){
+                qpPopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),info,"TRTC");
+            }else if (studentVideoListFragment!=null){
+                qpPopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),info,"VIDEO");
+            }
+
+        }else if (jo.getString("action").equals("cameraBack")) {
+            //老师发起退出全屏
+            String info=jo.getString("info");
+            if (qpPopupWindow!=null){
+                qpPopupWindow.dismiss();
+                qpPopupWindow=null;
+            }
+            if (timeSDVideoListFragment!=null){
+                timeSDVideoListFragment.showView(info);
+            }else if (studentVideoListFragment!=null){
+                studentVideoListFragment.showView(info);
             }
         }
     }
@@ -1026,18 +1580,38 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         super.onStop();
 
     }
+    /**
+     * 监听Back键按下事件,方法2:
+     * 注意:
+     * 返回值表示:是否能完全处理该事件
+     * 在此处返回false,所以会继续传播该事件.
+     * 在具体项目中此处的返回值视情况而定.
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+            DialogUtil.showDialog(this, "退出后本节课将会结束，确定要退出课堂吗？",
+                    "确定",  "取消",false, new DialogUtil.AlertDialogBtnClickListener() {
+                        @Override
+                        public void clickPositive() {
+                            quitOpenGroup();
+                        }
+
+                        @Override
+                        public void clickNegative() {
+                        }
+                    });
+            return true;
+        }else {
+            return super.onKeyDown(keyCode, event);
+        }
+    }
     @Override
     protected void onDestroy() {
         Log.e("生命周期","StudentLiveActivity-onDestroy");
-        if (studentVideoListFragment!=null){
-            studentVideoListFragment=null;
+        if (!isquitClass) {
+            quitOpenGroup();
         }
-        if (onLineStudentListFragment!=null){
-            onLineStudentListFragment=null;
-        }
-        liveDataManager.destroyInstance();
-        quitOpenGroup();
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         super.onDestroy();
 
     }

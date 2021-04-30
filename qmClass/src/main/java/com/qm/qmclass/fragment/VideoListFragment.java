@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.alibaba.fastjson.JSON;
+import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.qm.qmclass.R;
 import com.qm.qmclass.activitys.TeacherLiveActivity;
@@ -30,7 +31,11 @@ import com.qm.qmclass.base.QMSDK;
 import com.qm.qmclass.qmmanager.QMClassManagerImpl;
 import com.qm.qmclass.tencent.TICManager;
 import com.qm.qmclass.tencent.TICVideoRootView;
+import com.qm.qmclass.tencent.TRTCView;
+import com.qm.qmclass.utils.LivePopupWindow;
 import com.qm.qmclass.utils.PermissionUtils;
+import com.qm.qmclass.utils.RefreshJianKongListener;
+import com.qm.qmclass.utils.RoundImageView;
 import com.tencent.liteav.basic.log.TXCLog;
 import com.tencent.rtmp.ui.TXCloudVideoView;
 import com.tencent.trtc.TRTCCloud;
@@ -41,6 +46,7 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.IllegalFormatCodePointException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,24 +62,29 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
     //trtc
     TRTCCloud mTrtcCloud;
     // 实时音视频视图控件
-    TICVideoRootView teacherVideoView;
+    RelativeLayout teacherVideoView;
+    TXCloudVideoView teacherLocalVideoView;
 //    private RecyclerView studentVideolist;
     private TextView teachername;
     private RelativeLayout rlTools;
     private LinearLayout shouqi;
     private LinearLayout llTool;
+    private RoundImageView teacherIcon;
     private LinearLayout teacherShexiangtou;
     private LinearLayout teacherMaike;
     private LinearLayout teacherQiehuan;
     private LinearLayout teacherQuanping;
     private ScrollView svStudent;
     private LinearLayout studentVideo;
-    private ImageView addstudent;
+    private LinearLayout addstudent;
     private String videoState;
 //    private List<StudentVideoList> studentList=new ArrayList<StudentVideoList>();
-    private HashMap<String, Object> map = new HashMap<>();
-    boolean mEnableFrontCamera = true;
+    private LinkedHashMap<String, View> studentViewMap = new LinkedHashMap<>();
     private boolean isVideoToolShow=true;
+    private RefreshJianKongListener refreshJianKongListener;
+    boolean isFrontCamera = true;
+    private TRTCView trtcView;
+    private LivePopupWindow qpPopupWindow;
 
     @Nullable
     @Override
@@ -81,18 +92,23 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
         view = inflater.inflate(R.layout.fragment_videolist, container, false);
         teacherLiveActivity=(TeacherLiveActivity)getActivity();
         dataManager =DataManager.getInstance();
+        trtcView=TRTCView.getInstance(teacherLiveActivity);
         liveDataManager=LiveDataManager.getInstance();
+        liveDataManager.setVideoListFragment(this);
+        teacherVideoView = (RelativeLayout) view.findViewById(R.id.teacher_videoview);
         teachername=(TextView) view.findViewById(R.id.teachername);
         rlTools=(RelativeLayout) view.findViewById(R.id.rl_tools);
         shouqi=(LinearLayout) view.findViewById(R.id.shouqi);
         llTool=(LinearLayout) view.findViewById(R.id.ll_tool);
         teacherShexiangtou=(LinearLayout) view.findViewById(R.id.teacher_shexiangtou);
+        teacherIcon=(RoundImageView) view.findViewById(R.id.teacher_icon);
+        teacherIcon.setVisibility(View.GONE);
         teacherMaike=(LinearLayout) view.findViewById(R.id.teacher_maike);
         teacherQiehuan=(LinearLayout) view.findViewById(R.id.teacher_qiehuan);
         teacherQuanping=(LinearLayout) view.findViewById(R.id.teacher_quanping);
         svStudent=(ScrollView) view.findViewById(R.id.sv_student);
         studentVideo=(LinearLayout) view.findViewById(R.id.student_video);
-        addstudent=(ImageView) view.findViewById(R.id.addstudent);
+        addstudent=(LinearLayout) view.findViewById(R.id.addstudent);
         shouqi.setOnClickListener(this);
         teacherShexiangtou.setOnClickListener(this);
         teacherMaike.setOnClickListener(this);
@@ -103,6 +119,7 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
         mTicManager.addEventListener(VideoListFragment.this);
         CheckPermission();
         hidenAnimation();
+        teachername.setText(dataManager.getUserName());
         return view;
     }
     @Override
@@ -115,49 +132,133 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
             }
 
         }else if (v.getId()==R.id.teacher_shexiangtou){
-
+            if (liveDataManager.isTCameraOn()){
+                liveDataManager.setTCameraOn(false);
+                startLocalVideo(false);
+                teacherLiveActivity.sendGroupCustomMessage("teacherVideoClose",dataManager.getUserCode(),"");
+            }else {
+                liveDataManager.setTCameraOn(true);
+                startLocalVideo(true);
+                teacherLiveActivity.sendGroupCustomMessage("teacherVideoOpen",dataManager.getUserCode(),"");
+            }
 
         }else if (v.getId()==R.id.teacher_maike){
-
+            if (liveDataManager.isTMaikeOn()){
+                //4. 关闭音频
+                liveDataManager.setTMaikeOn(false);
+                enableAudioCapture(false);
+            }else {
+                //4. 开始音频
+                liveDataManager.setTMaikeOn(true);
+                enableAudioCapture(true);
+            }
         }else if (v.getId()==R.id.teacher_qiehuan){
+            if (isFrontCamera){
+                isFrontCamera=false;
+                mTrtcCloud.switchCamera();
+            }else {
+                isFrontCamera=true;
+                mTrtcCloud.switchCamera();
+            }
 
         }else if (v.getId()==R.id.teacher_quanping){
-
+           showQP(v,dataManager.getUserCode());
         }else if (v.getId()==R.id.addstudent){
-
+            teacherLiveActivity.showAddStudent(v);
         }
+    }
+    //---------trtc--------------
+    private void initTrtc() {
+        //1、获取trtc
+        mTrtcCloud = mTicManager.getTRTCClound();
+//        设置使用媒体音量
+        mTrtcCloud.setSystemVolumeType(TRTCSystemVolumeTypeMedia);
+
+        if (mTrtcCloud != null) {
+            //3、开始本地视频图像
+            startLocalVideo(true);
+
+            //4. 开始音频
+            enableAudioCapture(true);
+        }
+    }
+
+    private void unInitTrtc() {
+        if (mTrtcCloud != null) {
+            //3、停止本地视频图像
+            mTrtcCloud.stopLocalPreview();
+            enableAudioCapture(false);
+        }
+    }
+
+    private void startLocalVideo(boolean enable) {
+        if (mTrtcCloud != null) {
+            // 大画面的编码器参数设置
+            TRTCCloudDef.TRTCVideoEncParam encParam = new TRTCCloudDef.TRTCVideoEncParam();
+            encParam.videoResolution = TRTCCloudDef.TRTC_VIDEO_RESOLUTION_640_360;
+            encParam.videoFps = 15;
+            encParam.videoBitrate = 550;
+            // videoResolutionMode 设置为横屏
+            encParam.videoResolutionMode = TRTCCloudDef.TRTC_VIDEO_RESOLUTION_MODE_LANDSCAPE;
+            mTrtcCloud.setVideoEncoderParam(encParam);
+//            mTrtcCloud.setRemoteViewFillMode(false);
+//            final String usrid = dataManager.getUserCode();
+            if (liveDataManager.getTrtcViewmap().get(dataManager.getUserCode())==null){
+                teacherLocalVideoView = trtcView.getTRTCView();
+                teacherLocalVideoView.setUserId(dataManager.getUserCode());
+                teacherLocalVideoView.setVisibility(View.VISIBLE);
+                teacherVideoView.addView(teacherLocalVideoView);
+                liveDataManager.getTrtcViewmap().put(dataManager.getUserCode(),teacherLocalVideoView);
+            }
+            if (enable) {
+                teacherIcon.setVisibility(View.GONE);
+                teacherVideoView.setVisibility(View.VISIBLE);
+                mTrtcCloud.startLocalPreview(isFrontCamera, teacherLocalVideoView);
+                liveDataManager.getTrtcViewmap().put(dataManager.getUserCode(),teacherLocalVideoView);
+            } else {
+                teacherVideoView.setVisibility(View.GONE);
+                teacherIcon.setVisibility(View.VISIBLE);
+                Glide.with(teacherLiveActivity).load(dataManager.getUserIcon()).skipMemoryCache(true).into(teacherIcon);
+                mTrtcCloud.stopLocalPreview();
+            }
+        }
+    }
+
+    private void enableAudioCapture(boolean bEnable) {
+        if (mTrtcCloud != null) {
+            if (bEnable) {
+                mTrtcCloud.startLocalAudio();
+            } else {
+                mTrtcCloud.stopLocalAudio();
+            }
+        }
+
     }
 //    创建一个新学生视频View
     private View createView(final String studentCode) {
         //首先引入要添加的View
-        final View view=View.inflate(getActivity(), R.layout.student_video_item, null);
-        map.put(studentCode,view);
+        final View studentVideoItemView=View.inflate(getActivity(), R.layout.student_video_item, null);
         //找到里面需要动态改变的控件
-        TICVideoRootView studentVideoview = (TICVideoRootView) view.findViewById(R.id.student_videoview);
-        TXCloudVideoView localVideoView = studentVideoview.getCloudVideoViewByIndex(0);
-        localVideoView.setUserId(studentCode);
-        if (localVideoView != null) {
-            // 启动远程画面的解码和显示逻辑，FillMode 可以设置是否显示黑边
-            mTrtcCloud.setRemoteViewFillMode(studentCode, TRTCCloudDef.TRTC_VIDEO_RENDER_MODE_FILL);
-            mTrtcCloud.startRemoteView(studentCode, TRTCCloudDef.TRTC_VIDEO_STREAM_TYPE_BIG, localVideoView);
-            localVideoView.setVisibility(View.VISIBLE);
-        }
-        TextView studentname = (TextView) view.findViewById(R.id.studentname);
-        final LinearLayout sShouqi = (LinearLayout) view.findViewById(R.id.s_shouqi);
-        LinearLayout sVideoHuabi = (LinearLayout) view.findViewById(R.id.s_video_huabi);
-        LinearLayout sVideoLanmai = (LinearLayout) view.findViewById(R.id.s_video_lanmai);
-        LinearLayout sVideoQuanping = (LinearLayout) view.findViewById(R.id.s_video_quanping);
-        final RelativeLayout sRlTools = (RelativeLayout) view.findViewById(R.id.s_rl_tools);
-        final RelativeLayout rlItem = (RelativeLayout) view.findViewById(R.id.rl_item);
-        final LinearLayout sLlTool = (LinearLayout) view.findViewById(R.id.s_ll_tool);
+        RelativeLayout studentVideoview = (RelativeLayout) studentVideoItemView.findViewById(R.id.student_videoview);
+        TextView studentname = (TextView) studentVideoItemView.findViewById(R.id.studentname);
+
+        final LinearLayout sShouqi = (LinearLayout) studentVideoItemView.findViewById(R.id.s_shouqi);
+        LinearLayout sVideoHuabi = (LinearLayout) studentVideoItemView.findViewById(R.id.s_video_huabi);
+        LinearLayout sVideoLanmai = (LinearLayout) studentVideoItemView.findViewById(R.id.s_video_lanmai);
+        LinearLayout sVideoQuanping = (LinearLayout) studentVideoItemView.findViewById(R.id.s_video_quanping);
+        final RelativeLayout sRlTools = (RelativeLayout) studentVideoItemView.findViewById(R.id.s_rl_tools);
+        final RelativeLayout rlItem = (RelativeLayout) studentVideoItemView.findViewById(R.id.rl_item);
+        final LinearLayout sLlTool = (LinearLayout) studentVideoItemView.findViewById(R.id.s_ll_tool);
+
         sRlTools.setBackgroundColor(getResources().getColor(R.color.hlfTransparent));
         sShouqi.setRotation(180);
         RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) sShouqi.getLayoutParams();
         lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         sShouqi.setLayoutParams(lp);
         //给控件赋值
-        studentname.setText(liveDataManager.getAllStudentsMap().get(studentCode).getNickName());
-
+        if (liveDataManager.getAllStudentsMap().get(studentCode)!=null){
+            studentname.setText(liveDataManager.getAllStudentsMap().get(studentCode).getNickName());
+        }
         //设置每个View的点击事件
         sShouqi.setOnClickListener(new View.OnClickListener() {
             boolean isstudentVideoToolShow=false;
@@ -195,22 +296,22 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
         sVideoHuabi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!liveDataManager.getOnLineStudentsMap().get(studentCode).isHuabiOn()){
-//老师开启学生画笔
+                if (!liveDataManager.getAllStudentsMap().get(studentCode).isHuabiOn()){
+                   //老师开启学生画笔
                     Map<String, String> map = new HashMap<>();
                     map.put("action", "brushEnable");
                     String str = JSON.toJSONString(map);
                     final byte msg[] = str.getBytes();
                     teacherLiveActivity.sendCustomMessage(studentCode,msg);
-                    liveDataManager.getOnLineStudentsMap().get(studentCode).setHuabiOn(true);
-                }else if (liveDataManager.getOnLineStudentsMap().get(studentCode).isLianMai()){
-//老师关闭学生画笔
+                    liveDataManager.getAllStudentsMap().get(studentCode).setHuabiOn(true);
+                }else if (liveDataManager.getAllStudentsMap().get(studentCode).getLianMaiState()==1&&liveDataManager.getAllStudentsMap().get(studentCode).isHuabiOn()){
+                   //老师关闭学生画笔
                     Map<String, String> map = new HashMap<>();
                     map.put("action", "brushDisable");
                     String str = JSON.toJSONString(map);
                     final byte msg[] = str.getBytes();
                     teacherLiveActivity.sendCustomMessage(studentCode,msg);
-                    liveDataManager.getOnLineStudentsMap().get(studentCode).setHuabiOn(false);
+                    liveDataManager.getAllStudentsMap().get(studentCode).setHuabiOn(false);
                 }
 
             }
@@ -218,14 +319,14 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
         sVideoLanmai.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (liveDataManager.getOnLineStudentsMap().get(studentCode).isLianMai()){
+                if (liveDataManager.getAllStudentsMap().get(studentCode).getLianMaiState()==1){
 //                    老师发起让学生挂麦
                     Map<String, String> map = new HashMap<>();
                     map.put("action", "micClose");
                     String str = JSON.toJSONString(map);
                     final byte msg[] = str.getBytes();
                     teacherLiveActivity.sendCustomMessage(studentCode,msg);
-                    liveDataManager.getOnLineStudentsMap().get(studentCode).setLianMai(false);
+                    liveDataManager.getAllStudentsMap().get(studentCode).setLianMaiState(3);
                 }
             }
         });
@@ -233,111 +334,146 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
             @Override
             public void onClick(View v) {
                 Toast.makeText(getActivity(),studentCode+"sVideoQuanping",Toast.LENGTH_SHORT).show();
-
-//                RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) rlItem.getLayoutParams();
-//                lp.height=RelativeLayout.LayoutParams.MATCH_PARENT;
-//                lp.width=RelativeLayout.LayoutParams.MATCH_PARENT;
-//                rlItem.setLayoutParams(lp);
+                showQP(v,studentCode);
             }
         });
-        return view;
+        studentViewMap.put(studentCode,studentVideoItemView);
+        return studentVideoItemView;
     }
 //    获取学生视频view
     private View getVideoView(String studentid) {
-        view=(View) map.get(studentid);
-        return view;
+        View studentVideoItemView=studentViewMap.get(studentid);
+        return studentVideoItemView;
     }
 
-    //---------trtc--------------
-    private void initTrtc() {
-        //1、获取trtc
-        mTrtcCloud = mTicManager.getTRTCClound();
-//        设置使用媒体音量
-        mTrtcCloud.setSystemVolumeType(TRTCSystemVolumeTypeMedia);
-
-        if (mTrtcCloud != null) {
-            teacherVideoView = (TICVideoRootView) view.findViewById(R.id.teacher_videoview);
-            TXCloudVideoView localVideoView = teacherVideoView.getCloudVideoViewByIndex(0);
-            localVideoView.setUserId(dataManager.getUserCode());
-            //3、开始本地视频图像
-            startLocalVideo(true);
-
-            //4. 开始音频
-            enableAudioCapture(true);
-        }
-    }
-
-    private void unInitTrtc() {
-        if (mTrtcCloud != null) {
-            //3、停止本地视频图像
-            mTrtcCloud.stopLocalPreview();
-            enableAudioCapture(false);
-        }
-    }
-
-    private void startLocalVideo(boolean enable) {
-        if (mTrtcCloud != null) {
-            // 大画面的编码器参数设置
-            TRTCCloudDef.TRTCVideoEncParam encParam = new TRTCCloudDef.TRTCVideoEncParam();
-            encParam.videoResolution = TRTCCloudDef.TRTC_VIDEO_RESOLUTION_640_360;
-            encParam.videoFps = 15;
-            encParam.videoBitrate = 550;
-            // videoResolutionMode 设置为横屏
-            encParam.videoResolutionMode = TRTCCloudDef.TRTC_VIDEO_RESOLUTION_MODE_LANDSCAPE;
-            mTrtcCloud.setVideoEncoderParam(encParam);
-//            mTrtcCloud.setRemoteViewFillMode(false);
-            final String usrid = dataManager.getUserCode();
-            TXCloudVideoView localVideoView = teacherVideoView.getCloudVideoViewByUseId(usrid);
-            localVideoView.setUserId(usrid);
-            localVideoView.setVisibility(View.VISIBLE);
-            if (enable) {
-                mTrtcCloud.startLocalPreview(mEnableFrontCamera, localVideoView);
-            } else {
-                mTrtcCloud.stopLocalPreview();
-            }
-        }
-    }
-
-    private void enableAudioCapture(boolean bEnable) {
-        if (mTrtcCloud != null) {
-            if (bEnable) {
-                mTrtcCloud.startLocalAudio();
-            } else {
-                mTrtcCloud.stopLocalAudio();
-            }
-        }
-
-    }
     //    对应的远端主路（即摄像头）画面的状态通知
     @Override
     public void onTICUserVideoAvailable(String userId, boolean available) {
-        if (available) {
-            String broadId=dataManager.getAppid() + "_" + dataManager.getCourseId() + "_pusher";
-            if (!userId.equals(broadId)&&!userId.equals(dataManager.getUserCode())){
-                studentVideo.addView(createView(userId));
+    }
+    //摄像头状态改变
+    public void studentCameraState(String userCode){
+        View studentVideoView=getVideoView(userCode);
+        RelativeLayout rlview = (RelativeLayout) studentVideoView.findViewById(R.id.student_videoview);
+        LinearLayout onlianmai = (LinearLayout) studentVideoView.findViewById(R.id.onlianmai);
+        RoundImageView studentIcon=(RoundImageView) studentVideoView.findViewById(R.id.student_icon);
+        if (liveDataManager.getAllStudentsMap().get(userCode).isCameraOn()){
+            TXCloudVideoView studentTRTCView=liveDataManager.getTrtcViewmap().get(userCode);
+            if (studentTRTCView != null) {
+                // 启动远程画面的解码和显示逻辑，FillMode 可以设置是否显示黑边
+                mTrtcCloud.setRemoteViewFillMode(userCode, TRTCCloudDef.TRTC_VIDEO_RENDER_MODE_FILL);
+                mTrtcCloud.startRemoteView(userCode, studentTRTCView);
+                studentTRTCView.setVisibility(View.VISIBLE);
             }
-        } else {
-            if (!map.isEmpty()){
-                TICVideoRootView ticVideoRootView=(TICVideoRootView)getVideoView(userId).findViewById(R.id.student_videoview);
-                if (ticVideoRootView!=null){
-                    ticVideoRootView.getCloudVideoViewByUseId(userId).setVisibility(View.GONE);
-                    mTrtcCloud.stopRemoteView(userId, TRTCCloudDef.TRTC_VIDEO_STREAM_TYPE_BIG);
-                    studentVideo.removeView(getVideoView(userId));
+            if (videoState.equals("JK")){
+                refreshJianKongListener.refreshSomeOne(userCode);
+            }else if(videoState.equals("TRTC")){
+                onlianmai.setVisibility(View.GONE);
+                studentIcon.setVisibility(View.GONE);
+                rlview.setVisibility(View.VISIBLE);
+                //                添加TRTC视图
+                ViewGroup studentTRTCViewParent=(ViewGroup) studentTRTCView.getParent();
+                if (studentTRTCViewParent!=null){
+                    studentTRTCViewParent.removeAllViews();
                 }
+                rlview.addView(studentTRTCView);
             }
-
+        }else {
+            if (videoState.equals("JK")){
+                refreshJianKongListener.refreshSomeOne(userCode);
+            }else if (videoState.equals("TRTC")){
+                //                移除TRTC视图
+                rlview.removeView(liveDataManager.getTrtcViewmap().get(userCode));
+                rlview.setVisibility(View.GONE);
+                onlianmai.setVisibility(View.GONE);
+                studentIcon.setVisibility(View.VISIBLE);
+                Glide.with(teacherLiveActivity).load(liveDataManager.getAllStudentsMap().get(userCode).getAvatarUrl()).skipMemoryCache(true).into(studentIcon);
+            }
         }
+    }
+//    添加连麦学生视图
+    public void addStudentItem(String userCode){
+        View studentVideoItemView=createView(userCode);
+        //找到里面需要动态改变的控件
+        LinearLayout onlianmai = (LinearLayout) studentVideoItemView.findViewById(R.id.onlianmai);
+        RoundImageView studentIcon=(RoundImageView) studentVideoItemView.findViewById(R.id.student_icon);
+        if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==2){
+            onlianmai.setVisibility(View.VISIBLE);
+            studentIcon.setVisibility(View.GONE);
+        }
+        studentVideo.addView(studentVideoItemView);
+        if (videoState.equals("JK")){
+            refreshJianKongListener.refreshSomeOne(userCode);
+        }
+    }
+    // 拒绝连麦
+    public void refuseLianMai(String userCode){
+        if (getVideoView(userCode)!=null){
+            studentVideo.removeView(getVideoView(userCode));
+        }
+        studentViewMap.remove(userCode);
+        //            移除TRTC视图
+        liveDataManager.getTrtcViewmap().remove(userCode);
+
+        if (videoState.equals("JK")){
+            refreshJianKongListener.refreshSomeOne(userCode);
+        }
+
     }
 
     @Override
     public void onUserEnter(String userId) {
         TXCLog.i("退出加入房间", "TICManager: onUserEnter :" + userId );
-        Map<String, String> map = new HashMap<>();
-        map.put("studentId", userId);
-        map.put("type", "1");
-        String str = JSON.toJSONString(map);
-        teacherLiveActivity.sendGroupCustomMessage("micStuNotify",dataManager.getUserCode(),str);
-//        teacherLiveActivity.changeStudentListLMstate(userId,true);
+        String broadId=dataManager.getAppid() + "_" + dataManager.getCourseId() + "_pusher";
+        if (!userId.equals(broadId)){
+            Map<String, String> map = new HashMap<>();
+            map.put("studentId", userId);
+            map.put("type", "1");
+            String str = JSON.toJSONString(map);
+            teacherLiveActivity.sendGroupCustomMessage("micStuNotify",dataManager.getUserCode(),str);
+            if (liveDataManager.getAllStudentsMap().get(userId)!=null) {
+                liveDataManager.getAllStudentsMap().get(userId).setLianMaiState(1);
+            }
+//            创建TRTC视图
+            TXCloudVideoView studentTRTCView = trtcView.getTRTCView();
+            studentTRTCView.setUserId(userId);
+            if (studentTRTCView != null) {
+                // 启动远程画面的解码和显示逻辑，FillMode 可以设置是否显示黑边
+                mTrtcCloud.setRemoteViewFillMode(userId, TRTCCloudDef.TRTC_VIDEO_RENDER_MODE_FILL);
+                mTrtcCloud.startRemoteView(userId, studentTRTCView);
+                studentTRTCView.setVisibility(View.VISIBLE);
+            }
+//            添加TRTC视图
+            liveDataManager.getTrtcViewmap().put(userId,studentTRTCView);
+            View studentVideoView=getVideoView(userId);
+            if (studentVideoView==null){
+                studentVideoView=createView(userId);
+                studentVideo.addView(studentVideoView);
+            }
+            if (videoState.equals("TRTC")){
+                RelativeLayout rlview = (RelativeLayout) studentVideoView.findViewById(R.id.student_videoview);
+                LinearLayout onlianmai = (LinearLayout) studentVideoView.findViewById(R.id.onlianmai);
+                RoundImageView studentIcon=(RoundImageView) studentVideoView.findViewById(R.id.student_icon);
+                if (liveDataManager.getAllStudentsMap().get(userId).getLianMaiState()==2){
+                    onlianmai.setVisibility(View.VISIBLE);
+                    studentIcon.setVisibility(View.GONE);
+                }else {
+                    onlianmai.setVisibility(View.GONE);
+                }
+                if (liveDataManager.getAllStudentsMap().get(userId).isCameraOn()){
+                    studentIcon.setVisibility(View.GONE);
+                    //                添加列表视图
+                    rlview.addView(studentTRTCView);
+                }else {
+                    studentIcon.setVisibility(View.VISIBLE);
+                    Glide.with(teacherLiveActivity).load(liveDataManager.getAllStudentsMap().get(userId).getAvatarUrl()).skipMemoryCache(true).into(studentIcon);
+                }
+
+            }else if (videoState.equals("JK")){
+                if (videoState.equals("JK")){
+                    refreshJianKongListener.refreshSomeOne(userId);
+                }
+            }
+        }
     }
 
 
@@ -349,9 +485,73 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
         map.put("type", "2");
         String str = JSON.toJSONString(map);
         teacherLiveActivity.sendGroupCustomMessage("micStuNotify",dataManager.getUserCode(),str);
-        teacherLiveActivity.changeStudentListLMstate(userId,false);
-    }
 
+        if (liveDataManager.getAllStudentsMap().get(userId)!=null) {
+            liveDataManager.getAllStudentsMap().get(userId).setLianMaiState(3);
+            teacherLiveActivity.changeStudentListLMstate(userId,3);
+        }
+
+        if (videoState.equals("JK")&&refreshJianKongListener!=null){
+            refreshJianKongListener.refreshSomeOne(userId);
+        }
+
+        mTrtcCloud.stopRemoteView(userId);
+//            去掉列表视图
+        refuseLianMai(userId);
+    }
+    /*
+     *全屏
+     */
+    public void showQP(View view,final String userCode) {
+        if (qpPopupWindow==null){
+            qpPopupWindow=new LivePopupWindow(teacherLiveActivity);
+        }
+        qpPopupWindow.showQPPopupWindow(view,userCode);
+        teacherLiveActivity.sendGroupCustomMessage("cameraFull","",userCode);
+    }
+    /*
+     *退出全屏
+     */
+    public void cameraBack(String userCode){
+        qpPopupWindow=null;
+        if (userCode.equals(dataManager.getUserCode())){
+            TXCloudVideoView teacherTrtcView=liveDataManager.getTrtcViewmap().get(userCode);
+            ViewGroup teacherTrtcViewParent=(ViewGroup) teacherTrtcView.getParent();
+            if (teacherTrtcViewParent!=null){
+                teacherTrtcViewParent.removeAllViews();
+            }
+            teacherVideoView.addView(teacherTrtcView);
+        }else {
+            if (videoState.equals("TRTC")){
+                for(String key:liveDataManager.getTrtcViewmap().keySet()){
+                    if (key.equals(userCode)){
+                        View studentView=studentViewMap.get(key);
+                        RelativeLayout studentVideoview = (RelativeLayout) studentView.findViewById(R.id.student_videoview);
+                        LinearLayout onlianmai = (LinearLayout) studentView.findViewById(R.id.onlianmai);
+                        RoundImageView studentIcon=(RoundImageView) studentView.findViewById(R.id.student_icon);
+                        onlianmai.setVisibility(View.GONE);
+                        if (liveDataManager.getAllStudentsMap().get(key).isCameraOn()){
+                            studentIcon.setVisibility(View.GONE);
+                            //                添加列表视图
+                            TXCloudVideoView trtcView=liveDataManager.getTrtcViewmap().get(key);
+                            ViewGroup trtcViewParent=(ViewGroup) trtcView.getParent();
+                            if (trtcViewParent!=null){
+                                trtcViewParent.removeAllViews();
+                            }
+                            studentVideoview.addView(trtcView);
+                        }else {
+                            studentIcon.setVisibility(View.VISIBLE);
+                            Glide.with(teacherLiveActivity).load(liveDataManager.getAllStudentsMap().get(key).getAvatarUrl()).skipMemoryCache(true).into(studentIcon);
+                        }
+                    }
+                }
+
+            }else if (videoState.equals("JK")&&refreshJianKongListener!=null){
+                refreshJianKongListener.refreshSomeOne(userCode);
+            }
+        }
+
+    }
     @Override
     public void onTICUserSubStreamAvailable(String userId, boolean available) {
 
@@ -454,18 +654,46 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
             Log.e("生命周期","VideoListFragment-onHiddenChanged"+videoState);
             if (videoState.equals("TRTC")){
                 svStudent.setVisibility(View.VISIBLE);
+                if (liveDataManager.getTrtcViewmap().size()>1){
+                    for(String key:liveDataManager.getTrtcViewmap().keySet()){
+                        if (!key.equals(dataManager.getUserCode())){
+                            View studentView=studentViewMap.get(key);
+                            RelativeLayout studentVideoview = (RelativeLayout) studentView.findViewById(R.id.student_videoview);
+                            LinearLayout onlianmai = (LinearLayout) studentView.findViewById(R.id.onlianmai);
+                            RoundImageView studentIcon=(RoundImageView) studentView.findViewById(R.id.student_icon);
+                            onlianmai.setVisibility(View.GONE);
+                            if (liveDataManager.getAllStudentsMap().get(key).isCameraOn()){
+                                studentIcon.setVisibility(View.GONE);
+                                //                添加列表视图
+                                TXCloudVideoView trtcView=liveDataManager.getTrtcViewmap().get(key);
+                                ViewGroup trtcViewParent=(ViewGroup) trtcView.getParent();
+                                if (trtcViewParent!=null){
+                                    trtcViewParent.removeAllViews();
+                                }
+                                studentVideoview.addView(trtcView);
+                            }else {
+                                studentIcon.setVisibility(View.VISIBLE);
+                                Glide.with(teacherLiveActivity).load(liveDataManager.getAllStudentsMap().get(key).getAvatarUrl()).skipMemoryCache(true).into(studentIcon);
+                            }
+
+//                    ViewGroup studentViewParent=(ViewGroup) studentView.getParent();
+//                    if (studentViewParent!=null){
+//                        studentViewParent.removeAllViews();
+//                    }
+//                    studentVideo.addView(studentView);
+                        }
+                    }
+                }
             }else if (videoState.equals("JK")){
-                if (mTrtcCloud!=null){
-                    mTrtcCloud.stopAllRemoteView();
-                }
-                if (studentVideo!=null){
-                    studentVideo.removeAllViews();
-                }
+//                if (studentVideo!=null){
+//                    studentVideo.removeAllViews();
+//                }
                 svStudent.setVisibility(View.GONE);
             }
         }
         super.onHiddenChanged(hidden);
     }
+
     @Override
     public void onResume() {
         Log.e("生命周期","VideoListFragment-onResume");
@@ -488,6 +716,9 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
     public void onDestroyView() {
         Log.e("生命周期","VideoListFragment-onDestroyView");
         unInitTrtc();
+        if (mTrtcCloud != null) {
+            mTrtcCloud.stopAllRemoteView();
+        }
         if (studentVideo!=null){
             studentVideo.removeAllViews();
         }
@@ -501,5 +732,9 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
     public void onDestroy() {
         Log.e("生命周期","VideoListFragment-onDestroy");
         super.onDestroy();
+    }
+
+    public void setRefreshJianKongListener(RefreshJianKongListener refreshJianKongListener) {
+        this.refreshJianKongListener = refreshJianKongListener;
     }
 }
