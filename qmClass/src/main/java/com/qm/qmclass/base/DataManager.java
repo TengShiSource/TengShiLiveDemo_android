@@ -29,14 +29,6 @@ public class DataManager {
     private String expValue;
     private String studyCoin;
 
-//    private HashMap<String, StudentInfor> allStudentsMap = new HashMap<>();
-//    private HashMap<String, StudentInfor> onLineStudentsMap = new HashMap<>();
-//    private HashMap<String, StudentInfor> offLineStudentsMap = new HashMap<>();
-//    private int Teacher_StudentListState=0;//教师端学生列表状态
-//    private boolean isCameraOn=true;//摄像头状态
-//    private boolean isMaikeOn=true;//麦克风状态
-//    private List<ChatContent> chatContentList=new ArrayList<ChatContent>();//聊天消息
-//    private boolean isOpenDanmu=false;//弹幕是否打开
     private DataManager() {
     }
 

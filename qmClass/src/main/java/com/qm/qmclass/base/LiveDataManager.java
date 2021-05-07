@@ -22,6 +22,9 @@ public class LiveDataManager {
     private LinkedHashMap<String, TXCloudVideoView> trtcViewmap = new LinkedHashMap<>();
     //学生端拉流视频
     private LinkedHashMap<String, View> videoViewMap = new LinkedHashMap<>();
+    //学生举手列表
+    private List<String> jushouList = new ArrayList<>();
+
     private int Teacher_StudentListState=0;//教师端学生列表状态
     private boolean isCameraOn=false;//学生摄像头状态
     private boolean isMaikeOn=false;//学生麦克风状态
@@ -31,6 +34,7 @@ public class LiveDataManager {
     private boolean isOpenDanmu=false;//弹幕是否打开
     private boolean isJinYan=false;//禁言状态
     private boolean myselfLianmai=false;
+    private boolean jushou=false;//学生举手状态
     private String witchTools="1";
     private int textProgress=320;
     private int lineProgress=50;
@@ -250,5 +254,21 @@ public class LiveDataManager {
 
     public void setVideoViewMap(LinkedHashMap<String, View> videoViewMap) {
         this.videoViewMap = videoViewMap;
+    }
+
+    public boolean isJushou() {
+        return jushou;
+    }
+
+    public void setJushou(boolean jushou) {
+        this.jushou = jushou;
+    }
+
+    public List<String> getJushouList() {
+        return jushouList;
+    }
+
+    public void setJushouList(List<String> jushouList) {
+        this.jushouList = jushouList;
     }
 }

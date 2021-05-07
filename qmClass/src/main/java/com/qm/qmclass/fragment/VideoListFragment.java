@@ -327,6 +327,7 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
                     final byte msg[] = str.getBytes();
                     teacherLiveActivity.sendCustomMessage(studentCode,msg);
                     liveDataManager.getAllStudentsMap().get(studentCode).setLianMaiState(3);
+                    liveDataManager.getAllStudentsMap().get(studentCode).setHuabiOn(false);
                 }
             }
         });

@@ -1,15 +1,21 @@
 package com.qm.qmclass.activitys;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -49,11 +55,19 @@ import com.tencent.imsdk.TIMMessage;
 import com.tencent.rtmp.TXLog;
 import com.tencent.teduboard.TEduBoardController;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -81,6 +95,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         LivePopupWindow.PopupWindowListener,
         TICManager.TICMessageListener,
         TICManager.TICIMStatusListener {
+    private TextView tvTitle;
+    private TextView tvTime;
     private ImageView ivSet;
     private ImageView ivChat;
     private ImageView ivJushou;
@@ -112,8 +128,6 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private VideoListFragment videoListFragment;
     private StudentListFragment studentListFragment;
     private List<Integer> colorList=null;
-    private List jushouList=null;
-    private List<Hudong> huDongList;
 
     private TICManager mTicManager;
     static TEduBoardController mBoard = null;
@@ -136,6 +150,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private LivePopupWindow huDongPopupWindow;
     private LivePopupWindow jiankongPopupWindow;
     private LivePopupWindow addSTPopupWindow;
+    private LivePopupWindow wenJianPopupWindow;
+    private LivePopupWindow questionPopupWindow;
 
     private static TeacherLiveActivity mactivity;
     private boolean isquitClass=false;
@@ -143,6 +159,81 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
 //    private VideoFragmentListener mvideoFragmentListener;
     private StudentlistFragmentListener mstudentlistFragmentListener;
     private DanmuContentAdpter danmuContentAdpter;
+    public static final int TAKE_PHOTO = 1;
+    public static final int CROP_PHOTO = 2;
+    public static final int GET_PHOTO = 3;
+    private Uri headImgUri;
+    private File appDir = null;
+    private Uri uritempFile = null;
+    private Date date;
+    private SimpleDateFormat simpleDateFormat;
+    private String currentTime;//当前时间
+    private String startTime;//开始时间
+    private String endTime;//结束时间
+    private Date startDate;//开始时间
+    private Date endDate;//结束时间
+    private int classState=-1;
+    private int recLen = 0;
+    Handler handler = new Handler();
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            if (classState==1){
+                recLen--;
+                tvTime.setText("还有 "+timeCalculate(recLen)+" 上课");
+                //获取当前时间
+                date = new Date(System.currentTimeMillis());
+                String currentTime=simpleDateFormat.format(date);
+                try {
+                    Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
+                    if (currentDate.getTime()>=startDate.getTime()) {
+                        //已经上课00:00
+                        classState=2;
+                        recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-startDate.getTime()))/1000;
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }else if (classState==2){
+                recLen++;
+                tvTime.setText("已上课 "+timeCalculate(recLen));
+                //获取当前时间
+                date = new Date(System.currentTimeMillis());
+                String currentTime=simpleDateFormat.format(date);
+                try {
+                    Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
+                    if (endDate.getTime()-currentDate.getTime()<=600000) {
+                        //已经上课00:00
+                        classState=3;
+                        recLen=Integer.parseInt(String.valueOf(endDate.getTime()-currentDate.getTime()))/1000;
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }else if (classState==3){
+                recLen--;
+                tvTime.setText("还有 "+timeCalculate(recLen)+" 下课");
+                //获取当前时间
+                date = new Date(System.currentTimeMillis());
+                String currentTime=simpleDateFormat.format(date);
+                try {
+                    Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
+                    if (currentDate.getTime()>endDate.getTime()) {
+                        //已经上课00:00
+                        classState=4;
+                        recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-endDate.getTime()))/1000;
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }else if (classState==4){
+                recLen++;
+                tvTime.setText("上课超时 "+timeCalculate(recLen));
+            }
+
+            handler.postDelayed(this, 1000);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,6 +264,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     }
 
     private void initView(){
+        tvTitle=(TextView) findViewById(R.id.tv_title);
+        tvTime=(TextView) findViewById(R.id.tv_time);
         ivSet=(ImageView) findViewById(R.id.iv_set);
         ivSet.setOnClickListener(this);
         ivChat=(ImageView) findViewById(R.id.iv_chat);
@@ -237,6 +330,43 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         jiankong.setImageDrawable(getResources().getDrawable(R.mipmap.jiankong));
         fragmentManager = this.getSupportFragmentManager();
         setFragmentSelection(0,"TRTC");
+        tvTitle.setText(dataManager.getCourseName());
+
+        simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// HH:mm:ss
+        //获取当前时间
+        date = new Date(System.currentTimeMillis());
+        currentTime=simpleDateFormat.format(date);
+        startTime=dataManager.getStartTime();
+        endTime=dataManager.getEndTime();
+        try {
+            Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
+            startDate = simpleDateFormat.parse(startTime);//开始时间
+            endDate = simpleDateFormat.parse(endTime);//结束时间
+            if (currentDate.getTime() < startDate.getTime()) {
+               //还有00:00上课
+                classState=1;
+                recLen=Integer.parseInt(String.valueOf(startDate.getTime()-currentDate.getTime()))/1000;
+                handler.postDelayed(runnable, 1000);
+            } else if (currentDate.getTime()>=startDate.getTime()) {
+                //已经上课00:00
+                classState=2;
+                recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-startDate.getTime()))/1000;
+                handler.postDelayed(runnable, 1000);
+            }  else if (endDate.getTime()-currentDate.getTime()<=600000) {
+                //还有00:00下课
+                classState=3;
+                recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-endDate.getTime()))/1000;
+                handler.postDelayed(runnable, 1000);
+            }else if (currentDate.getTime() > endDate.getTime()) {
+                //上课超时00:00
+                classState=4;
+                recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-endDate.getTime()))/1000;
+                handler.postDelayed(runnable, 1000);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
         ivColor.setImageDrawable(getResources().getDrawable(R.mipmap.color));
         colorList=new ArrayList();
         colorList.add(0, R.mipmap.red);
@@ -316,6 +446,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                 deleteAllFiles(file);
 //                退出IM
                 logout();
+                //将线程销毁掉
+                handler.removeCallbacks(runnable);
             }
 
             @Override
@@ -356,18 +488,12 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             ivChat.setImageDrawable(getDrawable(R.mipmap.liaotian));
             chatPopupWindow.showChatPopupWindow(view,liveDataManager.getChatContentList());
         } else if (view.getId() == R.id.iv_jushou) {
-            jushouList=new ArrayList();
-            jushouList.add(0, "张佳佳");
-            jushouList.add(1, "张佳佳1");
-            jushouList.add(2, "张佳佳2");
-            jushouList.add(3, "张佳佳3");
-            jushouList.add(4, "张佳佳4");
-            jushouList.add(5, "张佳佳5");
+            ivJushou.setImageDrawable(getResources().getDrawable(R.mipmap.jushou));
             if (showJuShouPopupWindow==null){
                 showJuShouPopupWindow=new LivePopupWindow(mactivity);
                 showJuShouPopupWindow.setPopupWindowListener(this);
             }
-            showJuShouPopupWindow.showJuShouPopupWindow(view,jushouList);
+            showJuShouPopupWindow.showJuShouPopupWindow(view,liveDataManager.getJushouList());
         } else if (view.getId() == R.id.iv_jinyan) {
             if (mutePopupWindow==null){
                 mutePopupWindow=new LivePopupWindow(mactivity);
@@ -375,42 +501,17 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
             mutePopupWindow.showMutePopupWindow(view);
         } else if (view.getId() == R.id.iv_question) {
-
+            if (questionPopupWindow==null){
+                questionPopupWindow=new LivePopupWindow(mactivity);
+//                questionPopupWindow.setPopupWindowListener(this);
+            }
+            questionPopupWindow.showQuestionPopupWindow(view);
         } else if (view.getId() == R.id.iv_hudong) {
-            huDongList=new ArrayList<Hudong>();
-            Hudong hudong0=new Hudong();
-            hudong0.setName("点名");
-            hudong0.setIconid(R.mipmap.dianming);
-            Hudong hudong1=new Hudong();
-            hudong1.setName("答题器");
-            hudong1.setIconid(R.mipmap.dati);
-            Hudong hudong2=new Hudong();
-            hudong2.setName("抢答器");
-            hudong2.setIconid(R.mipmap.qiangda);
-            Hudong hudong3=new Hudong();
-            hudong3.setName("积分器");
-            hudong3.setIconid(R.mipmap.jifen);
-            Hudong hudong4=new Hudong();
-            hudong4.setName("定时器");
-            hudong4.setIconid(R.mipmap.dingshi);
-            Hudong hudong5=new Hudong();
-            hudong5.setName("抽奖");
-            hudong5.setIconid(R.mipmap.dianming);
-            Hudong hudong6=new Hudong();
-            hudong6.setName("红包");
-            hudong6.setIconid(R.mipmap.hongbao);
-            huDongList.add(hudong0);
-            huDongList.add(hudong1);
-            huDongList.add(hudong2);
-            huDongList.add(hudong3);
-            huDongList.add(hudong4);
-            huDongList.add(hudong5);
-            huDongList.add(hudong6);
             if (huDongPopupWindow==null){
                 huDongPopupWindow=new LivePopupWindow(mactivity);
                 huDongPopupWindow.setPopupWindowListener(this);
             }
-            huDongPopupWindow.showhudongPopupWindow(view,huDongList);
+            huDongPopupWindow.showhudongPopupWindow(view);
         } else if (view.getId() == R.id.iv_set) {
             if (setPopupWindow==null){
                 setPopupWindow=new LivePopupWindow(mactivity);
@@ -437,7 +538,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             mBoard.snapshot(tEduBoardSnapshotInfo);
 
         } else if (view.getId() == R.id.iv_wenjian) {
-
+            if (wenJianPopupWindow==null){
+                wenJianPopupWindow=new LivePopupWindow(mactivity);
+                wenJianPopupWindow.setPopupWindowListener(this);
+            }
+            wenJianPopupWindow.showWenJianPopupWindow(view);
         } else if (view.getId() == R.id.iv_color) {
             if (colorPopupWindow==null){
                 colorPopupWindow=new LivePopupWindow(mactivity);
@@ -1166,12 +1271,47 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
      */
     @Override
     public void juShouOnclick(int position, String action) {
-        if (action.equals("huabi")){
-            Toast.makeText(TeacherLiveActivity.this,"huabi"+position,Toast.LENGTH_SHORT).show();
-        }else if (action.equals("maike")){
-            Toast.makeText(TeacherLiveActivity.this,"maike"+position,Toast.LENGTH_SHORT).show();
+        String userCode=liveDataManager.getJushouList().get(position);
+         if (action.equals("maike")){
+            if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==3){
+                //老师向学生发起连麦
+                Map<String, String> map = new HashMap<>();
+                map.put("action", "micOpen");
+                String str = JSON.toJSONString(map);
+                final byte msg[] = str.getBytes();
+                sendCustomMessage(userCode,msg);
+                liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(2);
+                changeStudentVideoLMstate(userCode);
+                changeStudentListLMstate(userCode,2);
+                if (showJuShouPopupWindow!=null&&showJuShouPopupWindow.isShowing()){
+                    showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
+                }
+            }else if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==1){
+//                    老师发起让学生挂麦
+                Map<String, String> map = new HashMap<>();
+                map.put("action", "micClose");
+                String str = JSON.toJSONString(map);
+                final byte msg[] = str.getBytes();
+                sendCustomMessage(userCode,msg);
+                liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(3);
+                refuseLianMai(userCode);
+                changeStudentListLMstate(userCode,3);
+                liveDataManager.getAllStudentsMap().get(userCode).setHuabiOn(false);
+                if (showJuShouPopupWindow!=null&&showJuShouPopupWindow.isShowing()){
+                    showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
+                }
+            }
         }else if (action.equals("tichu")){
-            Toast.makeText(TeacherLiveActivity.this,"tichu"+position,Toast.LENGTH_SHORT).show();
+             //老师向学生发起连麦
+             Map<String, String> map = new HashMap<>();
+             map.put("action", "kickOut");
+             String str = JSON.toJSONString(map);
+             final byte msg[] = str.getBytes();
+             sendCustomMessage(userCode,msg);
+             liveDataManager.getJushouList().remove(userCode);
+             if (showJuShouPopupWindow!=null&&showJuShouPopupWindow.isShowing()){
+                 showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
+             }
         }
     }
     /*
@@ -1179,7 +1319,21 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
      */
     @Override
     public void huDongOnclick(int position) {
-        Toast.makeText(TeacherLiveActivity.this,huDongList.get(position).getName(),Toast.LENGTH_SHORT).show();
+        if (position==1){
+            Toast.makeText(TeacherLiveActivity.this,"点名",Toast.LENGTH_SHORT).show();
+        }else if (position==2){
+            Toast.makeText(TeacherLiveActivity.this,"答题器",Toast.LENGTH_SHORT).show();
+        }else if (position==3){
+            Toast.makeText(TeacherLiveActivity.this,"抢答器",Toast.LENGTH_SHORT).show();
+        }else if (position==4){
+            Toast.makeText(TeacherLiveActivity.this,"计分器",Toast.LENGTH_SHORT).show();
+        }else if (position==5){
+            Toast.makeText(TeacherLiveActivity.this,"定时器",Toast.LENGTH_SHORT).show();
+        }else if (position==6){
+            Toast.makeText(TeacherLiveActivity.this,"抽奖",Toast.LENGTH_SHORT).show();
+        }else if (position==7){
+            Toast.makeText(TeacherLiveActivity.this,"红包",Toast.LENGTH_SHORT).show();
+        }
     }
 
     /*
@@ -1199,6 +1353,50 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             changeStudentListLMstate(userCode,2);
         }
     }
+
+    /*
+     *打开文件
+     */
+    @Override
+    public void wenJianOnclick(String type) {
+        if (type.equals("camera")){
+            //相机
+            String fileName = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
+            appDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + fileName);
+            if (!appDir.exists()) {
+                appDir.mkdirs();
+            }
+            try {
+                appDir.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                //第二个参数为 包名.fileprovider
+                headImgUri = FileProvider.getUriForFile(this, "com.qm.qmclass.fileprovider", appDir);
+            } else {
+                headImgUri = Uri.fromFile(appDir);
+            }
+            Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, headImgUri);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            }
+            this.startActivityForResult(intent, TAKE_PHOTO);
+        }else if (type.equals("album")){
+            //相册
+            String fileName = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
+            appDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + fileName);
+            if (!appDir.exists()) {
+                appDir.mkdirs();
+            }
+            Intent intent = new Intent(Intent.ACTION_PICK,
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(intent, GET_PHOTO);
+        }
+    }
+
     /*
      *显示连麦学生列表
      */
@@ -1223,6 +1421,90 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             mstudentlistFragmentListener.lianMai(userCode,lianMaistate);
         }
     }
+    /**
+     * 裁剪
+     */
+    private void crop(Uri uri) {
+        // 裁剪图片意图
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        }
+        intent.setDataAndType(uri, "image/*");
+        // 下面这个crop=true是设置在开启的Intent中设置显示的VIEW可裁剪
+        intent.putExtra("crop", "true");
+        intent.putExtra("scale", true);// 去黑边
+        // 裁剪框的比例，1：1
+//        intent.putExtra("aspectX", 4);// 输出是X方向的比例
+//        intent.putExtra("aspectY", 3);
+        // 裁剪后输出图片的尺寸大小,不能太大500程序崩溃
+        intent.putExtra("outputX", 300);
+        intent.putExtra("outputY", 300);
+        intent.putExtra("circleCrop", false);
+        // 图片格式
+        /* intent.putExtra("outputFormat", "JPEG"); */
+        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+        // intent.putExtra("noFaceDetection", true);// 取消人脸识别
+        //intent.putExtra("return-data", true);// true:返回uri，false：不返回uri
+        //String phone = Build.MODEL;
+        //System.out.println(phone);
+        // 同一个地址下 裁剪的图片覆盖拍照的图片
+        uritempFile = Uri.parse("file://" + "/" + Environment.getExternalStorageDirectory().getPath() + "/" + "small.jpg");
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uritempFile);
+//        intent.putExtra(MediaStore.EXTRA_OUTPUT, appDir);
+        startActivityForResult(intent, CROP_PHOTO);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case GET_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    crop(data.getData());
+                }
+                break;
+            case TAKE_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    crop(headImgUri);
+                }
+                break;
+            case CROP_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    try {
+                        Bitmap headImage = BitmapFactory.decodeStream(this.getContentResolver().openInputStream(uritempFile));
+                        File file = getFile(headImage);//把Bitmap转成File
+//                        liveBroadcastPecenter.postpazzle(courseId, file);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    //把bitmap转成file
+    public File getFile(Bitmap bitmap) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, baos);
+        File file = new File(Environment.getExternalStorageDirectory() + "/temp.jpg");
+        try {
+            file.createNewFile();
+            FileOutputStream fos = new FileOutputStream(file);
+            InputStream is = new ByteArrayInputStream(baos.toByteArray());
+            int x = 0;
+            byte[] b = new byte[1024 * 100];
+            while ((x = is.read(b)) != -1) {
+                fos.write(b, 0, x);
+            }
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return file;
+    }
     /*
      *发送单独数据
      */
@@ -1245,6 +1527,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
         });
     }
+
     @Override
     public void onTICRecvTextMessage(String fromUserId, String text) {
         Log.e("接收IM", "接收单独Text--IM"+text);
@@ -1316,6 +1599,29 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                 if (jiankongPopupWindow!=null){
                     jiankongPopupWindow.refreshSomeOne(fromUserId);
                 }
+            }
+        }else if (jo.getString("action").equals("handsUp")){
+            //学生举手
+            liveDataManager.getJushouList().add(fromUserId);
+            if (showJuShouPopupWindow!=null){
+                if (!showJuShouPopupWindow.isShowing()){
+                    ivJushou.setImageDrawable(getResources().getDrawable(R.mipmap.jushou_red));
+                }else {
+                    showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
+                }
+            }else {
+                ivJushou.setImageDrawable(getResources().getDrawable(R.mipmap.jushou_red));
+            }
+        }else if (jo.getString("action").equals("handsDown")){
+           //学生取消举手
+            liveDataManager.getJushouList().remove(fromUserId);
+            if (showJuShouPopupWindow!=null){
+                if (showJuShouPopupWindow.isShowing()){
+                    showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
+                }
+            }
+            if (liveDataManager.getJushouList().size()<1){
+                ivJushou.setImageDrawable(getResources().getDrawable(R.mipmap.jushou));
             }
         }
     }
@@ -1947,5 +2253,18 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     }
                 }
             }
+    }
+    /**
+     * 获取计时时间
+     */
+    public String timeCalculate(long time){
+        long  daysuuu,hoursuuu, minutesuuu, secondsuuu;
+        String restT = "";
+        daysuuu = (Math.round(time) / 86400);
+        hoursuuu = (Math.round(time) / 3600) - (daysuuu * 24);
+        minutesuuu = (Math.round(time) / 60) - (daysuuu * 1440) - (hoursuuu * 60);
+        secondsuuu = Math.round(time) % 60;
+        restT = String.format("%02d:%02d:%02d", hoursuuu, minutesuuu, secondsuuu);
+        return restT;
     }
 }

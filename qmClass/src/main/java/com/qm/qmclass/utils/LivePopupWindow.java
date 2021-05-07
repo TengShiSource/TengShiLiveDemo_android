@@ -38,7 +38,6 @@ import com.qm.qmclass.activitys.TeacherLiveActivity;
 import com.qm.qmclass.adpter.AddStudentAdpter;
 import com.qm.qmclass.adpter.ChatContentAdpter;
 import com.qm.qmclass.adpter.ColorAdpter;
-import com.qm.qmclass.adpter.HudongAdpter;
 import com.qm.qmclass.adpter.JushouAdpter;
 import com.qm.qmclass.adpter.XzAdpter;
 import com.qm.qmclass.base.DataManager;
@@ -60,6 +59,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
     private ChatContentAdpter chatContentAdpter;
     private ColorAdpter colorAdpter;
     private XzAdpter xzAdpter;
+    private JushouAdpter jushouAdpter;
     private LiveDataManager liveDataManager;
     private String[] xz = {"shifang","shituo","kongfang","kongtuo"};
     private LinearLayout jiankongpage;
@@ -190,7 +190,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
 //                makeDropDownMeasureSpec(this.getHeight()));
 //        PopupWindowCompat.showAsDropDown(this, view, 0, 0, Gravity.START);
 //    }
-//设置
+    //设置
     public void showSetPopupWindow(View view){
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_set,
                 null, false);
@@ -203,6 +203,48 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         });
         TextView courseId=(TextView)contentView.findViewById(R.id.courseId);
         courseId.setText(String.valueOf(DataManager.getInstance().getCourseId()));
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(true);
+        setFocusable(true);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+    //打开文件
+    public void showWenJianPopupWindow(View view){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_wenjian,
+                null, false);
+        ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
+        yincang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        LinearLayout camera=(LinearLayout) contentView.findViewById(R.id.camera);
+        LinearLayout album=(LinearLayout) contentView.findViewById(R.id.album);
+        LinearLayout remote=(LinearLayout) contentView.findViewById(R.id.remote);
+        camera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.wenJianOnclick("camera");
+                dismiss();
+            }
+        });
+        album.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.wenJianOnclick("album");
+                dismiss();
+            }
+        });
+        remote.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
         setWidth(DensityUtil.dp2px(mactivity, 255));
         setOutsideTouchable(true);
@@ -226,7 +268,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         TextView jushounum=(TextView)contentView.findViewById(R.id.jushounum);
         jushounum.setText("("+list.size()+")");
         ListView jushoulistView=(ListView)contentView.findViewById(R.id.jushoulistView);
-        JushouAdpter jushouAdpter=new JushouAdpter(mactivity, list, new JushouAdpter.MyClickListener() {
+        jushouAdpter=new JushouAdpter(mactivity, list, new JushouAdpter.MyClickListener() {
             @Override
             public void myOnClick(int position, View v) {
                  if (v.getId()==R.id.maike){
@@ -244,6 +286,10 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         setContentView(contentView);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+
+    public void refreshJuShou(List<String> list){
+        jushouAdpter.refresh(list);
     }
 //    静音
     public void showMutePopupWindow(View view){
@@ -282,10 +328,9 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         setContentView(contentView);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
     }
-    //互动列表
-    public void showhudongPopupWindow(View view,List list){
-
-        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_hudong,
+    //课堂答疑
+    public void showQuestionPopupWindow(View view){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_question,
                 null, false);
         ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
         yincang.setOnClickListener(new View.OnClickListener() {
@@ -294,17 +339,104 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
                 dismiss();
             }
         });
-        RecyclerView hudonglistView=(RecyclerView)contentView.findViewById(R.id.hudonglistView);
-        GridLayoutManager manager = new GridLayoutManager(mactivity, 3);
-        manager.setOrientation(GridLayoutManager.VERTICAL);
-        hudonglistView.setLayoutManager(manager);
-        HudongAdpter hudongAdpter=new HudongAdpter(mactivity, list, new HudongAdpter.MyClickListener() {
+        LinearLayout answered=(LinearLayout) contentView.findViewById(R.id.answered);
+        TextView tvAnswered=(TextView) contentView.findViewById(R.id.tv_answered);
+        View viewAnswered=(View) contentView.findViewById(R.id.view_answered);
+        LinearLayout unanswered=(LinearLayout) contentView.findViewById(R.id.unanswered);
+        TextView tvUnanswered=(TextView) contentView.findViewById(R.id.tv_unanswered);
+        View viewUnanswered=(View) contentView.findViewById(R.id.view_unanswered);
+        tvAnswered.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+        tvUnanswered.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+        viewAnswered.setVisibility(View.VISIBLE);
+        viewUnanswered.setVisibility(View.INVISIBLE);
+        answered.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void myOnClick(int position) {
-                mpopupWindowListener.huDongOnclick(position);
+            public void onClick(View v) {
+                tvAnswered.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+                tvUnanswered.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+                viewAnswered.setVisibility(View.VISIBLE);
+                viewUnanswered.setVisibility(View.INVISIBLE);
             }
         });
-        hudonglistView.setAdapter(hudongAdpter);
+        unanswered.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tvAnswered.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+                tvUnanswered.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+                viewAnswered.setVisibility(View.INVISIBLE);
+                viewUnanswered.setVisibility(View.VISIBLE);
+            }
+        });
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(true);
+        setFocusable(true);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+    //互动列表
+    public void showhudongPopupWindow(View view){
+
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_hudong,
+                null, false);
+        ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
+        LinearLayout dianming=(LinearLayout)contentView.findViewById(R.id.dianming);
+        LinearLayout dati=(LinearLayout)contentView.findViewById(R.id.dati);
+        LinearLayout qiangda=(LinearLayout)contentView.findViewById(R.id.qiangda);
+        LinearLayout jifen=(LinearLayout)contentView.findViewById(R.id.jifen);
+        LinearLayout dingshi=(LinearLayout)contentView.findViewById(R.id.dingshi);
+        LinearLayout choujiang=(LinearLayout)contentView.findViewById(R.id.choujiang);
+        LinearLayout hongbao=(LinearLayout)contentView.findViewById(R.id.hongbao);
+        yincang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        dianming.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.huDongOnclick(1);
+            }
+        });
+        dati.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.huDongOnclick(2);
+            }
+        });
+        qiangda.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.huDongOnclick(3);
+            }
+        });
+        jifen.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.huDongOnclick(4);
+            }
+        });
+        dingshi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.huDongOnclick(5);
+            }
+        });
+        choujiang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.huDongOnclick(6);
+            }
+        });
+        hongbao.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.huDongOnclick(7);
+            }
+        });
+
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
         setWidth(DensityUtil.dp2px(mactivity, 255));
         setOutsideTouchable(true);
@@ -1099,6 +1231,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         void juShouOnclick(int position,String action);
         void huDongOnclick(int position);
         void addStudentOnclick(String userCode);
+        void wenJianOnclick(String type);
 
     }
     public void setPopupWindowListener(PopupWindowListener popupWindowListener) {

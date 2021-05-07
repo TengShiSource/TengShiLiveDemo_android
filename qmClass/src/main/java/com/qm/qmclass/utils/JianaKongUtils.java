@@ -151,6 +151,8 @@ public class JianaKongUtils{
                 final byte msg[] = str.getBytes();
                 teacherLiveActivity.sendCustomMessage(userCode,msg);
                 liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(3);
+                teacherLiveActivity.refuseLianMai(userCode);
+                liveDataManager.getAllStudentsMap().get(userCode).setHuabiOn(false);
             }
         });
         jkquanping.setOnClickListener(new View.OnClickListener() {

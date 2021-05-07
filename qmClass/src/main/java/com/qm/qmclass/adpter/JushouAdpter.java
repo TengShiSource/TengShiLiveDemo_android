@@ -9,6 +9,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.qm.qmclass.R;
+import com.qm.qmclass.base.LiveDataManager;
+import com.qm.qmclass.model.StudentInfor;
 
 import java.util.List;
 
@@ -17,11 +19,13 @@ public class JushouAdpter extends BaseAdapter {
     private Context mcontext;
     private List mlist;
     private MyClickListener mListener;
+    private LiveDataManager liveDataManager;
     public JushouAdpter(Context context, List list,MyClickListener listener) {
         inflater = LayoutInflater.from(context);
         mcontext=context;
         mlist=list;
         mListener = listener;
+        liveDataManager=LiveDataManager.getInstance();
     }
     @Override
     public int getCount() {
@@ -52,7 +56,15 @@ public class JushouAdpter extends BaseAdapter {
         } else {
             holderView = (HolderView) convertView.getTag();
         }
-        holderView.name.setText(mlist.get(position).toString());
+
+        holderView.name.setText(liveDataManager.getAllStudentsMap().get(mlist.get(position)).getNickName());
+        if (liveDataManager.getAllStudentsMap().get(mlist.get(position)).getLianMaiState()==1){
+            holderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.guamai));
+        }else if (liveDataManager.getAllStudentsMap().get(mlist.get(position)).getLianMaiState()==3){
+            holderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.videolist));
+        }else if (liveDataManager.getAllStudentsMap().get(mlist.get(position)).getLianMaiState()==2){
+            holderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.onlianmai));
+        }
         holderView.maike.setOnClickListener(mListener);
         holderView.tichu.setOnClickListener(mListener);
         holderView.maike.setTag(position);
@@ -78,5 +90,9 @@ public class JushouAdpter extends BaseAdapter {
             myOnClick((Integer) v.getTag(), v);
         }
         public abstract void myOnClick(int position, View v);
+    }
+    public void refresh(List<String> list) {
+        mlist = list;//传入list，然后调用notifyDataSetChanged方法
+        notifyDataSetChanged();
     }
 }

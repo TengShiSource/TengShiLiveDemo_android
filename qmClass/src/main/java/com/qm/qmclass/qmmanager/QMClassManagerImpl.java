@@ -106,6 +106,8 @@ public class QMClassManagerImpl extends QMClassManager {
                     dataManager.setTeacherCode(courseInfo.getTeacher().getUserCode());
                     dataManager.setTeacherName(courseInfo.getTeacher().getNickName());
                     dataManager.setTeacherIcon(courseInfo.getTeacher().getAvatarUrl());
+                    dataManager.setStartTime(courseInfo.getCourse().getStartTime());
+                    dataManager.setEndTime(courseInfo.getCourse().getEndTime());
                     mticManager.init(mContext, courseInfo.getTxAppId());
 
                     //        直播推流licence

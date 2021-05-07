@@ -71,8 +71,10 @@ public class StudentListFragment extends Fragment implements TeacherLiveActivity
                         String str = JSON.toJSONString(map);
                         final byte msg[] = str.getBytes();
                         teacherLiveActivity.sendCustomMessage(userCode,msg);
+                        liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(3);
+                        teacherLiveActivity.refuseLianMai(userCode);
                         lianMai(userCode,3);
-                        Toast.makeText(teacherLiveActivity,userCode+"挂麦",Toast.LENGTH_SHORT).show();
+                        liveDataManager.getAllStudentsMap().get(userCode).setHuabiOn(false);
                     }else if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==3){
                         //老师向学生发起连麦
                         Map<String, String> map = new HashMap<>();
@@ -83,7 +85,6 @@ public class StudentListFragment extends Fragment implements TeacherLiveActivity
                         liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(2);
                         teacherLiveActivity.changeStudentVideoLMstate(userCode);
                         lianMai(userCode,2);
-                        Toast.makeText(teacherLiveActivity,userCode+"连麦",Toast.LENGTH_SHORT).show();
                     }
 
                 }else if(v.getId()==R.id.tichu){
@@ -94,6 +95,7 @@ public class StudentListFragment extends Fragment implements TeacherLiveActivity
                     String str = JSON.toJSONString(map);
                     final byte msg[] = str.getBytes();
                     teacherLiveActivity.sendCustomMessage(userCode,msg);
+                    liveDataManager.getJushouList().remove(userCode);
                 }
             }
 

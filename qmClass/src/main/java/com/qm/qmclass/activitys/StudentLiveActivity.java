@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.text.InputType;
 import android.util.Log;
@@ -56,8 +57,11 @@ import com.tencent.teduboard.TEduBoardController;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.ref.WeakReference;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +85,8 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         StudentLivePopupWindow.PopupWindowListener,
         TICManager.TICMessageListener,
         TICManager.TICIMStatusListener {
+    private TextView tvTitle;
+    private TextView tvTime;
     private ImageView ivSet;
     private ImageView ivChat;
     private ImageView ivJushou;
@@ -132,7 +138,75 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     private VideoFragmentListener mvideoFragmentListener;
     private DanmuContentAdpter danmuContentAdpter;
     private boolean isquitClass=false;
+    private Date date;
+    private SimpleDateFormat simpleDateFormat;
+    private String currentTime;//当前时间
+    private String startTime;//开始时间
+    private String endTime;//结束时间
+    private Date startDate;//开始时间
+    private Date endDate;//结束时间
+    private int classState=-1;
+    private int recLen = 0;
+    Handler handler = new Handler();
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            if (classState==1){
+                recLen--;
+                tvTime.setText("还有 "+timeCalculate(recLen)+" 上课");
+                //获取当前时间
+                date = new Date(System.currentTimeMillis());
+                String currentTime=simpleDateFormat.format(date);
+                try {
+                    Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
+                    if (currentDate.getTime()>=startDate.getTime()) {
+                        //已经上课00:00
+                        classState=2;
+                        recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-startDate.getTime()))/1000;
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }else if (classState==2){
+                recLen++;
+                tvTime.setText("已上课 "+timeCalculate(recLen));
+                //获取当前时间
+                date = new Date(System.currentTimeMillis());
+                String currentTime=simpleDateFormat.format(date);
+                try {
+                    Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
+                    if (endDate.getTime()-currentDate.getTime()<=600000) {
+                        //已经上课00:00
+                        classState=3;
+                        recLen=Integer.parseInt(String.valueOf(endDate.getTime()-currentDate.getTime()))/1000;
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }else if (classState==3){
+                recLen--;
+                tvTime.setText("还有 "+timeCalculate(recLen)+" 下课");
+                //获取当前时间
+                date = new Date(System.currentTimeMillis());
+                String currentTime=simpleDateFormat.format(date);
+                try {
+                    Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
+                    if (currentDate.getTime()>endDate.getTime()) {
+                        //已经上课00:00
+                        classState=4;
+                        recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-endDate.getTime()))/1000;
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            }else if (classState==4){
+                recLen++;
+                tvTime.setText("上课超时 "+timeCalculate(recLen));
+            }
 
+            handler.postDelayed(this, 1000);
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -159,6 +233,8 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         mTicManager.addIMStatusListener(this);
     }
     private void initView(){
+        tvTitle=(TextView) findViewById(R.id.tv_title);
+        tvTime=(TextView) findViewById(R.id.tv_time);
         ivSet=(ImageView) findViewById(R.id.iv_set);
         ivSet.setOnClickListener(this);
         ivChat=(ImageView) findViewById(R.id.iv_chat);
@@ -210,7 +286,42 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         ivVideolist.setImageDrawable(getResources().getDrawable(R.mipmap.videolist_lv));
         ivStudentlist.setImageDrawable(getResources().getDrawable(R.mipmap.studentlist));
         fragmentManager = this.getSupportFragmentManager();
+        tvTitle.setText(dataManager.getCourseName());
 
+        simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// HH:mm:ss
+        //获取当前时间
+        date = new Date(System.currentTimeMillis());
+        currentTime=simpleDateFormat.format(date);
+        startTime=dataManager.getStartTime();
+        endTime=dataManager.getEndTime();
+        try {
+            Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
+            startDate = simpleDateFormat.parse(startTime);//开始时间
+            endDate = simpleDateFormat.parse(endTime);//结束时间
+            if (currentDate.getTime() < startDate.getTime()) {
+                //还有00:00上课
+                classState=1;
+                recLen=Integer.parseInt(String.valueOf(startDate.getTime()-currentDate.getTime()))/1000;
+                handler.postDelayed(runnable, 1000);
+            } else if (currentDate.getTime()>=startDate.getTime()) {
+                //已经上课00:00
+                classState=2;
+                recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-startDate.getTime()))/1000;
+                handler.postDelayed(runnable, 1000);
+            }  else if (endDate.getTime()-currentDate.getTime()<=600000) {
+                //还有00:00下课
+                classState=3;
+                recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-endDate.getTime()))/1000;
+                handler.postDelayed(runnable, 1000);
+            }else if (currentDate.getTime() > endDate.getTime()) {
+                //上课超时00:00
+                classState=4;
+                recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-endDate.getTime()))/1000;
+                handler.postDelayed(runnable, 1000);
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         //学生端进入直播间是拉流观看
         rlVideoView.setVisibility(View.VISIBLE);
         llBroadcast.setVisibility(View.GONE);
@@ -387,6 +498,8 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                     liveDataManager.destroyInstance();
                     getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
                     logout();
+                    //将线程销毁掉
+                    handler.removeCallbacks(runnable);
                 }
 
                 @Override
@@ -499,7 +612,23 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             ivChat.setImageDrawable(getDrawable(R.mipmap.liaotian));
             chatPopupWindow.showChatPopupWindow(view,liveDataManager.getChatContentList());
         } else if (view.getId() == R.id.iv_jushou) {
-
+            if (liveDataManager.isJushou()){
+                liveDataManager.setJushou(false);
+                ivJushou.setImageDrawable(getResources().getDrawable(R.mipmap.jushou));
+                Map<String, String> map = new HashMap<>();
+                map.put("action", "handsDown");
+                String str = JSON.toJSONString(map);
+                final byte msg[] = str.getBytes();
+                sendCustomMessage(dataManager.getTeacherCode(),msg);
+            }else {
+                liveDataManager.setJushou(true);
+                ivJushou.setImageDrawable(getResources().getDrawable(R.mipmap.jushou_lv));
+                Map<String, String> map = new HashMap<>();
+                map.put("action", "handsUp");
+                String str = JSON.toJSONString(map);
+                final byte msg[] = str.getBytes();
+                sendCustomMessage(dataManager.getTeacherCode(),msg);
+            }
         } else if (view.getId() == R.id.iv_question) {
 
         } else if (view.getId() == R.id.iv_set) {
@@ -1655,5 +1784,18 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     }
     public void setVideoFragmentListener(VideoFragmentListener videoFragmentListener) {
         this.mvideoFragmentListener = videoFragmentListener;
+    }
+    /**
+     * 获取计时时间
+     */
+    public String timeCalculate(long time){
+        long  daysuuu,hoursuuu, minutesuuu, secondsuuu;
+        String restT = "";
+        daysuuu = (Math.round(time) / 86400);
+        hoursuuu = (Math.round(time) / 3600) - (daysuuu * 24);
+        minutesuuu = (Math.round(time) / 60) - (daysuuu * 1440) - (hoursuuu * 60);
+        secondsuuu = Math.round(time) % 60;
+        restT = String.format("%02d:%02d:%02d", hoursuuu, minutesuuu, secondsuuu);
+        return restT;
     }
 }
