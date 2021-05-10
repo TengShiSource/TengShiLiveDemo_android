@@ -2,9 +2,13 @@ package com.qm.qmclass.activitys;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.text.InputType;
@@ -22,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -54,8 +59,13 @@ import com.tencent.rtmp.TXLog;
 import com.tencent.rtmp.ui.TXCloudVideoView;
 import com.tencent.teduboard.TEduBoardController;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -71,6 +81,7 @@ import java.util.stream.Collectors;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static com.tencent.teduboard.TEduBoardController.TEduBoardElementType.TEDU_BOARD_ELEMENT_IMAGE;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_ERASER;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_LINE;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_OVAL;
@@ -125,7 +136,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     private int count = 0;
 
     private StudentLivePopupWindow chatPopupWindow;
-    private StudentLivePopupWindow danmuPopupWindow;
+    private StudentLivePopupWindow questionPopupWindow;
     private StudentLivePopupWindow setPopupWindow;
     private StudentLivePopupWindow classOverPopupWindow;
     private StudentLivePopupWindow toolsPopupWindow;
@@ -138,6 +149,12 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     private VideoFragmentListener mvideoFragmentListener;
     private DanmuContentAdpter danmuContentAdpter;
     private boolean isquitClass=false;
+    public static final int TAKE_PHOTO = 1;
+    public static final int CROP_PHOTO = 2;
+    public static final int GET_PHOTO = 3;
+    private Uri headImgUri;
+    private File appDir = null;
+    private Uri uritempFile = null;
     private Date date;
     private SimpleDateFormat simpleDateFormat;
     private String currentTime;//当前时间
@@ -630,7 +647,11 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 sendCustomMessage(dataManager.getTeacherCode(),msg);
             }
         } else if (view.getId() == R.id.iv_question) {
-
+            if (questionPopupWindow==null){
+                questionPopupWindow=new StudentLivePopupWindow(mactivity);
+                questionPopupWindow.setPopupWindowListener(this);
+            }
+            questionPopupWindow.showQuestionPopupWindow(view);
         } else if (view.getId() == R.id.iv_set) {
             if (setPopupWindow==null){
                 setPopupWindow=new StudentLivePopupWindow(mactivity);
@@ -838,6 +859,130 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
 //                chatPopupWindow.refreshChatContent(liveDataManager.getChatContentList());
 //            }
         }
+    }
+
+    @Override
+    public void questionOnclick(String type) {
+        if (type.equals("camera")){
+            //相机
+            String fileName = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
+            appDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + fileName);
+            if (!appDir.exists()) {
+                appDir.mkdirs();
+            }
+            try {
+                appDir.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                //第二个参数为 包名.fileprovider
+                headImgUri = FileProvider.getUriForFile(this, "com.qm.qmclass.fileprovider", appDir);
+            } else {
+                headImgUri = Uri.fromFile(appDir);
+            }
+            Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, headImgUri);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            }
+            this.startActivityForResult(intent, TAKE_PHOTO);
+        }else if (type.equals("album")){
+            //相册
+            String fileName = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
+            appDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + fileName);
+            if (!appDir.exists()) {
+                appDir.mkdirs();
+            }
+            Intent intent = new Intent(Intent.ACTION_PICK,
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(intent, GET_PHOTO);
+        }
+    }
+    /**
+     * 裁剪
+     */
+    private void crop(Uri uri) {
+        // 裁剪图片意图
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        }
+        intent.setDataAndType(uri, "image/*");
+        // 下面这个crop=true是设置在开启的Intent中设置显示的VIEW可裁剪
+        intent.putExtra("crop", "true");
+        intent.putExtra("scale", true);// 去黑边
+        // 裁剪框的比例，1：1
+//        intent.putExtra("aspectX", 4);// 输出是X方向的比例
+//        intent.putExtra("aspectY", 3);
+        // 裁剪后输出图片的尺寸大小,不能太大500程序崩溃
+        intent.putExtra("outputX", 300);
+        intent.putExtra("outputY", 300);
+        intent.putExtra("circleCrop", false);
+        // 图片格式
+        /* intent.putExtra("outputFormat", "JPEG"); */
+        intent.putExtra("outputFormat", Bitmap.CompressFormat.JPEG.toString());
+        // intent.putExtra("noFaceDetection", true);// 取消人脸识别
+        //intent.putExtra("return-data", true);// true:返回uri，false：不返回uri
+        //String phone = Build.MODEL;
+        //System.out.println(phone);
+        // 同一个地址下 裁剪的图片覆盖拍照的图片
+        uritempFile = Uri.parse("file://" + "/" + Environment.getExternalStorageDirectory().getPath() + "/" + "small.jpg");
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, uritempFile);
+//        intent.putExtra(MediaStore.EXTRA_OUTPUT, appDir);
+        startActivityForResult(intent, CROP_PHOTO);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case GET_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    crop(data.getData());
+                }
+                break;
+            case TAKE_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    crop(headImgUri);
+                }
+                break;
+            case CROP_PHOTO:
+                if (resultCode == RESULT_OK) {
+                    try {
+                        Bitmap headImage = BitmapFactory.decodeStream(this.getContentResolver().openInputStream(uritempFile));
+                        File file = getFile(headImage);//把Bitmap转成File
+//                        liveBroadcastPecenter.postpazzle(courseId, file);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+//    把bitmap转成file
+    public File getFile(Bitmap bitmap) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, baos);
+        File file = new File(Environment.getExternalStorageDirectory() + "/temp.jpg");
+        try {
+            file.createNewFile();
+            FileOutputStream fos = new FileOutputStream(file);
+            InputStream is = new ByteArrayInputStream(baos.toByteArray());
+            int x = 0;
+            byte[] b = new byte[1024 * 100];
+            while ((x = is.read(b)) != -1) {
+                fos.write(b, 0, x);
+            }
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return file;
     }
     /*
      *选择画笔颜色

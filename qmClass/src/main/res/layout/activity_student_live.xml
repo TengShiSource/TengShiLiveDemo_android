@@ -121,15 +121,6 @@
                 android:background="@drawable/circle_bg"
                 android:padding="@dimen/dp_6"
                 android:src="@mipmap/jushou" />
-<!--            <ImageView-->
-<!--                android:id="@+id/iv_jinyan"-->
-<!--                android:layout_width="@dimen/dp_30"-->
-<!--                android:layout_height="@dimen/dp_30"-->
-<!--                android:layout_marginRight="@dimen/dp_3"-->
-<!--                android:layout_marginLeft="@dimen/dp_3"-->
-<!--                android:background="@drawable/circle_bg"-->
-<!--                android:padding="@dimen/dp_6"-->
-<!--                android:src="@mipmap/jinyan" />-->
             <ImageView
                 android:id="@+id/iv_question"
                 android:layout_width="@dimen/dp_30"
@@ -138,16 +129,7 @@
                 android:layout_marginLeft="@dimen/dp_3"
                 android:background="@drawable/circle_bg"
                 android:padding="@dimen/dp_6"
-                android:src="@mipmap/question" />
-<!--            <ImageView-->
-<!--                android:id="@+id/iv_hudong"-->
-<!--                android:layout_width="@dimen/dp_30"-->
-<!--                android:layout_height="@dimen/dp_30"-->
-<!--                android:layout_marginRight="@dimen/dp_3"-->
-<!--                android:layout_marginLeft="@dimen/dp_3"-->
-<!--                android:background="@drawable/circle_bg"-->
-<!--                android:padding="@dimen/dp_6"-->
-<!--                android:src="@mipmap/hudong" />-->
+                android:src="@mipmap/xiangji" />
             <ImageView
                 android:id="@+id/iv_set"
                 android:layout_width="@dimen/dp_30"

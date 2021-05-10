@@ -95,8 +95,10 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
         myselfIcon=(RoundImageView) view.findViewById(R.id.myself_icon);
         myselfname.setText(dataManager.getUserName());
         myselfShexiangtou=(LinearLayout) view.findViewById(R.id.myself_shexiangtou);
+        ivShexiangtou=(ImageView) view.findViewById(R.id.iv_shexiangtou);
         myselfGuamai=(LinearLayout) view.findViewById(R.id.myself_guamai);
         myselfMaike=(LinearLayout) view.findViewById(R.id.myself_maike);
+        ivMaike=(ImageView) view.findViewById(R.id.iv_maike);
         myselfQiehuan=(LinearLayout) view.findViewById(R.id.myself_qiehuan);
 
         classmateVideo=(LinearLayout) view.findViewById(R.id.classmate_video);
@@ -202,7 +204,7 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
             mTrtcCloud.setVideoEncoderParam(encParam);
             String userCode=dataManager.getUserCode();
             if (enable) {
-                ivShexiangtou.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.shexiangtou));
+                ivShexiangtou.setImageDrawable(studentLiveActivity.getResources().getDrawable(R.mipmap.shexiangtou));
                 if (liveDataManager.getTrtcViewmap().get(userCode)==null){
                     //创建TRTC视图
                     myselfTRTCView = trtcView.getTRTCView();
@@ -216,7 +218,7 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
                 myselfVideoView.setVisibility(View.VISIBLE);
                 mTrtcCloud.startLocalPreview(isFrontCamera, myselfTRTCView);
             } else {
-                ivShexiangtou.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.shexiangtou_guan));
+                ivShexiangtou.setImageDrawable(studentLiveActivity.getResources().getDrawable(R.mipmap.shexiangtou_guan));
                 myselfVideoView.setVisibility(View.GONE);
                 myselfIcon.setVisibility(View.VISIBLE);
                 Glide.with(studentLiveActivity).load(dataManager.getUserIcon()).skipMemoryCache(true).into(myselfIcon);

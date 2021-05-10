@@ -28,6 +28,7 @@ import com.qm.qmclass.R;
 import com.qm.qmclass.adpter.ChatContentAdpter;
 import com.qm.qmclass.adpter.ColorAdpter;
 import com.qm.qmclass.adpter.XzAdpter;
+import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.model.ChatContent;
 import com.tencent.rtmp.ui.TXCloudVideoView;
@@ -126,10 +127,55 @@ public class StudentLivePopupWindow extends PopupWindow {
             chatContentAdpter.add(data);
         }
     }
+    //提问
+    public void showQuestionPopupWindow(View view){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_question,
+                null, false);
+        ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
+        yincang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        LinearLayout camera=(LinearLayout) contentView.findViewById(R.id.camera);
+        LinearLayout album=(LinearLayout) contentView.findViewById(R.id.album);
+
+        camera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.questionOnclick("camera");
+                dismiss();
+            }
+        });
+        album.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.questionOnclick("album");
+                dismiss();
+            }
+        });
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(true);
+        setFocusable(true);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
 //设置
     public void showSetPopupWindow(View view){
-        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_set,
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_set,
                 null, false);
+        ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
+        yincang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        TextView courseId=(TextView)contentView.findViewById(R.id.courseId);
+        courseId.setText(String.valueOf(DataManager.getInstance().getCourseId()));
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
         setWidth(DensityUtil.dp2px(mactivity, 255));
         setOutsideTouchable(true);
@@ -482,6 +528,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         void xianOnclick(int type);
         void quitClass();
         void showDanmu();
+        void questionOnclick(String type);
     }
     public void setPopupWindowListener(PopupWindowListener popupWindowListener) {
         this.mpopupWindowListener = popupWindowListener;
