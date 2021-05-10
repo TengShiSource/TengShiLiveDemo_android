@@ -71,7 +71,9 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
     private LinearLayout llTool;
     private RoundImageView teacherIcon;
     private LinearLayout teacherShexiangtou;
+    private ImageView ivShexiangtou;
     private LinearLayout teacherMaike;
+    private ImageView ivMaike;
     private LinearLayout teacherQiehuan;
     private LinearLayout teacherQuanping;
     private ScrollView svStudent;
@@ -101,9 +103,11 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
         shouqi=(LinearLayout) view.findViewById(R.id.shouqi);
         llTool=(LinearLayout) view.findViewById(R.id.ll_tool);
         teacherShexiangtou=(LinearLayout) view.findViewById(R.id.teacher_shexiangtou);
+        ivShexiangtou=(ImageView) view.findViewById(R.id.iv_shexiangtou);
         teacherIcon=(RoundImageView) view.findViewById(R.id.teacher_icon);
         teacherIcon.setVisibility(View.GONE);
         teacherMaike=(LinearLayout) view.findViewById(R.id.teacher_maike);
+        ivMaike=(ImageView) view.findViewById(R.id.iv_maike);
         teacherQiehuan=(LinearLayout) view.findViewById(R.id.teacher_qiehuan);
         teacherQuanping=(LinearLayout) view.findViewById(R.id.teacher_quanping);
         svStudent=(ScrollView) view.findViewById(R.id.sv_student);
@@ -133,10 +137,15 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
 
         }else if (v.getId()==R.id.teacher_shexiangtou){
             if (liveDataManager.isTCameraOn()){
+                //关闭摄像头
+                ivShexiangtou.setImageDrawable(teacherLiveActivity.getResources().getDrawable(R.mipmap.shexiangtou_guan));
                 liveDataManager.setTCameraOn(false);
                 startLocalVideo(false);
                 teacherLiveActivity.sendGroupCustomMessage("teacherVideoClose",dataManager.getUserCode(),"");
+
             }else {
+                //开启摄像头
+                ivShexiangtou.setImageDrawable(teacherLiveActivity.getResources().getDrawable(R.mipmap.shexiangtou));
                 liveDataManager.setTCameraOn(true);
                 startLocalVideo(true);
                 teacherLiveActivity.sendGroupCustomMessage("teacherVideoOpen",dataManager.getUserCode(),"");
@@ -144,11 +153,13 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
 
         }else if (v.getId()==R.id.teacher_maike){
             if (liveDataManager.isTMaikeOn()){
-                //4. 关闭音频
+                //关闭音频
+                ivMaike.setImageDrawable(teacherLiveActivity.getResources().getDrawable(R.mipmap.maike_guan));
                 liveDataManager.setTMaikeOn(false);
                 enableAudioCapture(false);
             }else {
-                //4. 开始音频
+                //开始音频
+                ivMaike.setImageDrawable(teacherLiveActivity.getResources().getDrawable(R.mipmap.maike));
                 liveDataManager.setTMaikeOn(true);
                 enableAudioCapture(true);
             }
@@ -244,6 +255,7 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
 
         final LinearLayout sShouqi = (LinearLayout) studentVideoItemView.findViewById(R.id.s_shouqi);
         LinearLayout sVideoHuabi = (LinearLayout) studentVideoItemView.findViewById(R.id.s_video_huabi);
+        ImageView ivHuabi= (ImageView) studentVideoItemView.findViewById(R.id.iv_huabi);
         LinearLayout sVideoLanmai = (LinearLayout) studentVideoItemView.findViewById(R.id.s_video_lanmai);
         LinearLayout sVideoQuanping = (LinearLayout) studentVideoItemView.findViewById(R.id.s_video_quanping);
         final RelativeLayout sRlTools = (RelativeLayout) studentVideoItemView.findViewById(R.id.s_rl_tools);
@@ -298,6 +310,7 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
             public void onClick(View v) {
                 if (!liveDataManager.getAllStudentsMap().get(studentCode).isHuabiOn()){
                    //老师开启学生画笔
+                    ivHuabi.setImageDrawable(teacherLiveActivity.getResources().getDrawable(R.mipmap.huabi_lv));
                     Map<String, String> map = new HashMap<>();
                     map.put("action", "brushEnable");
                     String str = JSON.toJSONString(map);
@@ -306,6 +319,7 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
                     liveDataManager.getAllStudentsMap().get(studentCode).setHuabiOn(true);
                 }else if (liveDataManager.getAllStudentsMap().get(studentCode).getLianMaiState()==1&&liveDataManager.getAllStudentsMap().get(studentCode).isHuabiOn()){
                    //老师关闭学生画笔
+                    ivHuabi.setImageDrawable(teacherLiveActivity.getResources().getDrawable(R.mipmap.huabi));
                     Map<String, String> map = new HashMap<>();
                     map.put("action", "brushDisable");
                     String str = JSON.toJSONString(map);

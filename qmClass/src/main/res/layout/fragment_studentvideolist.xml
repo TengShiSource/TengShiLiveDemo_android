@@ -98,7 +98,7 @@
                         android:id="@+id/iv_shexiangtou"
                         android:layout_width="@dimen/dp_18"
                         android:layout_height="@dimen/dp_18"
-                        android:src="@mipmap/shexiangtou"/>
+                        android:src="@mipmap/shexiangtou_guan"/>
                 </LinearLayout>
                 <LinearLayout
                     android:id="@+id/myself_lianmai"

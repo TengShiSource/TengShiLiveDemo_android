@@ -64,8 +64,10 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
     private LinearLayout shouqi;
     private LinearLayout llTool;
     private LinearLayout myselfShexiangtou;
+    private ImageView ivShexiangtou;
     private LinearLayout myselfGuamai;
     private LinearLayout myselfMaike;
+    private ImageView ivMaike;
     private LinearLayout myselfQiehuan;
     private LinearLayout classmateVideo;
 
@@ -200,6 +202,7 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
             mTrtcCloud.setVideoEncoderParam(encParam);
             String userCode=dataManager.getUserCode();
             if (enable) {
+                ivShexiangtou.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.shexiangtou));
                 if (liveDataManager.getTrtcViewmap().get(userCode)==null){
                     //创建TRTC视图
                     myselfTRTCView = trtcView.getTRTCView();
@@ -213,6 +216,7 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
                 myselfVideoView.setVisibility(View.VISIBLE);
                 mTrtcCloud.startLocalPreview(isFrontCamera, myselfTRTCView);
             } else {
+                ivShexiangtou.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.shexiangtou_guan));
                 myselfVideoView.setVisibility(View.GONE);
                 myselfIcon.setVisibility(View.VISIBLE);
                 Glide.with(studentLiveActivity).load(dataManager.getUserIcon()).skipMemoryCache(true).into(myselfIcon);
@@ -224,8 +228,10 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
     private void enableAudioCapture(boolean bEnable) {
         if (mTrtcCloud != null) {
             if (bEnable) {
+                ivMaike.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.maike));
                 mTrtcCloud.startLocalAudio();
             } else {
+                ivMaike.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.maike_guan));
                 mTrtcCloud.stopLocalAudio();
             }
         }
@@ -419,6 +425,21 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
                 Glide.with(studentLiveActivity).load(liveDataManager.getOnLineStudentsMap().get(userCode).getAvatarUrl()).skipMemoryCache(true).into(classmateIcon);
             }
         }
+    }
+    //静音
+    public void mute(boolean ismMandatory){
+        if (ismMandatory){
+            liveDataManager.setMaikeOn(false);
+            enableAudioCapture(false);
+            myselfMaike.setClickable(false);
+        }else {
+            liveDataManager.setMaikeOn(false);
+            enableAudioCapture(false);
+        }
+    }
+    //取消静音
+    public void cancelMute(){
+        myselfMaike.setClickable(true);
     }
     @Override
     public void onTICUserSubStreamAvailable(String userId, boolean available) {

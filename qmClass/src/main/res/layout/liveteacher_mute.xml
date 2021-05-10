@@ -32,6 +32,7 @@
         android:layout_height="@dimen/dp_1"
         android:background="@color/holo_button_normal"/>
     <LinearLayout
+        android:id="@+id/mute"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_65"
         android:layout_marginLeft="@dimen/dp_20"
@@ -48,13 +49,6 @@
                 android:text="全体静音"
                 android:textColor="@color/colorWhite"
                 android:textSize="@dimen/sp_13"/>
-            <Switch
-                android:id="@+id/mute"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:switchMinWidth="20dp"
-                android:track="@drawable/track"
-                android:thumb="@drawable/thumb"/>
         </LinearLayout>
         <TextView
             android:layout_width="wrap_content"

@@ -32,6 +32,7 @@ import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.google.gson.JsonObject;
 import com.qm.qmclass.BuildConfig;
 import com.qm.qmclass.R;
 import com.qm.qmclass.adpter.DanmuContentAdpter;
@@ -42,7 +43,9 @@ import com.qm.qmclass.fragment.StudentListFragment;
 import com.qm.qmclass.fragment.VideoListFragment;
 import com.qm.qmclass.model.ClassOver;
 import com.qm.qmclass.model.Hudong;
+import com.qm.qmclass.model.LoginInfor;
 import com.qm.qmclass.model.StudentInfor;
+import com.qm.qmclass.model.YcFileInfo;
 import com.qm.qmclass.okhttp.BaseResponse;
 import com.qm.qmclass.okhttp.MyCallBack;
 import com.qm.qmclass.okhttp.OkHttpUtils;
@@ -78,6 +81,7 @@ import java.util.stream.Collectors;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static com.tencent.teduboard.TEduBoardController.TEduBoardElementType.TEDU_BOARD_ELEMENT_IMAGE;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_ERASER;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_LINE;
 import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_BOARD_TOOL_TYPE_OVAL;
@@ -105,12 +109,13 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private ImageView ivHudong;
     private ImageView ivClassover;
     private FrameLayout llBroadcast;
-    private ImageView ivChehui;
-    private ImageView ivJieping;
-    private ImageView ivWenjian;
-    private ImageView ivColor;
-    private TextView tvText;
-    private ImageView ivHuabi;
+    private static ImageView ivChehui;
+    private static ImageView ivJieping;
+    private static ImageView ivWenjian;
+    private static ImageView ivColor;
+    private static TextView tvText;
+    private static ImageView ivHuabi;
+    private static LinearLayout llHuabi;
     private FrameLayout flFrament;
     private ImageView ivVideolist;
     private ImageView ivStudentlist;
@@ -120,9 +125,10 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private LinearLayout llDanmu;
     private EditText danmuInput;
     private ImageView ivFanye;
-    private TextView tvYeshu;
-    private ImageView ivJiaye;
-    private LinearLayout tools;
+    private static TextView tvYeshu;
+    private static ImageView ivJiaye;
+    private static LinearLayout tools;
+    private static LinearLayout toolFanye;
     private FragmentManager fragmentManager;
     private FragmentTransaction fragmentTransaction;
     private VideoListFragment videoListFragment;
@@ -137,7 +143,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     boolean mCanUndo = false;
 
     private DataManager dataManager;
-    private LiveDataManager liveDataManager;
+    private static LiveDataManager liveDataManager;
 
     private LivePopupWindow chatPopupWindow;
     private LivePopupWindow showJuShouPopupWindow;
@@ -152,6 +158,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private LivePopupWindow addSTPopupWindow;
     private LivePopupWindow wenJianPopupWindow;
     private LivePopupWindow questionPopupWindow;
+    private LivePopupWindow ycFilePopupWindow;
 
     private static TeacherLiveActivity mactivity;
     private boolean isquitClass=false;
@@ -159,6 +166,10 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
 //    private VideoFragmentListener mvideoFragmentListener;
     private StudentlistFragmentListener mstudentlistFragmentListener;
     private DanmuContentAdpter danmuContentAdpter;
+    private static List<YcFileInfo> ycFileList;
+    private static List<String> fileBoardList;
+    private static int pageNum=1;
+    private static int filePosition;
     public static final int TAKE_PHOTO = 1;
     public static final int CROP_PHOTO = 2;
     public static final int GET_PHOTO = 3;
@@ -293,6 +304,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         tvText.setOnClickListener(this);
         ivHuabi=(ImageView) findViewById(R.id.iv_huabi);
         ivHuabi.setOnClickListener(this);
+        llHuabi=(LinearLayout) findViewById(R.id.ll_huabi);
         flFrament=(FrameLayout) findViewById(R.id.fl_frament);
         ivVideolist=(ImageView) findViewById(R.id.iv_videolist);
         ivVideolist.setOnClickListener(this);
@@ -324,6 +336,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         ivJiaye=(ImageView) findViewById(R.id.iv_jiaye);
         ivJiaye.setOnClickListener(this);
         tools=(LinearLayout) findViewById(R.id.tools);
+        toolFanye=(LinearLayout) findViewById(R.id.tool_fanye);
 
         ivVideolist.setImageDrawable(getResources().getDrawable(R.mipmap.videolist_lv));
         ivStudentlist.setImageDrawable(getResources().getDrawable(R.mipmap.studentlist));
@@ -381,6 +394,25 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         colorList.add(9, R.mipmap.white);
         colorList.add(10, R.mipmap.gray);
         colorList.add(11, R.mipmap.black);
+
+        ycFileList=new ArrayList<>();
+        YcFileInfo ycFileInfo=new YcFileInfo();
+        ycFileInfo.setTitle("测试PPT.pptx");
+        ycFileInfo.setSourceUrl("https://1400467841-1253868908.cos.ap-nanjing.myqcloud.com/qm_upload/9fa940059493498880e0902cd46f0867.pptx");
+        ycFileInfo.setTxUrl("https://1400467841-1253868908.cos.ap-nanjing.myqcloud.com/0a94e26p5vgr23o9fa2c_tiw/h5/index.html");
+        ycFileInfo.setTxResolution("1920x1080");
+        ycFileInfo.setPageNum(4);
+        ycFileInfo.setFileType("pptx");
+        ycFileInfo.setCreateTime("2021-05-07 16:03:38");
+        YcFileInfo ycFileInfo2=new YcFileInfo();
+        ycFileInfo2.setTitle("测试视频.mp4");
+        ycFileInfo2.setTxUrl("https://media.w3.org/2010/05/sintel/trailer.mp4");
+        ycFileInfo2.setTxResolution("1920x1080");
+        ycFileInfo2.setPageNum(1);
+        ycFileInfo2.setFileType("mp4");
+        ycFileInfo2.setCreateTime("2021-05-07 16:03:38");
+        ycFileList.add(ycFileInfo);
+        ycFileList.add(ycFileInfo2);
     }
 
     /**
@@ -563,29 +595,25 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             toolsPopupWindow.showToolsPopupWindow(tools);
         }  else if (view.getId() == R.id.iv_fanye) {
             if (mBoard!=null) {
-                if (liveDataManager.getBoardNum() > 1) {
+                String fileId=mBoard.getCurrentFile();
+                if (fileId.equals("#DEFAULT")){
                     mBoard.prevBoard();
-                    liveDataManager.setBoardNum(liveDataManager.getBoardNum() - 1);
-                    tvYeshu.setText(liveDataManager.getBoardNum() + "/" + mBoard.getBoardList().size());
-                    ivJiaye.setImageDrawable(getResources().getDrawable(R.mipmap.fanyeright));
+                }else {
+                    mBoard.prevStep();
                 }
             }
         } else if (view.getId() == R.id.iv_jiaye) {
             if (mBoard!=null){
-                if (liveDataManager.getBoardNum()==mBoard.getBoardList().size()){
-                    mBoard.addBoard(null);
-                    liveDataManager.setBoardNum(liveDataManager.getBoardNum()+1);
-                    ivJiaye.setImageDrawable(getResources().getDrawable(R.mipmap.jiaye));
-                    tvYeshu.setText(liveDataManager.getBoardNum()+"/"+mBoard.getBoardList().size());
-                }else if (liveDataManager.getBoardNum()<mBoard.getBoardList().size()){
-                    mBoard.nextBoard();
-                    liveDataManager.setBoardNum(liveDataManager.getBoardNum()+1);
-                    if (liveDataManager.getBoardNum()==mBoard.getBoardList().size()){
-                        ivJiaye.setImageDrawable(getResources().getDrawable(R.mipmap.jiaye));
-                    }else {
-                        ivJiaye.setImageDrawable(getResources().getDrawable(R.mipmap.fanyeright));
+                String fileId=mBoard.getCurrentFile();
+                if (fileId.equals("#DEFAULT")) {
+                    List boardlist=mBoard.getFileBoardList(fileId);
+                    if (pageNum == boardlist.size()) {
+                        mBoard.addBoard(null);
+                    } else if (pageNum < boardlist.size()) {
+                        mBoard.nextBoard();
                     }
-                    tvYeshu.setText(liveDataManager.getBoardNum()+"/"+mBoard.getBoardList().size());
+                }else {
+                    mBoard.nextStep();
                 }
             }
         }else if (view.getId() == R.id.iv_videolist) {
@@ -1251,17 +1279,21 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
      *点击静音
      */
     @Override
-    public void mute(boolean isforce, boolean isChecked) {
+    public void mute(boolean isforce) {
         if (!isforce){
-            if (isChecked){
-                Toast.makeText(TeacherLiveActivity.this,"开启静音",Toast.LENGTH_SHORT).show();
-            }else {
-                Toast.makeText(TeacherLiveActivity.this,"关闭静音",Toast.LENGTH_SHORT).show();
-            }
+            Map<String, Boolean> map = new HashMap<>();
+            map.put("ismMandatory", false);
+            String str = JSON.toJSONString(map);
+            sendGroupCustomMessage("micDisable",dataManager.getUserCode(),str);
         }else {
-            if (isChecked){
+            if (!liveDataManager.isIsmMandatory()){
+                Map<String, Boolean> map = new HashMap<>();
+                map.put("ismMandatory", true);
+                String str = JSON.toJSONString(map);
+                sendGroupCustomMessage("micDisable",dataManager.getUserCode(),str);
                 Toast.makeText(TeacherLiveActivity.this,"开启强制静音",Toast.LENGTH_SHORT).show();
             }else {
+                sendGroupCustomMessage("micEnable",dataManager.getUserCode(),"");
                 Toast.makeText(TeacherLiveActivity.this,"关闭强制静音",Toast.LENGTH_SHORT).show();
             }
         }
@@ -1394,6 +1426,73 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             Intent intent = new Intent(Intent.ACTION_PICK,
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(intent, GET_PHOTO);
+        }else if (type.equals("remote")){
+            if (ycFilePopupWindow==null){
+                ycFilePopupWindow=new LivePopupWindow(TeacherLiveActivity.this);
+                ycFilePopupWindow.setPopupWindowListener(TeacherLiveActivity.this);
+            }
+            ycFilePopupWindow.showYuanChengPopupWindow(mactivity.getWindow().getDecorView(),ycFileList);
+//            OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/member/getLoginInfo", new MyCallBack<BaseResponse<YcFileInfo>>() {
+//                @Override
+//                public void onLoadingBefore(Request request) {
+//
+//                }
+//
+//                @Override
+//                public void onSuccess(BaseResponse<YcFileInfo> result) {
+//                    if (result!=null&&result.getData()!=null){
+////                        ycFileList = JSON.parseArray(result.getData().toString(), YcFileInfo.class);
+//
+//                    }
+//                }
+//
+//                @Override
+//                public void onFailure(Request request, Exception e) {
+//
+//                }
+//
+//                @Override
+//                public void onError(Response response) {
+//
+//                }
+//            });
+
+        }else if (type.equals("changetobroad")){
+            if (mBoard!=null){
+                mBoard.switchFile("#DEFAULT");
+            }
+        }
+    }
+
+    @Override
+    public void fileItemOnclick(int position) {
+        filePosition=position;
+        if (ycFileList!=null){
+            if (ycFileList.get(position).getFileType().equals("mp4")){
+                if (mBoard!=null){
+                    if (!ycFileList.get(position).isAdd()){
+                        mBoard.addVideoFile(ycFileList.get(position).getTxUrl());
+                    }else {
+                        mBoard.switchFile(ycFileList.get(position).getFileId());
+                    }
+                }
+
+            }else {
+                ivJiaye.setImageDrawable(getResources().getDrawable(R.mipmap.fanyeright));
+                if (mBoard!=null){
+                    if (!ycFileList.get(position).isAdd()){
+                        TEduBoardController.TEduBoardTranscodeFileResult tEduBoardTranscodeFileResult=new TEduBoardController.TEduBoardTranscodeFileResult();
+                        tEduBoardTranscodeFileResult.title=ycFileList.get(position).getTitle();
+                        tEduBoardTranscodeFileResult.resolution=ycFileList.get(position).getTxResolution();
+                        tEduBoardTranscodeFileResult.url=ycFileList.get(position).getTxUrl();
+                        tEduBoardTranscodeFileResult.pages=ycFileList.get(position).getPageNum();
+                        mBoard.addTranscodeFile(tEduBoardTranscodeFileResult,true);
+                    }else {
+                        mBoard.switchFile(ycFileList.get(position).getFileId());
+                    }
+
+                }
+            }
         }
     }
 
@@ -1473,9 +1572,10 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             case CROP_PHOTO:
                 if (resultCode == RESULT_OK) {
                     try {
-                        Bitmap headImage = BitmapFactory.decodeStream(this.getContentResolver().openInputStream(uritempFile));
-                        File file = getFile(headImage);//把Bitmap转成File
-//                        liveBroadcastPecenter.postpazzle(courseId, file);
+                        String path=Environment.getExternalStorageDirectory().getPath() + "/" + "small.jpg";
+                        if(mBoard!=null){
+                            mBoard.addElement(TEDU_BOARD_ELEMENT_IMAGE,path);
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -1486,25 +1586,25 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         }
     }
     //把bitmap转成file
-    public File getFile(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, baos);
-        File file = new File(Environment.getExternalStorageDirectory() + "/temp.jpg");
-        try {
-            file.createNewFile();
-            FileOutputStream fos = new FileOutputStream(file);
-            InputStream is = new ByteArrayInputStream(baos.toByteArray());
-            int x = 0;
-            byte[] b = new byte[1024 * 100];
-            while ((x = is.read(b)) != -1) {
-                fos.write(b, 0, x);
-            }
-            fos.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return file;
-    }
+//    public File getFile(Bitmap bitmap) {
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        bitmap.compress(Bitmap.CompressFormat.JPEG, 50, baos);
+//        File file = new File(Environment.getExternalStorageDirectory() + "/temp.jpg");
+//        try {
+//            file.createNewFile();
+//            FileOutputStream fos = new FileOutputStream(file);
+//            InputStream is = new ByteArrayInputStream(baos.toByteArray());
+//            int x = 0;
+//            byte[] b = new byte[1024 * 100];
+//            while ((x = is.read(b)) != -1) {
+//                fos.write(b, 0, x);
+//            }
+//            fos.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return file;
+//    }
     /*
      *发送单独数据
      */
@@ -1825,55 +1925,110 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         public void onTEBSyncData(String data) {
 
         }
-
+        //白板图片状态改变回调
         @Override
         public void onTEBImageStatusChanged(String boardId, String url, int status) {
 
         }
-
+        //增加白板页回调
         @Override
         public void onTEBAddBoard(List<String> boardId, final String fileId) {
             TXLog.i("LiveBroadcastActivity", "onTEBAddBoard:" + fileId);
+            fileBoardList = mBoard.getFileBoardList(fileId);
         }
-
+        // 	删除白板页回调
         @Override
         public void onTEBDeleteBoard(List<String> boardId, final String fileId) {
 
         }
-
+        //跳转白板页回调
         @Override
         public void onTEBGotoBoard(String boardId, final String fileId) {
+            Log.e("文件回调",boardId+"------"+fileId);
+            if (mBoard!=null) {
+                if (!ycFileList.get(filePosition).getFileType().equals("mp4") || fileId.equals("#DEFAULT")) {
+                    if (fileBoardList == null) {
+                        fileBoardList = mBoard.getFileBoardList(fileId);
+                    }
+                    int pageTotal = fileBoardList.size();
+                    for (int i = 0; i < pageTotal; i++) {
+                        if (fileBoardList.get(i).equals(boardId)) {
+                            pageNum = i + 1;
+                            if (fileId.equals("#DEFAULT")) {
+                                if (pageNum == pageTotal) {
+                                    ivJiaye.setImageDrawable(mactivity.getResources().getDrawable(R.mipmap.jiaye));
+                                } else {
+                                    ivJiaye.setImageDrawable(mactivity.getResources().getDrawable(R.mipmap.fanyeright));
+                                }
+                            } else {
+                                ivJiaye.setImageDrawable(mactivity.getResources().getDrawable(R.mipmap.fanyeright));
+                            }
+                            tvYeshu.setText(pageNum + "/" + pageTotal);
+                            return;
+                        }
+                    }
+                }
+            }
 
         }
-
+        //白板页动画步数回调
         @Override
         public void onTEBGotoStep(int currentStep, int total) {
-
+            TXLog.i("LiveBroadcastActivity", "onTEBAddBoard:" + currentStep+"/"+total);
         }
-
+        //框选工具选中回调
         @Override
         public void onTEBRectSelected() {
 
         }
-
+        //刷新白板回调
         @Override
         public void onTEBRefresh() {
 
         }
-
+        //删除文件回调
         @Override
         public void onTEBDeleteFile(String fileId) {
+            
         }
-
+        //切换文件回调
         @Override
         public void onTEBSwitchFile(String fileId) {
+            if (fileId.equals("#DEFAULT")||!ycFileList.get(filePosition).getFileType().equals("mp4")){
+                toolFanye.setVisibility(View.VISIBLE);
+                ivChehui.setVisibility(View.VISIBLE);
+                ivJieping.setVisibility(View.VISIBLE);
+                if (liveDataManager.getWitchTools().equals("1")||liveDataManager.getWitchTools().equals("2")){
+                    ivColor.setVisibility(View.VISIBLE);
+                }else if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setVisibility(View.VISIBLE);
+                }
+                llHuabi.setVisibility(View.VISIBLE);
+                if (mBoard!=null){
+                    fileBoardList=mBoard.getFileBoardList(fileId);
+                }
+            }else {
+                toolFanye.setVisibility(View.GONE);
+                ivChehui.setVisibility(View.GONE);
+                ivJieping.setVisibility(View.GONE);
+                if (liveDataManager.getWitchTools().equals("1")||liveDataManager.getWitchTools().equals("2")){
+                    ivColor.setVisibility(View.GONE);
+                }else if (liveDataManager.getWitchTools().equals("3")){
+                    tvText.setVisibility(View.GONE);
+                }
+                llHuabi.setVisibility(View.GONE);
+            }
         }
-
+         //增加转码文件回调
         @Override
-        public void onTEBAddTranscodeFile(String s) {
+        public void onTEBAddTranscodeFile(String fileId) {
+            if (ycFileList!=null&&!ycFileList.get(filePosition).isAdd()) {
+                ycFileList.get(filePosition).setAdd(true);
+                ycFileList.get(filePosition).setFileId(fileId);
+            }
         }
 
-        //        白板可撤销状态改变回调
+        //白板可撤销状态改变回调
         @Override
         public void onTEBUndoStatusChanged(boolean canUndo) {
             TeacherLiveActivity activityEx = mActivityRef.get();
@@ -1882,7 +2037,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
         }
 
-        //        白板可重做状态改变回调
+        //白板可重做状态改变回调
         @Override
         public void onTEBRedoStatusChanged(boolean canredo) {
             TeacherLiveActivity activityEx = mActivityRef.get();
@@ -1895,7 +2050,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         public void onTEBFileUploadProgress(final String path, int currentBytes, int totalBytes, int uploadSpeed, float percent) {
             TXLog.i("LiveBroadcastActivity", "onTEBFileUploadProgress:" + path + " percent:" + percent);
         }
-
+        //文件上传状态回调
         @Override
         public void onTEBFileUploadStatus(final String path, int status, int code, String statusMsg) {
             TXLog.i("LiveBroadcastActivity", "onTEBFileUploadStatus:" + path + " status:" + status);
@@ -1905,27 +2060,30 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         public void onTEBFileTranscodeProgress(String s, String s1, String s2, TEduBoardController.TEduBoardTranscodeFileResult tEduBoardTranscodeFileResult) {
 
         }
-
+        //H5 文件状态回调
         @Override
         public void onTEBH5FileStatusChanged(String fileId, int status) {
-
+            TXLog.i("LiveBroadcastActivity", "onTEBFileUploadProgress:" + fileId + " status:" + status);
         }
-
+        //增加批量图片文件回调
         @Override
         public void onTEBAddImagesFile(String s) {
 
         }
-
+        //视频文件状态回调
         @Override
         public void onTEBVideoStatusChanged(String fileId, int status, float progress, float duration) {
-
+            if (ycFileList!=null&&!ycFileList.get(filePosition).isAdd()){
+                ycFileList.get(filePosition).setAdd(true);
+                ycFileList.get(filePosition).setFileId(fileId);
+            }
         }
 
         @Override
         public void onTEBAudioStatusChanged(String s, int i, float v, float v1) {
 
         }
-
+        //白板快照
         @Override
         public void onTEBSnapshot(String s, int i, String s1) {
             ToastUtil.showToast1(mactivity,"","截屏成功");
@@ -1941,7 +2099,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             // 通知相册更新
             mactivity.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(file)));
         }
-
+        //ppt 状态改变回调
         @Override
         public void onTEBH5PPTStatusChanged(int i, String s, String s1) {
 
@@ -1951,12 +2109,12 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         public void onTEBSetBackgroundImage(final String url) {
             TXLog.i("LiveBroadcastActivity", "onTEBSetBackgroundImage:" + url);
         }
-
+        //添加图片元素回调
         @Override
         public void onTEBAddImageElement(final String url) {
             TXLog.i("LiveBroadcastActivity", "onTEBAddImageElement:" + url);
         }
-
+       //添加元素回调
         @Override
         public void onTEBAddElement(String s, String s1) {
 
@@ -1978,7 +2136,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private void addBoardView() {
         View boardview = mBoard.getBoardRenderView();
         //        隐藏视频工具栏
-        mBoard.showVideoControl(false);
+        mBoard.showVideoControl(true);
         mBoard.setDrawEnable(true);
         mBoard.setToolType(TEDU_BOARD_TOOL_TYPE_PEN);
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
@@ -2003,7 +2161,6 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
      */
     private void onTEBHistroyDataSyncCompleted() {
         mHistroyDataSyncCompleted = true;
-        tvYeshu.setText("1/"+mBoard.getBoardList().size());
         startPushBoardStream();
         Log.e("Board", "历史数据同步完成");
     }

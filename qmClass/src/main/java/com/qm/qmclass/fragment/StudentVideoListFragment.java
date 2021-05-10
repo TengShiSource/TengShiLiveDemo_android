@@ -124,14 +124,12 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
         shouqi.setOnClickListener(this);
         myselfShexiangtou.setOnClickListener(this);
         myselfLianmai.setOnClickListener(this);
-//        myselfMaike.setOnClickListener(this);
         myselfQiehuan.setOnClickListener(this);
         classmateVideo=(LinearLayout) view.findViewById(R.id.classmate_video);
-//        getPictureUtil=new GetPictureUtil();
-//        myselfIcon.setImageBitmap(getPictureUtil.getNetPicture("https://s1.ax1x.com/2020/05/05/YkGcqg.png"));
         CheckPermission();
         hidenAnimation();
         teachername.setText(dataManager.getTeacherName());
+        ivShexiangtou.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.shexiangtou_guan));
         return view;
     }
 
@@ -151,6 +149,7 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
             }
         }else if (v.getId()==R.id.myself_shexiangtou){
             if (liveDataManager.isCameraOn()){
+                ivShexiangtou.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.shexiangtou_guan));
                 liveDataManager.setCameraOn(false);
                 myselfIcon.setVisibility(View.VISIBLE);
                 mLivePusher.stopCameraPreview(true);
@@ -162,6 +161,7 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
                 final byte msg[] = str.getBytes();
                 studentLiveActivity.sendCustomMessage(dataManager.getTeacherCode(),msg);
             }else {
+                ivShexiangtou.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.shexiangtou));
                 PushMyselfVideo();
                 liveDataManager.setCameraOn(true);
                 myselfIcon.setVisibility(View.GONE);

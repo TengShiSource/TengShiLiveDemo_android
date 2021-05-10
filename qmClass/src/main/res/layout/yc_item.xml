@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:id="@+id/fileItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/dp_10"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/filename"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="151511515.mp4"
+            android:textColor="@color/b_white"
+            android:textSize="@dimen/sp_13"/>
+        <TextView
+            android:id="@+id/filetime"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_3"
+            android:text="151511515.mp4"
+            android:textColor="@color/text_color_sub_info"
+            android:textSize="@dimen/sp_12"/>
+    </LinearLayout>
+</LinearLayout>

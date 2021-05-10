@@ -40,6 +40,7 @@ import com.qm.qmclass.adpter.ChatContentAdpter;
 import com.qm.qmclass.adpter.ColorAdpter;
 import com.qm.qmclass.adpter.JushouAdpter;
 import com.qm.qmclass.adpter.XzAdpter;
+import com.qm.qmclass.adpter.YCAdpter;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.model.StudentInfor;
@@ -54,8 +55,6 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
     private PopupWindowListener mpopupWindowListener;
     private ChangeStudentListener mchangeStudentListener;
     private CountDownTimer timer;
-    private boolean muteChecked;
-    private boolean forcemuteChecked;
     private ChatContentAdpter chatContentAdpter;
     private ColorAdpter colorAdpter;
     private XzAdpter xzAdpter;
@@ -225,6 +224,8 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         LinearLayout camera=(LinearLayout) contentView.findViewById(R.id.camera);
         LinearLayout album=(LinearLayout) contentView.findViewById(R.id.album);
         LinearLayout remote=(LinearLayout) contentView.findViewById(R.id.remote);
+        LinearLayout changetobroad=(LinearLayout) contentView.findViewById(R.id.changetobroad);
+
         camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -242,9 +243,48 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         remote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                mpopupWindowListener.wenJianOnclick("remote");
+                dismiss();
             }
         });
+        changetobroad.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.wenJianOnclick("changetobroad");
+                dismiss();
+            }
+        });
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(true);
+        setFocusable(true);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+    //远程文件
+    public void showYuanChengPopupWindow(View view,List list){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_yuancheng ,
+                null, false);
+        ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
+        yincang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        ListView yclist=(ListView) contentView.findViewById(R.id.yclist);
+        YCAdpter ycAdpter=new YCAdpter(mactivity, list, new YCAdpter.MyClickListener() {
+            @Override
+            public void myOnClick(int position, View v) {
+                if (v.getId()==R.id.fileItem){
+                    mpopupWindowListener.fileItemOnclick(position);
+                    dismiss();
+                }
+            }
+        });
+        yclist.setAdapter(ycAdpter);
+
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
         setWidth(DensityUtil.dp2px(mactivity, 255));
         setOutsideTouchable(true);
@@ -296,7 +336,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_mute,
                 null, false);
         ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
-        Switch mute=(Switch)contentView.findViewById(R.id.mute);
+        LinearLayout mute=(LinearLayout)contentView.findViewById(R.id.mute);
         Switch forcemute=(Switch)contentView.findViewById(R.id.forcemute);
         yincang.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -304,20 +344,18 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
                 dismiss();
             }
         });
-        mute.setChecked(muteChecked);
-        forcemute.setChecked(forcemuteChecked);
-        mute.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        forcemute.setChecked(liveDataManager.isIsmMandatory());
+        mute.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    muteChecked=isChecked;
-                    mpopupWindowListener.mute(false,isChecked);
+            public void onClick(View v) {
+                mpopupWindowListener.mute(false);
             }
         });
         forcemute.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                forcemuteChecked=isChecked;
-                    mpopupWindowListener.mute(true,isChecked);
+                liveDataManager.setIsmMandatory(isChecked);
+                mpopupWindowListener.mute(true);
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
@@ -1226,12 +1264,13 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         void teacherBack();
         void timeCountDown(String time);
         void cancelClassOver(String time);
-        void mute(boolean isforce,boolean isChecked);
+        void mute(boolean isforce);
         void showDanmu();
         void juShouOnclick(int position,String action);
         void huDongOnclick(int position);
         void addStudentOnclick(String userCode);
         void wenJianOnclick(String type);
+        void fileItemOnclick(int position);
 
     }
     public void setPopupWindowListener(PopupWindowListener popupWindowListener) {

@@ -97,9 +97,10 @@
                     android:gravity="center"
                     android:layout_weight="1">
                     <ImageView
+                        android:id="@+id/iv_shexiangtou"
                         android:layout_width="@dimen/dp_18"
                         android:layout_height="@dimen/dp_18"
-                        android:src="@mipmap/shexiangtou"/>
+                        android:src="@mipmap/shexiangtou_guan"/>
                 </LinearLayout>
                 <LinearLayout
                     android:id="@+id/myself_guamai"
@@ -119,9 +120,10 @@
                     android:layout_weight="1"
                     android:gravity="center">
                     <ImageView
+                        android:id="@+id/iv_maike"
                         android:layout_width="@dimen/dp_18"
                         android:layout_height="@dimen/dp_18"
-                        android:src="@mipmap/maike"/>
+                        android:src="@mipmap/maike_guan"/>
                 </LinearLayout>
                 <LinearLayout
                     android:id="@+id/myself_qiehuan"

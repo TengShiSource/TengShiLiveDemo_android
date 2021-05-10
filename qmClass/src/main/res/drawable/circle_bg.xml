@@ -4,7 +4,7 @@
     android:shape="oval"
     android:useLevel="false">
     <!--设置背景色-->
-    <solid android:color="#1f2123" />
+    <solid android:color="#AC1f2123" />
     <size android:width= "15dp"
         android:height= "15dp" />
     <!--<padding-->

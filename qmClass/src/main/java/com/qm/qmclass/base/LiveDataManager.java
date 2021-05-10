@@ -33,6 +33,7 @@ public class LiveDataManager {
     private List<String> chatContentList=new ArrayList<String>();//聊天消息
     private boolean isOpenDanmu=false;//弹幕是否打开
     private boolean isJinYan=false;//禁言状态
+    private boolean ismMandatory=false;//强制静音状态
     private boolean myselfLianmai=false;
     private boolean jushou=false;//学生举手状态
     private String witchTools="1";
@@ -42,7 +43,6 @@ public class LiveDataManager {
     private int textColor=0;
     private int lineColor=0;
     private int xian=1;
-    private int boardNum=1;
     private VideoListFragment videoListFragment;
     private Integer pageCount=1;
     private LiveDataManager() {
@@ -191,14 +191,6 @@ public class LiveDataManager {
         this.xian = xian;
     }
 
-    public int getBoardNum() {
-        return boardNum;
-    }
-
-    public void setBoardNum(int boardNum) {
-        this.boardNum = boardNum;
-    }
-
     public boolean isMyselfLianmai() {
         return myselfLianmai;
     }
@@ -271,4 +263,13 @@ public class LiveDataManager {
     public void setJushouList(List<String> jushouList) {
         this.jushouList = jushouList;
     }
+
+    public boolean isIsmMandatory() {
+        return ismMandatory;
+    }
+
+    public void setIsmMandatory(boolean ismMandatory) {
+        this.ismMandatory = ismMandatory;
+    }
+
 }
