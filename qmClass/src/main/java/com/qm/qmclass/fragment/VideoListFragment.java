@@ -51,6 +51,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.tencent.trtc.TRTCCloudDef.TRTCSystemVolumeTypeMedia;
+import static com.tencent.trtc.TRTCCloudDef.TRTC_AUDIO_QUALITY_SPEECH;
+import static com.tencent.trtc.TRTCCloudDef.TRTC_AUDIO_ROUTE_EARPIECE;
+import static com.tencent.trtc.TRTCCloudDef.TRTC_AUDIO_ROUTE_SPEAKER;
 
 
 public class VideoListFragment extends Fragment implements TICManager.TICEventListener, View.OnClickListener {
@@ -182,9 +185,6 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
     private void initTrtc() {
         //1、获取trtc
         mTrtcCloud = mTicManager.getTRTCClound();
-//        设置使用媒体音量
-        mTrtcCloud.setSystemVolumeType(TRTCSystemVolumeTypeMedia);
-
         if (mTrtcCloud != null) {
             //3、开始本地视频图像
             startLocalVideo(true);
@@ -238,9 +238,23 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
     private void enableAudioCapture(boolean bEnable) {
         if (mTrtcCloud != null) {
             if (bEnable) {
-                mTrtcCloud.startLocalAudio();
+                mTrtcCloud.startLocalAudio(TRTC_AUDIO_QUALITY_SPEECH);
             } else {
                 mTrtcCloud.stopLocalAudio();
+            }
+        }
+
+    }
+    //关闭和开启SDK音量
+    public void enableSDKAudio(boolean bEnable) {
+        if (mTrtcCloud != null) {
+            if (bEnable) {
+//                mTrtcCloud.setAudioCaptureVolume(0);
+                mTrtcCloud.setAudioPlayoutVolume(0);
+//                mTrtcCloud.setAudioRoute(TRTC_AUDIO_ROUTE_EARPIECE);
+
+            } else {
+                mTrtcCloud.muteLocalAudio(false);
             }
         }
 

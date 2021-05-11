@@ -164,7 +164,7 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
         //1、获取trtc
         mTrtcCloud = mTicManager.getTRTCClound();
 //        设置使用媒体音量
-        mTrtcCloud.setSystemVolumeType(TRTCSystemVolumeTypeMedia);
+//        mTrtcCloud.setSystemVolumeType(TRTCSystemVolumeTypeMedia);
 
         if (mTrtcCloud != null) {
             if (liveDataManager.isCameraOn()){
@@ -394,6 +394,7 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
         view=classMateItemMap.get(studentid);
         return view;
     }
+
     public void showView(String userCode){
         View trtcView=liveDataManager.getTrtcViewmap().get(userCode);
         if (trtcView!=null){
@@ -433,15 +434,17 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
         if (ismMandatory){
             liveDataManager.setMaikeOn(false);
             enableAudioCapture(false);
-            myselfMaike.setClickable(false);
+            ivMaike.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.maike_guan));
+            myselfMaike.setEnabled(false);
         }else {
             liveDataManager.setMaikeOn(false);
             enableAudioCapture(false);
+            ivMaike.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.maike_guan));
         }
     }
     //取消静音
     public void cancelMute(){
-        myselfMaike.setClickable(true);
+        myselfMaike.setEnabled(true);
     }
     @Override
     public void onTICUserSubStreamAvailable(String userId, boolean available) {

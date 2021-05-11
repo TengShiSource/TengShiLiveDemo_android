@@ -1586,7 +1586,8 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             }
         }else if (jo.getString("action").equals("micDisable")) {
             //老师发起静音
-            boolean ismMandatory=jo.getBoolean("info");
+            JSONObject info = JSON.parseObject(jo.getString("info"));
+            boolean ismMandatory=info.getBoolean("ismMandatory");
             if (timeSDVideoListFragment!=null){
                 timeSDVideoListFragment.mute(ismMandatory);
             }

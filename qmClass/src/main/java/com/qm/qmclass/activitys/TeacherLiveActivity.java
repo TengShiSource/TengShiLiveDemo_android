@@ -131,7 +131,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private static LinearLayout toolFanye;
     private FragmentManager fragmentManager;
     private FragmentTransaction fragmentTransaction;
-    private VideoListFragment videoListFragment;
+    private static VideoListFragment videoListFragment;
     private StudentListFragment studentListFragment;
     private List<Integer> colorList=null;
 
@@ -406,7 +406,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         ycFileInfo.setCreateTime("2021-05-07 16:03:38");
         YcFileInfo ycFileInfo2=new YcFileInfo();
         ycFileInfo2.setTitle("测试视频.mp4");
-        ycFileInfo2.setTxUrl("https://media.w3.org/2010/05/sintel/trailer.mp4");
+        ycFileInfo2.setTxUrl("https://tic-res-1259648581.cos.ap-shanghai.myqcloud.com/demo/tiw-vod.mp4");
         ycFileInfo2.setTxResolution("1920x1080");
         ycFileInfo2.setPageNum(1);
         ycFileInfo2.setFileType("mp4");
@@ -1286,15 +1286,13 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             String str = JSON.toJSONString(map);
             sendGroupCustomMessage("micDisable",dataManager.getUserCode(),str);
         }else {
-            if (!liveDataManager.isIsmMandatory()){
+            if (liveDataManager.isIsmMandatory()){
                 Map<String, Boolean> map = new HashMap<>();
                 map.put("ismMandatory", true);
                 String str = JSON.toJSONString(map);
                 sendGroupCustomMessage("micDisable",dataManager.getUserCode(),str);
-                Toast.makeText(TeacherLiveActivity.this,"开启强制静音",Toast.LENGTH_SHORT).show();
             }else {
                 sendGroupCustomMessage("micEnable",dataManager.getUserCode(),"");
-                Toast.makeText(TeacherLiveActivity.this,"关闭强制静音",Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -1469,6 +1467,9 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         filePosition=position;
         if (ycFileList!=null){
             if (ycFileList.get(position).getFileType().equals("mp4")){
+//                if (videoListFragment!=null){
+//                    videoListFragment.enableSDKAudio(true);
+//                }
                 if (mBoard!=null){
                     if (!ycFileList.get(position).isAdd()){
                         mBoard.addVideoFile(ycFileList.get(position).getTxUrl());
@@ -2058,6 +2059,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                 ycFileList.get(filePosition).setAdd(true);
                 ycFileList.get(filePosition).setFileId(fileId);
             }
+
         }
 
         @Override
