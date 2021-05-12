@@ -13,6 +13,7 @@ import com.qm.qmclass.R;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.model.YcFileInfo;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class YCAdpter extends BaseAdapter {
@@ -56,7 +57,9 @@ public class YCAdpter extends BaseAdapter {
         }
 
         holderView.filename.setText(mlist.get(position).getTitle());
-        holderView.filetime.setText(mlist.get(position).getCreateTime());
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String time=simpleDateFormat.format(mlist.get(position).getCreateTime());
+        holderView.filetime.setText(time);
         holderView.fileItem.setOnClickListener(mListener);
         holderView.fileItem.setTag(position);
         return convertView;

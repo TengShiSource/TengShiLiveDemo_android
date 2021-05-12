@@ -43,12 +43,14 @@ import com.qm.qmclass.fragment.StudentVideoListFragment;
 import com.qm.qmclass.fragment.TimeSDVideoListFragment;
 import com.qm.qmclass.model.ChatContent;
 import com.qm.qmclass.model.StudentInfor;
+import com.qm.qmclass.model.YcFileInfo;
 import com.qm.qmclass.okhttp.BaseResponse;
 import com.qm.qmclass.okhttp.MyCallBack;
 import com.qm.qmclass.okhttp.OkHttpUtils;
 import com.qm.qmclass.tencent.TICClassroomOption;
 import com.qm.qmclass.tencent.TICManager;
 import com.qm.qmclass.utils.DialogUtil;
+import com.qm.qmclass.utils.LivePopupWindow;
 import com.qm.qmclass.utils.StudentLivePopupWindow;
 import com.qm.qmclass.utils.ToastUtil;
 import com.tencent.imsdk.TIMMessage;
@@ -419,6 +421,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                         }
                     }else if (event == TXLiveConstants.PLAY_EVT_PLAY_BEGIN) {
                         Log.e("joinOpenClass","BEGIN");
+                        ivJushou.setEnabled(true);
                         rlVideoView.setVisibility(View.VISIBLE);
                         videoView.setVisibility(View.VISIBLE);
                         count=0;
@@ -464,6 +467,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onSuccess(Object data) {
                 Log.e("TeacherLiveActivity","切换到白板成功");
+                ivJushou.setEnabled(false);
                 if (mLivePlayer!=null){
                     mLivePlayer.stopPlay(true); // true 代表清除最后一帧画面
                     mLivePlayer=null;
@@ -501,6 +505,15 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             mTicManager.quitGroup(dataManager.getCourseId(), new TICManager.TICCallback() {
                 @Override
                 public void onSuccess(Object data) {
+                    if (liveDataManager.isJushou()){
+                        liveDataManager.setJushou(false);
+                        ivJushou.setImageDrawable(getResources().getDrawable(R.mipmap.jushou));
+                        Map<String, String> map = new HashMap<>();
+                        map.put("action", "handsDown");
+                        String str = JSON.toJSONString(map);
+                        final byte msg[] = str.getBytes();
+                        sendCustomMessage(dataManager.getTeacherCode(),msg);
+                    }
                     if (mBoard != null) {
                         removeBoardView();
                     }
@@ -954,7 +967,27 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                     try {
                         Bitmap headImage = BitmapFactory.decodeStream(this.getContentResolver().openInputStream(uritempFile));
                         File file = getFile(headImage);//把Bitmap转成File
-//                        liveBroadcastPecenter.postpazzle(courseId, file);
+                        OkHttpUtils.getInstance().PostWithFile(BuildConfig.SERVER_URL+"/upload/file",file,new MyCallBack<BaseResponse<String>>() {
+                            @Override
+                            public void onLoadingBefore(Request request) {
+
+                            }
+
+                            @Override
+                            public void onSuccess(BaseResponse<String> result) {
+                               ToastUtil.showToast1(mactivity,"",result.getData());
+                            }
+
+                            @Override
+                            public void onFailure(Request request, Exception e) {
+
+                            }
+
+                            @Override
+                            public void onError(Response response) {
+
+                            }
+                        });
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -1359,6 +1392,10 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                             String str = JSON.toJSONString(map);
                             final byte msg[] = str.getBytes();
                             sendCustomMessage(fromUserId,msg);
+                            if(liveDataManager.isJushou()){
+                                liveDataManager.setJushou(false);
+                                ivJushou.setImageDrawable(getResources().getDrawable(R.mipmap.jushou));
+                            }
                         }
 
                         @Override

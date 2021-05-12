@@ -11,6 +11,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.alibaba.fastjson.parser.ParserConfig;
 import com.google.gson.Gson;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -23,6 +24,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.FormBody;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -36,6 +38,7 @@ public class OkHttpUtils {
     // 必须要用的okhttpclient实例,在构造器中实例化保证单一实例
     private OkHttpClient mOkHttpClient;
     public static final MediaType JSONTYPE = MediaType.parse("application/json; charset=utf-8");
+    public static final MediaType FILETYPE = MediaType.parse("multipart/form-data");
     private Handler mHandler;
     private Gson mGson;
     private String mtoken="";
@@ -112,6 +115,41 @@ public class OkHttpUtils {
          * 请求网络的逻辑
          */
         requestNetWork(request, callBack);
+    }
+    /**
+     * 对外提供的Post方法访问
+     * @param url
+     * @param file: 提交内容为file数据
+     * @param callBack
+     */
+    public void PostWithFile(String url, File file, MyCallBack callBack) {
+        /**
+         * 通过url和POST方式构建Request
+         */
+        Request request = bulidRequestForPostByFile(url, file);
+        /**
+         * 请求网络的逻辑
+         */
+        requestNetWork(request, callBack);
+    }
+    /**
+     * POST方式构建Request {file}
+     * @param url
+     * @param file
+     * @return
+     */
+    private Request bulidRequestForPostByFile(String url, File file) {
+        // 创建 RequestBody，用于封装构建RequestBody
+        RequestBody requestFile = RequestBody.create(FILETYPE, file);
+//        //和后端约定好Key，这里的partName是用file
+//        MultipartBody.Part body = MultipartBody.Part.createFormData("file", file.getName(), requestFile);
+        RequestBody requestBody = new MultipartBody.Builder()
+                .addFormDataPart("file", file.getName(), requestFile)
+                .build();
+        return new Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build();
     }
     /**
      * POST方式构建Request {json}

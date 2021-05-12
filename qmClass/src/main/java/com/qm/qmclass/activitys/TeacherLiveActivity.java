@@ -394,25 +394,6 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         colorList.add(9, R.mipmap.white);
         colorList.add(10, R.mipmap.gray);
         colorList.add(11, R.mipmap.black);
-
-        ycFileList=new ArrayList<>();
-        YcFileInfo ycFileInfo=new YcFileInfo();
-        ycFileInfo.setTitle("测试PPT.pptx");
-        ycFileInfo.setSourceUrl("https://1400467841-1253868908.cos.ap-nanjing.myqcloud.com/qm_upload/9fa940059493498880e0902cd46f0867.pptx");
-        ycFileInfo.setTxUrl("https://1400467841-1253868908.cos.ap-nanjing.myqcloud.com/0a94e26p5vgr23o9fa2c_tiw/h5/index.html");
-        ycFileInfo.setTxResolution("1920x1080");
-        ycFileInfo.setPageNum(4);
-        ycFileInfo.setFileType("pptx");
-        ycFileInfo.setCreateTime("2021-05-07 16:03:38");
-        YcFileInfo ycFileInfo2=new YcFileInfo();
-        ycFileInfo2.setTitle("测试视频.mp4");
-        ycFileInfo2.setTxUrl("https://tic-res-1259648581.cos.ap-shanghai.myqcloud.com/demo/tiw-vod.mp4");
-        ycFileInfo2.setTxResolution("1920x1080");
-        ycFileInfo2.setPageNum(1);
-        ycFileInfo2.setFileType("mp4");
-        ycFileInfo2.setCreateTime("2021-05-07 16:03:38");
-        ycFileList.add(ycFileInfo);
-        ycFileList.add(ycFileInfo2);
     }
 
     /**
@@ -1316,21 +1297,22 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                 if (showJuShouPopupWindow!=null&&showJuShouPopupWindow.isShowing()){
                     showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
                 }
-            }else if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==1){
-//                    老师发起让学生挂麦
-                Map<String, String> map = new HashMap<>();
-                map.put("action", "micClose");
-                String str = JSON.toJSONString(map);
-                final byte msg[] = str.getBytes();
-                sendCustomMessage(userCode,msg);
-                liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(3);
-                refuseLianMai(userCode);
-                changeStudentListLMstate(userCode,3);
-                liveDataManager.getAllStudentsMap().get(userCode).setHuabiOn(false);
-                if (showJuShouPopupWindow!=null&&showJuShouPopupWindow.isShowing()){
-                    showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
-                }
             }
+//            else if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==1){
+////                    老师发起让学生挂麦
+//                Map<String, String> map = new HashMap<>();
+//                map.put("action", "micClose");
+//                String str = JSON.toJSONString(map);
+//                final byte msg[] = str.getBytes();
+//                sendCustomMessage(userCode,msg);
+//                liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(3);
+//                refuseLianMai(userCode);
+//                changeStudentListLMstate(userCode,3);
+//                liveDataManager.getAllStudentsMap().get(userCode).setHuabiOn(false);
+//                if (showJuShouPopupWindow!=null&&showJuShouPopupWindow.isShowing()){
+//                    showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
+//                }
+//            }
         }else if (action.equals("tichu")){
              //老师向学生发起连麦
              Map<String, String> map = new HashMap<>();
@@ -1425,36 +1407,34 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(intent, GET_PHOTO);
         }else if (type.equals("remote")){
-            if (ycFilePopupWindow==null){
-                ycFilePopupWindow=new LivePopupWindow(TeacherLiveActivity.this);
-                ycFilePopupWindow.setPopupWindowListener(TeacherLiveActivity.this);
-            }
-            ycFilePopupWindow.showYuanChengPopupWindow(mactivity.getWindow().getDecorView(),ycFileList);
-//            OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/member/getLoginInfo", new MyCallBack<BaseResponse<YcFileInfo>>() {
-//                @Override
-//                public void onLoadingBefore(Request request) {
-//
-//                }
-//
-//                @Override
-//                public void onSuccess(BaseResponse<YcFileInfo> result) {
-//                    if (result!=null&&result.getData()!=null){
-////                        ycFileList = JSON.parseArray(result.getData().toString(), YcFileInfo.class);
-//
-//                    }
-//                }
-//
-//                @Override
-//                public void onFailure(Request request, Exception e) {
-//
-//                }
-//
-//                @Override
-//                public void onError(Response response) {
-//
-//                }
-//            });
+            OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/member/getCoursewareList","",new MyCallBack<BaseResponse<List<YcFileInfo>>>() {
+                @Override
+                public void onLoadingBefore(Request request) {
 
+                }
+
+                @Override
+                public void onSuccess(BaseResponse<List<YcFileInfo>> result) {
+                    if (result!=null){
+                        ycFileList = result.getData();
+                        if (ycFilePopupWindow==null){
+                            ycFilePopupWindow=new LivePopupWindow(TeacherLiveActivity.this);
+                            ycFilePopupWindow.setPopupWindowListener(TeacherLiveActivity.this);
+                        }
+                        ycFilePopupWindow.showYuanChengPopupWindow(mactivity.getWindow().getDecorView(),ycFileList);
+                    }
+                }
+
+                @Override
+                public void onFailure(Request request, Exception e) {
+
+                }
+
+                @Override
+                public void onError(Response response) {
+
+                }
+            });
         }else if (type.equals("changetobroad")){
             if (mBoard!=null){
                 mBoard.switchFile("#DEFAULT");
@@ -1631,9 +1611,20 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     changeStudentListLMstate(fromUserId, 3);
                     //删除连麦学生
                     refuseLianMai(fromUserId);
+                    if (showJuShouPopupWindow!=null){
+                        if (showJuShouPopupWindow.isShowing()){
+                            showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
+                        }
+                    }
                 }
             }else if (jo.getString("result").equals("1")){
                 changeStudentListLMstate(fromUserId, 1);
+                liveDataManager.getJushouList().remove(fromUserId);
+                if (showJuShouPopupWindow!=null){
+                    if (showJuShouPopupWindow.isShowing()){
+                        showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
+                    }
+                }
             }
 
         }else if (jo.getString("action").equals("micOpenRequest")){
@@ -1759,6 +1750,15 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                 // 更新监控
                 if (jiankongPopupWindow!=null){
                     jiankongPopupWindow.showJianKong("Exit",list.get(i));
+                }
+                //更新举手列表
+                if (liveDataManager.getJushouList()!=null){
+                    liveDataManager.getJushouList().remove(list.get(i));
+                    if (showJuShouPopupWindow!=null){
+                        if (showJuShouPopupWindow.isShowing()){
+                            showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
+                        }
+                    }
                 }
             }
             liveDataManager.getOffLineStudentsMap().putAll(exitStudentsMap);

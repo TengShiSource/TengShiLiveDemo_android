@@ -59,6 +59,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
     private ColorAdpter colorAdpter;
     private XzAdpter xzAdpter;
     private JushouAdpter jushouAdpter;
+    private TextView jushounum;
     private LiveDataManager liveDataManager;
     private String[] xz = {"shifang","shituo","kongfang","kongtuo"};
     private LinearLayout jiankongpage;
@@ -305,7 +306,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
                 dismiss();
             }
         });
-        TextView jushounum=(TextView)contentView.findViewById(R.id.jushounum);
+        jushounum=(TextView)contentView.findViewById(R.id.jushounum);
         jushounum.setText("("+list.size()+")");
         ListView jushoulistView=(ListView)contentView.findViewById(R.id.jushoulistView);
         jushouAdpter=new JushouAdpter(mactivity, list, new JushouAdpter.MyClickListener() {
@@ -329,6 +330,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
     }
 
     public void refreshJuShou(List<String> list){
+        jushounum.setText("("+list.size()+")");
         jushouAdpter.refresh(list);
     }
 //    静音

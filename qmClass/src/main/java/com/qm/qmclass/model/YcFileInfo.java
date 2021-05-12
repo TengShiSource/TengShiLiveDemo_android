@@ -1,33 +1,23 @@
 package com.qm.qmclass.model;
 
+import java.util.Date;
+
 /**
  * Created by lz on 2020/11/12.
  */
 public class YcFileInfo {
-    private int id;
     private int teacherId;
     private int courseId;
-    private int appId;
     private String title;
-    private String sourceUrl;
     private String txUrl;
     private int pageNum;
     private String txResolution;
     private String txThumPre;
     private String txStatus;
-    private String txTaskId;
-    private String createTime;
-    private String taskId;
+    private Date createTime;
     private String fileType;
     private boolean isAdd=false;
     private String fileId;
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public int getTeacherId() {
         return teacherId;
@@ -45,28 +35,12 @@ public class YcFileInfo {
         this.courseId = courseId;
     }
 
-    public int getAppId() {
-        return appId;
-    }
-
-    public void setAppId(int appId) {
-        this.appId = appId;
-    }
-
     public String getTitle() {
         return title;
     }
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public String getSourceUrl() {
-        return sourceUrl;
-    }
-
-    public void setSourceUrl(String sourceUrl) {
-        this.sourceUrl = sourceUrl;
     }
 
     public String getTxUrl() {
@@ -109,28 +83,12 @@ public class YcFileInfo {
         this.txStatus = txStatus;
     }
 
-    public String getTxTaskId() {
-        return txTaskId;
-    }
-
-    public void setTxTaskId(String txTaskId) {
-        this.txTaskId = txTaskId;
-    }
-
-    public String getCreateTime() {
+    public Date getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(String createTime) {
+    public void setCreateTime(Date createTime) {
         this.createTime = createTime;
-    }
-
-    public String getTaskId() {
-        return taskId;
-    }
-
-    public void setTaskId(String taskId) {
-        this.taskId = taskId;
     }
 
     public String getFileType() {
