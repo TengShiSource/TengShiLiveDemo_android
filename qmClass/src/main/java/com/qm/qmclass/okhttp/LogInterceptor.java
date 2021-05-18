@@ -81,7 +81,7 @@ public class LogInterceptor implements Interceptor {
                             Charset.forName("UTF-8"));
                     if (charset != null) {
                         str = buffer.readString(charset);
-                        if (str.length()>200){
+                        if (str.length()>400){
                             str="太长了-------！";
                         }
                     }

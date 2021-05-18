@@ -144,6 +144,8 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     private StudentLivePopupWindow toolsPopupWindow;
     private StudentLivePopupWindow colorPopupWindow;
     private StudentLivePopupWindow qpPopupWindow;
+    private StudentLivePopupWindow dianMingPopupWindow;
+    private StudentLivePopupWindow answerPopupWindow;
 
     private static Activity mactivity;
     private DataManager dataManager;
@@ -913,6 +915,17 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             startActivityForResult(intent, GET_PHOTO);
         }
     }
+
+    @Override
+    public void signOnclick(long time) {
+        Map<String, String> map = new HashMap<>();
+        map.put("action", "rollCallResponse");
+        map.put("second", String.valueOf(time));
+        String str = JSON.toJSONString(map);
+        final byte msg[] = str.getBytes();
+        sendCustomMessage(dataManager.getTeacherCode(),msg);
+    }
+
     /**
      * 裁剪
      */
@@ -975,7 +988,9 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
 
                             @Override
                             public void onSuccess(BaseResponse<String> result) {
-                               ToastUtil.showToast1(mactivity,"",result.getData());
+                               if (result.getData()!=null){
+                                   postPazzle(result.getData());
+                               }
                             }
 
                             @Override
@@ -996,6 +1011,39 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             default:
                 break;
         }
+    }
+    private void postPazzle(String url){
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("courseId", dataManager.getCourseId());
+        map.put("pazzleUrl", url);
+        map.put("studentId", dataManager.getUserid());
+        String jsonObject=new JSONObject(map).toJSONString();
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/pazzle/pazzle",jsonObject,new MyCallBack<BaseResponse<Boolean>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<Boolean> result) {
+                if (result.getData()){
+                    ToastUtil.showToast1(mactivity,"","上传成功");
+                }else {
+                    ToastUtil.showToast1(mactivity,"","上传失败");
+                }
+
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+                ToastUtil.showToast1(mactivity,"","上传失败");
+            }
+
+            @Override
+            public void onError(Response response) {
+                ToastUtil.showToast1(mactivity,"","上传失败");
+            }
+        });
     }
 //    把bitmap转成file
     public File getFile(Bitmap bitmap) {
@@ -1482,6 +1530,18 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         }else if (jo.getString("action").equals("classOver")){
             //课堂结束
             quitOpenGroup();
+        }else if (jo.getString("action").equals("question")) {
+            //老师发起答题卡
+            int code=jo.getInteger("code");
+            int type=jo.getInteger("type");
+            int expValue=jo.getInteger("expValue");
+            int timeLimit=jo.getInteger("timeLimit");
+            String questionOptions=jo.getString("questionOptions");
+            if (answerPopupWindow==null){
+                answerPopupWindow=new StudentLivePopupWindow(mactivity);
+                answerPopupWindow.setPopupWindowListener(this);
+            }
+            answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),code,type,expValue,timeLimit,questionOptions);
         }
     }
     /*
@@ -1633,6 +1693,15 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             if (timeSDVideoListFragment!=null){
                 timeSDVideoListFragment.cancelMute();
             }
+        }else if (jo.getString("action").equals("rollCall")) {
+            //老师发起点名
+            JSONObject info = JSON.parseObject(jo.getString("info"));
+            int timeLimit=info.getInteger("timeLimit");
+            if (dianMingPopupWindow==null){
+                dianMingPopupWindow=new StudentLivePopupWindow(mactivity);
+                dianMingPopupWindow.setPopupWindowListener(this);
+            }
+            dianMingPopupWindow.showDianMingPopupWindow(mactivity.getWindow().getDecorView(),timeLimit);
         }
     }
 

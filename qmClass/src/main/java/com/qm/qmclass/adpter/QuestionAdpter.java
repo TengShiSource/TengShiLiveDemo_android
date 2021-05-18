@@ -6,30 +6,32 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.qm.qmclass.R;
 import com.qm.qmclass.base.LiveDataManager;
-import com.qm.qmclass.model.YcFileInfo;
+import com.qm.qmclass.model.QuestionInfo;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
 
-public class YCAdpter extends BaseAdapter {
+public class QuestionAdpter extends BaseAdapter {
     private LayoutInflater inflater;
     private Context mcontext;
-    private List<YcFileInfo> mlist;
+    private List<QuestionInfo> mlist;
     private MyClickListener mListener;
-    public YCAdpter(Context context, List<YcFileInfo> list, MyClickListener listener) {
+    private LiveDataManager liveDataManager;
+    public QuestionAdpter(Context context, List<QuestionInfo> list, MyClickListener listener) {
         inflater = LayoutInflater.from(context);
         mcontext=context;
         mlist=list;
         mListener = listener;
+        liveDataManager=LiveDataManager.getInstance();
     }
     @Override
     public int getCount() {
-        if (!mlist.isEmpty()){
+        if (mlist!=null&&!mlist.isEmpty()){
             return mlist.size();
         }
         return 0;
@@ -50,28 +52,25 @@ public class YCAdpter extends BaseAdapter {
         HolderView holderView = null;
         if (convertView == null) {
             holderView = new HolderView();
-            convertView = inflater.inflate(R.layout.yc_item, null);
-            holderView.fileItem = (LinearLayout) convertView.findViewById(R.id.fileItem);
-            holderView.filename = (TextView) convertView.findViewById(R.id.filename);
-            holderView.filetime = (TextView) convertView.findViewById(R.id.filetime);
+            convertView = inflater.inflate(R.layout.question_item, null);
+            holderView.rlQuestion = (RelativeLayout) convertView.findViewById(R.id.rl_question);
+            holderView.ivQuestion = (ImageView) convertView.findViewById(R.id.iv_question);
+            holderView.studentName = (TextView) convertView.findViewById(R.id.student_name);
             convertView.setTag(holderView);
         } else {
             holderView = (HolderView) convertView.getTag();
         }
-
-        holderView.filename.setText(mlist.get(position).getTitle());
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String time=simpleDateFormat.format(mlist.get(position).getCreateTime());
-        holderView.filetime.setText(time);
-        holderView.fileItem.setOnClickListener(mListener);
-        holderView.fileItem.setTag(position);
+        Glide.with(mcontext).load(mlist.get(position).getPazzleUrl()).skipMemoryCache(true).into(holderView.ivQuestion);
+        holderView.studentName.setText(mlist.get(position).getStudentNickName());
+        holderView.rlQuestion.setOnClickListener(mListener);
+        holderView.rlQuestion.setTag(position);
         return convertView;
     }
 
     public class HolderView {
-        LinearLayout fileItem;
-        TextView filename;
-        TextView filetime;
+        TextView studentName;
+        ImageView ivQuestion;
+        RelativeLayout rlQuestion;
     }
     /**
      * 用于回调的抽象类
@@ -85,5 +84,9 @@ public class YCAdpter extends BaseAdapter {
             myOnClick((Integer) v.getTag(), v);
         }
         public abstract void myOnClick(int position, View v);
+    }
+    public void refresh(List<QuestionInfo> list) {
+        mlist = list;//传入list，然后调用notifyDataSetChanged方法
+        notifyDataSetChanged();
     }
 }

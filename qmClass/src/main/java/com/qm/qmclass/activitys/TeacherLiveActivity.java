@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -44,7 +45,9 @@ import com.qm.qmclass.fragment.VideoListFragment;
 import com.qm.qmclass.model.ClassOver;
 import com.qm.qmclass.model.Hudong;
 import com.qm.qmclass.model.LoginInfor;
+import com.qm.qmclass.model.QuestionInfo;
 import com.qm.qmclass.model.StudentInfor;
+import com.qm.qmclass.model.StudentSignInfor;
 import com.qm.qmclass.model.YcFileInfo;
 import com.qm.qmclass.okhttp.BaseResponse;
 import com.qm.qmclass.okhttp.MyCallBack;
@@ -52,6 +55,7 @@ import com.qm.qmclass.okhttp.OkHttpUtils;
 import com.qm.qmclass.tencent.TICClassroomOption;
 import com.qm.qmclass.tencent.TICManager;
 import com.qm.qmclass.utils.DialogUtil;
+import com.qm.qmclass.utils.HudongPopupWindow;
 import com.qm.qmclass.utils.LivePopupWindow;
 import com.qm.qmclass.utils.ToastUtil;
 import com.tencent.imsdk.TIMMessage;
@@ -97,6 +101,7 @@ import static com.tencent.teduboard.TEduBoardController.TEduBoardToolType.TEDU_B
 */
 public class TeacherLiveActivity extends AppCompatActivity implements View.OnClickListener,
         LivePopupWindow.PopupWindowListener,
+        HudongPopupWindow.HDPWListener,
         TICManager.TICMessageListener,
         TICManager.TICIMStatusListener {
     private TextView tvTitle;
@@ -159,6 +164,12 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private LivePopupWindow wenJianPopupWindow;
     private LivePopupWindow questionPopupWindow;
     private LivePopupWindow ycFilePopupWindow;
+
+    private HudongPopupWindow dianMingPopupWindow;
+    private HudongPopupWindow onDMPopupWindow;
+    private HudongPopupWindow dmDetailsPopupWindow;
+    private HudongPopupWindow answerPopupWindow;
+    private HudongPopupWindow answerDetailsPopupWindow;
 
     private static TeacherLiveActivity mactivity;
     private boolean isquitClass=false;
@@ -514,9 +525,10 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
             mutePopupWindow.showMutePopupWindow(view);
         } else if (view.getId() == R.id.iv_question) {
+            ivQuestion.setImageDrawable(getResources().getDrawable(R.mipmap.question));
             if (questionPopupWindow==null){
                 questionPopupWindow=new LivePopupWindow(mactivity);
-//                questionPopupWindow.setPopupWindowListener(this);
+                questionPopupWindow.setPopupWindowListener(this);
             }
             questionPopupWindow.showQuestionPopupWindow(view);
         } else if (view.getId() == R.id.iv_hudong) {
@@ -635,6 +647,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
         }
     }
+
     /*
      *切换fragment
      */
@@ -1332,11 +1345,25 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     @Override
     public void huDongOnclick(int position) {
         if (position==1){
-            Toast.makeText(TeacherLiveActivity.this,"点名",Toast.LENGTH_SHORT).show();
+            if (dianMingPopupWindow==null){
+                dianMingPopupWindow=new HudongPopupWindow(mactivity);
+                dianMingPopupWindow.setHDPWListener(this);
+            }
+            dianMingPopupWindow.showDianMingPopupWindow(mactivity.getWindow().getDecorView());
         }else if (position==2){
-            Toast.makeText(TeacherLiveActivity.this,"答题器",Toast.LENGTH_SHORT).show();
+            liveDataManager.setQuestionMode(0);
+            if (answerPopupWindow==null){
+                answerPopupWindow=new HudongPopupWindow(mactivity);
+                answerPopupWindow.setHDPWListener(this);
+            }
+            answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView());
         }else if (position==3){
-            Toast.makeText(TeacherLiveActivity.this,"抢答器",Toast.LENGTH_SHORT).show();
+            liveDataManager.setQuestionMode(1);
+            if (answerPopupWindow==null){
+                answerPopupWindow=new HudongPopupWindow(mactivity);
+                answerPopupWindow.setHDPWListener(this);
+            }
+            answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView());
         }else if (position==4){
             Toast.makeText(TeacherLiveActivity.this,"计分器",Toast.LENGTH_SHORT).show();
         }else if (position==5){
@@ -1345,6 +1372,95 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             Toast.makeText(TeacherLiveActivity.this,"抽奖",Toast.LENGTH_SHORT).show();
         }else if (position==7){
             Toast.makeText(TeacherLiveActivity.this,"红包",Toast.LENGTH_SHORT).show();
+        }
+    }
+    /*
+     *点名开始或结束
+     */
+    @Override
+    public void dianMingOnclick(String state) {
+        Toast.makeText(TeacherLiveActivity.this,"点名结束",Toast.LENGTH_SHORT).show();
+        if (state.equals("start")){
+            Map<String, Integer> map = new HashMap<>();
+            map.put("timeLimit", liveDataManager.getDMTime());
+            String str = JSON.toJSONString(map);
+            sendGroupCustomMessage("rollCall",dataManager.getUserCode(),str);
+            if (onDMPopupWindow==null){
+                onDMPopupWindow=new HudongPopupWindow(mactivity);
+                onDMPopupWindow.setHDPWListener(this);
+            }
+            onDMPopupWindow.showONDMPopupWindow(mactivity.getWindow().getDecorView());
+        }else if (state.equals("close")){
+            liveDataManager.getSignedList().clear();
+        }else if (state.equals("timeOut")){
+            if (dmDetailsPopupWindow==null){
+                dmDetailsPopupWindow=new HudongPopupWindow(mactivity);
+            }
+            dmDetailsPopupWindow.showDMDetailsPopupWindow(mactivity.getWindow().getDecorView());
+        }
+
+    }
+    /*
+     *答题开始或结束
+     */
+    @Override
+    public void questionOnclick(String state) {
+        if (state.equals("start")){
+            String questionAnswer = TextUtils.join("",liveDataManager.getQuestionAnswer().toArray());
+            String questionOptions = TextUtils.join("", liveDataManager.getQuestionOptions());
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("courseId", dataManager.getCourseId());
+            map.put("expValue", liveDataManager.getExpValue());
+            map.put("questionAnswer", questionAnswer);
+            map.put("questionMode", liveDataManager.getQuestionMode());
+            map.put("questionOptions", questionOptions);
+            map.put("questionType", liveDataManager.getAnswerType());
+            map.put("teacherId", dataManager.getUserid());
+            map.put("timeLimit", liveDataManager.getTimeLimit());
+            String jsonQuestion=JSON.toJSONString(map);
+            OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/question",jsonQuestion,new MyCallBack<BaseResponse<Long>>() {
+                @Override
+                public void onLoadingBefore(Request request) {
+
+                }
+
+                @Override
+                public void onSuccess(BaseResponse<Long> result) {
+                    if (result.getData()!=null){
+//                        String questionOptions = TextUtils.join("", liveDataManager.getQuestionOptions());
+//                        Map<String, Object> map = new HashMap<>();
+//                        map.put("code", result.getData());
+//                        map.put("type", liveDataManager.getAnswerType());
+//                        map.put("expValue", liveDataManager.getExpValue());
+//                        map.put("timeLimit", liveDataManager.getTimeLimit());
+//                        map.put("questionOptions", questionOptions);
+//                        String str = JSON.toJSONString(map);
+//                        sendGroupCustomMessage("question",dataManager.getUserCode(),str);
+                        if (answerDetailsPopupWindow==null){
+                            answerDetailsPopupWindow=new HudongPopupWindow(mactivity);
+                            answerDetailsPopupWindow.setHDPWListener(TeacherLiveActivity.this);
+                        }
+                        answerDetailsPopupWindow.showAnswerDetailsPopupWindow(mactivity.getWindow().getDecorView());
+                    }
+
+                }
+
+                @Override
+                public void onFailure(Request request, Exception e) {
+
+                }
+
+                @Override
+                public void onError(Response response) {
+
+                }
+            });
+        }else if (state.equals("close")){
+            sendGroupCustomMessage("questionClose",dataManager.getUserCode(),"");
+        }else if (state.equals("finish")){
+            sendGroupCustomMessage("questionFinish",dataManager.getUserCode(),"");
+        }else if (state.equals("timeOut")){
+
         }
     }
 
@@ -1476,6 +1592,19 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
         }
     }
+    /*
+     *学生问题列表点击
+     */
+    @Override
+    public void questionItemOnclick(String questionUrl) {
+        if (ycFileList==null||!ycFileList.get(filePosition).getFileType().equals("mp4")) {
+            if (mBoard != null) {
+                mBoard.addElement(TEDU_BOARD_ELEMENT_IMAGE, questionUrl);
+            }
+        }else {
+            ToastUtil.showToast1(mactivity,"","视频播放，不可添加图片");
+        }
+    }
 
     /*
      *显示连麦学生列表
@@ -1589,10 +1718,26 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
         });
     }
-
+    /*
+     *接收单独IM text数据
+     */
     @Override
     public void onTICRecvTextMessage(String fromUserId, String text) {
-        Log.e("接收IM", "接收单独Text--IM"+text);
+        if (text!=null&&!text.equals("")){
+            JSONObject jo = JSON.parseObject(text);
+            if (jo.getString("action").equals("pazzle")){
+                //学生发起提问
+                if (questionPopupWindow!=null){
+                    if (questionPopupWindow.isShowing()){
+                        questionPopupWindow.getQuestionList();
+                    }else {
+                        ivQuestion.setImageDrawable(getResources().getDrawable(R.mipmap.question_red));
+                    }
+                }else {
+                    ivQuestion.setImageDrawable(getResources().getDrawable(R.mipmap.question_red));
+                }
+            }
+        }
     }
     /*
      *接收单独IM数据
@@ -1695,6 +1840,17 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
             if (liveDataManager.getJushouList().size()<1){
                 ivJushou.setImageDrawable(getResources().getDrawable(R.mipmap.jushou));
+            }
+        }else if (jo.getString("action").equals("rollCallResponse")){
+            //学生签到
+            StudentSignInfor studentSignInfor=new StudentSignInfor();
+            studentSignInfor.setUserCode(fromUserId);
+            studentSignInfor.setTime(jo.getString("second"));
+            liveDataManager.getSignedList().add(studentSignInfor);
+            if (onDMPopupWindow!=null){
+                if (onDMPopupWindow.isShowing()){
+                    onDMPopupWindow.refreshONDM();
+                }
             }
         }
     }
@@ -1809,6 +1965,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
 
         }else if (jo.getString("action").equals("studentJoin")) {
+            //学生加入房间
             String info=jo.getString("info");
             StudentInfor studentInfor = JSONObject.parseObject(info,StudentInfor.class);
             liveDataManager.getOnLineStudentsMap().put(fromUserId,studentInfor);
@@ -1825,7 +1982,11 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     studentListFragment.showWeiShangKeList();
                 }
             }
-
+            if (onDMPopupWindow!=null){
+                if (onDMPopupWindow.isShowing()){
+                    onDMPopupWindow.refreshONDM();
+                }
+            }
 
         }
     }
@@ -1858,6 +2019,9 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             videoListFragment.refuseLianMai(userCode);
         }
     }
+
+
+
     /*
      *白板回调
      */
@@ -1928,7 +2092,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         public void onTEBGotoBoard(String boardId, final String fileId) {
             Log.e("文件回调",boardId+"------"+fileId);
             if (mBoard!=null) {
-                if (!ycFileList.get(filePosition).getFileType().equals("mp4") || fileId.equals("#DEFAULT")) {
+                if (ycFileList==null||!ycFileList.get(filePosition).getFileType().equals("mp4") || fileId.equals("#DEFAULT")) {
                     if (fileBoardList == null) {
                         fileBoardList = mBoard.getFileBoardList(fileId);
                     }
@@ -2296,6 +2460,9 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
         });
     }
+    /**
+     *　获取在线学生列表
+     */
     public void getOnLineStudents(){
             OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/student/getOnlineStudents", new MyCallBack<BaseResponse<List<StudentInfor>>>() {
                 @Override

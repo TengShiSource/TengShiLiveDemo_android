@@ -4,9 +4,8 @@ import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.os.Handler;
-
-import com.android.tony.defenselib.DefenseCrash;
-import com.android.tony.defenselib.handler.IExceptionHandler;
+import android.os.Looper;
+import android.util.Log;
 import com.qm.qmclass.qmmanager.QMClassManager;
 import com.qm.qmclass.utils.CrashHandler;
 
@@ -14,7 +13,7 @@ import com.qm.qmclass.utils.CrashHandler;
 /**
  * Created by lz on 2020/11/12.
  */
-public class BaseApp extends Application implements IExceptionHandler {
+public class BaseApp extends Application {
     private static Context context;
     private static Application application;
     private static Activity mactivity;
@@ -30,9 +29,9 @@ public class BaseApp extends Application implements IExceptionHandler {
         CrashHandler.getInstance().init(this);
         application=this;
         // defense_crash防止崩溃
-        DefenseCrash.initialize();
+//        DefenseCrash.initialize();
         // 安装防火墙
-        DefenseCrash.install(this);
+//        DefenseCrash.install(this);
     }
     public static QMClassManager getQMClassManager() {
         return qmClassManager;
@@ -71,17 +70,28 @@ public class BaseApp extends Application implements IExceptionHandler {
     }
 
     @Override
-    public void onCaughtException(Thread thread, Throwable throwable, boolean b) {
-        throwable.printStackTrace();
-    }
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
 
-    @Override
-    public void onEnterSafeMode() {
+        new Handler(getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        Looper.loop(); //try-catch主线程的所有异常；Looper.loop()内部是一个死循环，出现异常时才会退出，所以这里使用while(true)。
+                    } catch (Throwable e) {
+                        Log.d("CrashApp", "Looper.loop(): " + e.getMessage());
+                    }
+                }
+            }
+        });
 
-    }
-
-    @Override
-    public void onMayBeBlackScreen(Throwable throwable) {
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) { //try-catch子线程的所有异常。
+                Log.d("CrashApp", "UncaughtExceptionHandler: " + e.getMessage());
+            }
+        });
 
     }
 }

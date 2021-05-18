@@ -29,7 +29,10 @@ public class AddStudentAdpter extends BaseAdapter {
     }
     @Override
     public int getCount() {
-        return mlist.size();
+        if (!mlist.isEmpty()){
+            return mlist.size();
+        }
+        return 0;
     }
 
     @Override

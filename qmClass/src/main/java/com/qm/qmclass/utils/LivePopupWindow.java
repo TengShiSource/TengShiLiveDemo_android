@@ -32,23 +32,35 @@ import androidx.core.widget.PopupWindowCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.alibaba.fastjson.JSONObject;
 import com.bumptech.glide.Glide;
+import com.qm.qmclass.BuildConfig;
 import com.qm.qmclass.R;
 import com.qm.qmclass.activitys.TeacherLiveActivity;
 import com.qm.qmclass.adpter.AddStudentAdpter;
 import com.qm.qmclass.adpter.ChatContentAdpter;
 import com.qm.qmclass.adpter.ColorAdpter;
 import com.qm.qmclass.adpter.JushouAdpter;
+import com.qm.qmclass.adpter.QuestionAdpter;
 import com.qm.qmclass.adpter.XzAdpter;
 import com.qm.qmclass.adpter.YCAdpter;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
+import com.qm.qmclass.model.LoginInfor;
+import com.qm.qmclass.model.QuestionInfo;
 import com.qm.qmclass.model.StudentInfor;
+import com.qm.qmclass.okhttp.BaseResponse;
+import com.qm.qmclass.okhttp.MyCallBack;
+import com.qm.qmclass.okhttp.OkHttpUtils;
 import com.tencent.rtmp.ui.TXCloudVideoView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismissListener , GestureDetector.OnGestureListener, RefreshJianKongListener {
     private TeacherLiveActivity mactivity;
@@ -59,6 +71,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
     private ColorAdpter colorAdpter;
     private XzAdpter xzAdpter;
     private JushouAdpter jushouAdpter;
+    private QuestionAdpter questionAdpter;
     private TextView jushounum;
     private LiveDataManager liveDataManager;
     private String[] xz = {"shifang","shituo","kongfang","kongtuo"};
@@ -71,6 +84,8 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
     private GestureDetector gestureDetector;
     private int pageNum=1;
     private List<StudentInfor> pageList=null;
+    private List<QuestionInfo> questionList=null;
+    private int answerState=0;//默认未解答
 
     public LivePopupWindow(TeacherLiveActivity activity) {
         mactivity=activity;
@@ -384,29 +399,55 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         View viewAnswered=(View) contentView.findViewById(R.id.view_answered);
         LinearLayout unanswered=(LinearLayout) contentView.findViewById(R.id.unanswered);
         TextView tvUnanswered=(TextView) contentView.findViewById(R.id.tv_unanswered);
+        GridView gridView = (GridView) contentView.findViewById(R.id.gridView);
         View viewUnanswered=(View) contentView.findViewById(R.id.view_unanswered);
-        tvAnswered.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
-        tvUnanswered.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
-        viewAnswered.setVisibility(View.VISIBLE);
-        viewUnanswered.setVisibility(View.INVISIBLE);
+        if (answerState==0){
+            tvUnanswered.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+            tvAnswered.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+            viewAnswered.setVisibility(View.INVISIBLE);
+            viewUnanswered.setVisibility(View.VISIBLE);
+        }else if (answerState==1){
+            tvAnswered.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+            tvUnanswered.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+            viewAnswered.setVisibility(View.VISIBLE);
+            viewUnanswered.setVisibility(View.INVISIBLE);
+        }
+
         answered.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                answerState=1;
                 tvAnswered.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
                 tvUnanswered.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
                 viewAnswered.setVisibility(View.VISIBLE);
                 viewUnanswered.setVisibility(View.INVISIBLE);
+                getQuestionList();
             }
         });
         unanswered.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                answerState=0;
                 tvAnswered.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
                 tvUnanswered.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
                 viewAnswered.setVisibility(View.INVISIBLE);
                 viewUnanswered.setVisibility(View.VISIBLE);
+                getQuestionList();
             }
         });
+        questionAdpter=new QuestionAdpter(mactivity, questionList, new QuestionAdpter.MyClickListener() {
+            @Override
+            public void myOnClick(int position, View v) {
+                mpopupWindowListener.questionItemOnclick(questionList.get(position).getPazzleUrl());
+                if (answerState==0){
+                    resolvePazzle(questionList.get(position).getId());
+                }
+            }
+        });
+        gridView.setAdapter(questionAdpter);
+
+        getQuestionList();
+
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
         setWidth(DensityUtil.dp2px(mactivity, 255));
         setOutsideTouchable(true);
@@ -414,6 +455,67 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         setContentView(contentView);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+
+    //获取问题列表
+    public void getQuestionList(){
+        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/pazzle/pazzleList?resolveFlag="+answerState, new MyCallBack<BaseResponse<List<QuestionInfo>>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<List<QuestionInfo>> result) {
+                if (result!=null&&result.getCode()==200){
+                    questionList=result.getData();
+                    questionAdpter.refresh(questionList);
+                }
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+
+            }
+
+            @Override
+            public void onError(Response response) {
+
+            }
+        });
+    }
+    /*
+     *解决学生问题
+     */
+    private void resolvePazzle(int pazzleId){
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("pazzleId", pazzleId);
+        String jsonObject=new JSONObject(map).toJSONString();
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/pazzle/resolvePazzle/"+pazzleId,"",new MyCallBack<BaseResponse<Boolean>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<Boolean> result) {
+                if (result.getData()!=null&&result.getData()){
+                    getQuestionList();
+                   ToastUtil.showToast1(mactivity,"","解决完成");
+                }
+
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+
+            }
+
+            @Override
+            public void onError(Response response) {
+
+            }
+        });
     }
     //互动列表
     public void showhudongPopupWindow(View view){
@@ -438,42 +540,49 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             @Override
             public void onClick(View v) {
                 mpopupWindowListener.huDongOnclick(1);
+                dismiss();
             }
         });
         dati.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mpopupWindowListener.huDongOnclick(2);
+                dismiss();
             }
         });
         qiangda.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mpopupWindowListener.huDongOnclick(3);
+                dismiss();
             }
         });
         jifen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mpopupWindowListener.huDongOnclick(4);
+                dismiss();
             }
         });
         dingshi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mpopupWindowListener.huDongOnclick(5);
+                dismiss();
             }
         });
         choujiang.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mpopupWindowListener.huDongOnclick(6);
+                dismiss();
             }
         });
         hongbao.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mpopupWindowListener.huDongOnclick(7);
+                dismiss();
             }
         });
 
@@ -1273,6 +1382,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         void addStudentOnclick(String userCode);
         void wenJianOnclick(String type);
         void fileItemOnclick(int position);
+        void questionItemOnclick(String url);
 
     }
     public void setPopupWindowListener(PopupWindowListener popupWindowListener) {

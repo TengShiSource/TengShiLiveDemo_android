@@ -3,6 +3,7 @@ package com.qm.qmclass.utils;
 import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.CountDownTimer;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -27,6 +28,8 @@ import androidx.core.widget.PopupWindowCompat;
 import com.qm.qmclass.R;
 import com.qm.qmclass.adpter.ChatContentAdpter;
 import com.qm.qmclass.adpter.ColorAdpter;
+import com.qm.qmclass.adpter.JushouAdpter;
+import com.qm.qmclass.adpter.OptionsAdpter;
 import com.qm.qmclass.adpter.XzAdpter;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
@@ -39,6 +42,7 @@ import java.util.List;
 public class StudentLivePopupWindow extends PopupWindow {
     private Activity mactivity;
     private PopupWindowListener mpopupWindowListener;
+    private CountDownTimer timer;
     private boolean chatChecked;
     private boolean isChatJinyan=false;
     private ChatContentAdpter chatContentAdpter;
@@ -46,6 +50,7 @@ public class StudentLivePopupWindow extends PopupWindow {
     private XzAdpter xzAdpter;
     private LiveDataManager liveDataManager;
     private String[] xz = {"shifang","shituo","kongfang","kongtuo"};
+    private long dmtime;
 
     public StudentLivePopupWindow(Activity activity) {
         mactivity=activity;
@@ -508,6 +513,151 @@ public class StudentLivePopupWindow extends PopupWindow {
         setContentView(contentView);
         this.showAtLocation(view, Gravity.CENTER, 0, 0);
     }
+    //签到
+    public void showDianMingPopupWindow(View view,int time){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_dianming,
+                null, false);
+        ImageView close=(ImageView)contentView.findViewById(R.id.close);
+        LinearLayout llSign=(LinearLayout) contentView.findViewById(R.id.ll_sign);
+        TextView tvTime=(TextView) contentView.findViewById(R.id.tv_time);
+        TextView sign=(TextView) contentView.findViewById(R.id.sign);
+        LinearLayout llSignfinish=(LinearLayout) contentView.findViewById(R.id.ll_signfinish);
+        TextView finish=(TextView) contentView.findViewById(R.id.finish);
+        llSign.setVisibility(View.VISIBLE);
+        llSignfinish.setVisibility(View.GONE);
+        timer=new CountDownTimer(time*1000,1000){
+            @Override
+            public void onTick(long millisUntilFinished) {
+                dmtime=time*1000-millisUntilFinished;
+                long day=millisUntilFinished/(1000*60*60*24);
+                long hour=(millisUntilFinished-day*(1000*60*60*24))/(1000*60*60);
+                long minute=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60))/(1000*60);
+                long second=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60)-minute*(1000*60))/1000;
+                if (minute>9&&second>9){
+                    tvTime.setText(minute+":"+second);
+                }
+                if (minute<10&&second<10){
+                    tvTime.setText("0"+minute+":0"+second);
+                }
+                if (minute>9&&second<10){
+                    tvTime.setText(minute+":0"+second);
+                }
+                if (minute<10&&second>9){
+                    tvTime.setText("0"+minute+":"+second);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                if (timer != null) {
+                    timer.cancel();
+                }
+                dismiss();
+            }
+        };
+        timer.start();
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        sign.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (timer != null) {
+                    timer.cancel();
+                }
+                mpopupWindowListener.signOnclick(dmtime);
+                llSign.setVisibility(View.GONE);
+                llSignfinish.setVisibility(View.VISIBLE);
+            }
+        });
+        finish.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(false);
+        setFocusable(false);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+    //答题器
+    public void showAnswerPopupWindow(View view,int code,int type,int exp,int time,String options){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_answer,
+                null, false);
+        ImageView close=(ImageView)contentView.findViewById(R.id.close);
+        TextView tvQuestiontype=(TextView) contentView.findViewById(R.id.tv_questiontype);
+        ListView lvOption=(ListView) contentView.findViewById(R.id.lv_option);
+        TextView expValue=(TextView) contentView.findViewById(R.id.expValue);
+        TextView answerTime=(TextView) contentView.findViewById(R.id.answer_time);
+        TextView commit=(TextView) contentView.findViewById(R.id.commit);
+        List<String> list = Arrays.asList(options.split(""));
+        OptionsAdpter optionsAdpter=new OptionsAdpter(mactivity, list,type, new OptionsAdpter.MyClickListener() {
+            @Override
+            public void myOnClick(int position) {
+
+            }
+        });
+        lvOption.setAdapter(optionsAdpter);
+
+        timer=new CountDownTimer(time*1000,1000){
+            @Override
+            public void onTick(long millisUntilFinished) {
+                dmtime=time*1000-millisUntilFinished;
+                long day=millisUntilFinished/(1000*60*60*24);
+                long hour=(millisUntilFinished-day*(1000*60*60*24))/(1000*60*60);
+                long minute=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60))/(1000*60);
+                long second=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60)-minute*(1000*60))/1000;
+                if (minute>9&&second>9){
+                    answerTime.setText(minute+":"+second);
+                }
+                if (minute<10&&second<10){
+                    answerTime.setText("0"+minute+":0"+second);
+                }
+                if (minute>9&&second<10){
+                    answerTime.setText(minute+":0"+second);
+                }
+                if (minute<10&&second>9){
+                    answerTime.setText("0"+minute+":"+second);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                if (timer != null) {
+                    timer.cancel();
+                }
+                dismiss();
+            }
+        };
+        timer.start();
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+
+        commit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(false);
+        setFocusable(false);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
     @SuppressWarnings("ResourceType")
     private static int makeDropDownMeasureSpec(int measureSpec) {
         int mode;
@@ -529,6 +679,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         void quitClass();
         void showDanmu();
         void questionOnclick(String type);
+        void signOnclick(long time);
     }
     public void setPopupWindowListener(PopupWindowListener popupWindowListener) {
         this.mpopupWindowListener = popupWindowListener;
