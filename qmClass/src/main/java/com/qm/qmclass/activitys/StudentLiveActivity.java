@@ -34,6 +34,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qm.qmclass.BuildConfig;
 import com.qm.qmclass.R;
+import com.qm.qmclass.adpter.AnswerListAdpter;
+import com.qm.qmclass.adpter.AnswerStatAdpter;
 import com.qm.qmclass.adpter.DanmuContentAdpter;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
@@ -41,7 +43,9 @@ import com.qm.qmclass.base.QMSDK;
 import com.qm.qmclass.fragment.OnLineStudentListFragment;
 import com.qm.qmclass.fragment.StudentVideoListFragment;
 import com.qm.qmclass.fragment.TimeSDVideoListFragment;
+import com.qm.qmclass.model.AnswerListInfo;
 import com.qm.qmclass.model.ChatContent;
+import com.qm.qmclass.model.StudentAnswerStatInfo;
 import com.qm.qmclass.model.StudentInfor;
 import com.qm.qmclass.model.YcFileInfo;
 import com.qm.qmclass.okhttp.BaseResponse;
@@ -146,6 +150,10 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     private StudentLivePopupWindow qpPopupWindow;
     private StudentLivePopupWindow dianMingPopupWindow;
     private StudentLivePopupWindow answerPopupWindow;
+    private StudentLivePopupWindow answerDetailPopupWindow;
+    private StudentLivePopupWindow rushPopupWindow;
+    private StudentLivePopupWindow rushFinishPopupWindow;
+    private StudentLivePopupWindow rushRedEnvelopePopupWindow;
 
     private static Activity mactivity;
     private DataManager dataManager;
@@ -1532,8 +1540,9 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             quitOpenGroup();
         }else if (jo.getString("action").equals("question")) {
             //老师发起答题卡
-            int code=jo.getInteger("code");
-            int type=jo.getInteger("type");
+            Long questionId=jo.getLong("questionId");
+            liveDataManager.setQuestionId(questionId);
+            int questionType=jo.getInteger("questionType");
             int expValue=jo.getInteger("expValue");
             int timeLimit=jo.getInteger("timeLimit");
             String questionOptions=jo.getString("questionOptions");
@@ -1541,7 +1550,103 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 answerPopupWindow=new StudentLivePopupWindow(mactivity);
                 answerPopupWindow.setPopupWindowListener(this);
             }
-            answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),code,type,expValue,timeLimit,questionOptions);
+            answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),questionId,questionType,expValue,timeLimit,questionOptions);
+        }else if (jo.getString("action").equals("questionFinish")) {
+            //老师发起结束答题
+            if (answerPopupWindow!=null){
+                if (answerPopupWindow.isShowing()){
+                    answerPopupWindow.dismiss();
+                }
+            }
+            OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/question/studentAnswerList/"+liveDataManager.getQuestionId(), new MyCallBack<BaseResponse<List<AnswerListInfo>>>() {
+                @Override
+                public void onLoadingBefore(Request request) {
+
+                }
+
+                @Override
+                public void onSuccess(BaseResponse<List<AnswerListInfo>> result) {
+                    if (result!=null&&result.getData()!=null){
+                        if (answerDetailPopupWindow==null){
+                            answerDetailPopupWindow=new StudentLivePopupWindow(mactivity);
+                        }
+                        answerDetailPopupWindow.showAnswerDetailPopupWindow(mactivity.getWindow().getDecorView(),result.getData());
+                    }
+                }
+
+                @Override
+                public void onFailure(Request request, Exception e) {
+
+                }
+
+                @Override
+                public void onError(Response response) {
+
+                }
+            });
+        }else if (jo.getString("action").equals("questionClose")) {
+            //老师发起取消答题
+            if (answerPopupWindow!=null){
+                if (answerPopupWindow.isShowing()){
+                    answerPopupWindow.dismiss();
+                }
+            }
+        }else if (jo.getString("action").equals("rushQuestion")) {
+            //老师发起抢答
+            Long questionId=jo.getLong("questionId");
+            liveDataManager.setQuestionId(questionId);
+            if (rushPopupWindow==null){
+                rushPopupWindow=new StudentLivePopupWindow(mactivity);
+                rushPopupWindow.setPopupWindowListener(this);
+            }
+            rushPopupWindow.showRushPopupWindow(mactivity.getWindow().getDecorView());
+        }else if (jo.getString("action").equals("rushQuestionFinish")) {
+            //老师发起抢答完成
+            int userId=jo.getInteger("userId");
+            if (userId==dataManager.getUserid()){
+                int questionType=jo.getInteger("questionType");
+                int expValue=jo.getInteger("expValue");
+                int timeLimit=jo.getInteger("timeLimit");
+                String questionOptions=jo.getString("questionOptions");
+                if (rushPopupWindow!=null&&rushPopupWindow.isShowing()){
+                    rushPopupWindow.dismiss();
+                }
+                if (answerPopupWindow==null){
+                    answerPopupWindow=new StudentLivePopupWindow(mactivity);
+                    answerPopupWindow.setPopupWindowListener(this);
+                }
+                answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),liveDataManager.getQuestionId(),questionType,expValue,timeLimit,questionOptions);
+            }else {
+                String nickName=jo.getString("nickName");
+                if (rushPopupWindow!=null&&rushPopupWindow.isShowing()){
+                    rushPopupWindow.refreshRush(nickName);
+                }
+            }
+        }else if (jo.getString("action").equals("rushQuestionAnswerFinish")) {
+            //抢答题答题完成
+            int userId=jo.getInteger("userId");
+            if (userId!=dataManager.getUserid()){
+                int expValue=jo.getInteger("expValue");
+                int result=jo.getInteger("result");
+                String nickName=jo.getString("nickName");
+                String questionAnswer=jo.getString("questionAnswer");
+                if (rushPopupWindow!=null&&rushPopupWindow.isShowing()){
+                    rushPopupWindow.dismiss();
+                }
+                if (rushFinishPopupWindow==null){
+                    rushFinishPopupWindow=new StudentLivePopupWindow(mactivity);
+                    rushFinishPopupWindow.setPopupWindowListener(this);
+                }
+                rushFinishPopupWindow.showRushFinishPopupWindow(mactivity.getWindow().getDecorView(),nickName,expValue,questionAnswer,result);
+            }
+        }else if (jo.getString("action").equals("redEnvelopeGroup")) {
+            //抢红包
+            String redPackKey=jo.getString("key");
+            if (rushRedEnvelopePopupWindow==null){
+                rushRedEnvelopePopupWindow=new StudentLivePopupWindow(mactivity);
+                rushRedEnvelopePopupWindow.setPopupWindowListener(this);
+            }
+            rushRedEnvelopePopupWindow.showRushRedEnvelopePopupWindow(mactivity.getWindow().getDecorView(),redPackKey);
         }
     }
     /*

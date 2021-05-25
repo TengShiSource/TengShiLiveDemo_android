@@ -86,6 +86,8 @@ public class LiveDataManager {
     private int expValue=3;
     //答题时长限制
     private int timeLimit=60;
+    //问题ID
+    private Long questionId;
 
 
 
@@ -378,5 +380,13 @@ public class LiveDataManager {
 
     public void setQuestionAnswer(Set<String> questionAnswer) {
         this.questionAnswer = questionAnswer;
+    }
+
+    public Long getQuestionId() {
+        return questionId;
+    }
+
+    public void setQuestionId(Long questionId) {
+        this.questionId = questionId;
     }
 }

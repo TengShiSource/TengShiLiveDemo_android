@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.qm.qmclass.R;
 import com.qm.qmclass.base.LiveDataManager;
 
+import java.util.IllegalFormatCodePointException;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -24,7 +25,9 @@ public class OptionsAdpter extends BaseAdapter {
     private LiveDataManager liveDataManager;
     private int mtype;
     private int selectPosition=-1;
-    private Set<Integer> dxPosition=new TreeSet<>();
+    private Set<Integer> dxSelectPosition=new TreeSet<>();
+    private Set<String> dxRightKey=new TreeSet<>();
+    private String rightKey;
     public OptionsAdpter(Context context, List list,int type, MyClickListener listener) {
         inflater = LayoutInflater.from(context);
         mcontext=context;
@@ -83,6 +86,8 @@ public class OptionsAdpter extends BaseAdapter {
                 holderView.optionPd.setImageDrawable(mcontext.getDrawable(R.mipmap.cuo));
             }
         }else if (mtype==1){
+            holderView.option.setVisibility(View.VISIBLE);
+            holderView.optionPd.setVisibility(View.GONE);
             if (selectPosition==position){
                 holderView.option.setBackground(mcontext.getDrawable(R.drawable.circle_green_bg));
             }else {
@@ -90,7 +95,9 @@ public class OptionsAdpter extends BaseAdapter {
             }
             holderView.option.setText(mlist.get(position));
         }else if (mtype==2){
-            if (dxPosition.contains(position)){
+            holderView.option.setVisibility(View.VISIBLE);
+            holderView.optionPd.setVisibility(View.GONE);
+            if (dxSelectPosition.contains(position)){
                 holderView.option.setBackground(mcontext.getDrawable(R.drawable.circle_green_bg));
             }else {
                 holderView.option.setBackground(mcontext.getDrawable(R.drawable.circle_darkgary_bg));
@@ -102,15 +109,69 @@ public class OptionsAdpter extends BaseAdapter {
             public void onClick(View v) {
                 if (mtype==1||mtype==3){
                     selectPosition=position;
+                    if (position==0){
+                        rightKey="A";
+                    }else if (position==1){
+                        rightKey="B";
+                    }else if (position==2){
+                        rightKey="C";
+                    }else if (position==3){
+                        rightKey="D";
+                    }else if (position==4){
+                        rightKey="E";
+                    }else if (position==5){
+                        rightKey="F";
+                    }else if (position==6){
+                        rightKey="G";
+                    }else if (position==7){
+                        rightKey="H";
+                    }
                     notifyDataSetChanged();
-                    mListener.myOnClick(position);
+                    mListener.myOnClick(rightKey);
                 }else if (mtype==2){
                     if (selectPosition==position){
-                        dxPosition.remove(position);
+                        selectPosition=-1;
+                        if (position==0){
+                            dxRightKey.remove("A");
+                        }else if (position==1){
+                            dxRightKey.remove("B");
+                        }else if (position==2){
+                            dxRightKey.remove("C");
+                        }else if (position==3){
+                            dxRightKey.remove("D");
+                        }else if (position==4){
+                            dxRightKey.remove("E");
+                        }else if (position==5){
+                            dxRightKey.remove("F");
+                        }else if (position==6){
+                            dxRightKey.remove("G");
+                        }else if (position==7){
+                            dxRightKey.remove("H");
+                        }
+                        dxSelectPosition.remove(position);
                     }else {
-                        dxPosition.add(position);
+                        selectPosition=position;
+                        if (position==0){
+                            dxRightKey.add("A");
+                        }else if (position==1){
+                            dxRightKey.add("B");
+                        }else if (position==2){
+                            dxRightKey.add("C");
+                        }else if (position==3){
+                            dxRightKey.add("D");
+                        }else if (position==4){
+                            dxRightKey.add("E");
+                        }else if (position==5){
+                            dxRightKey.add("F");
+                        }else if (position==6){
+                            dxRightKey.add("G");
+                        }else if (position==7){
+                            dxRightKey.add("H");
+                        }
+                        dxSelectPosition.add(position);
                     }
-                    selectPosition=position;
+                    notifyDataSetChanged();
+                    mListener.dxOnClick(dxRightKey);
                 }
 
             }
@@ -128,6 +189,7 @@ public class OptionsAdpter extends BaseAdapter {
      * 用于回调的抽象类
      */
     public static abstract class MyClickListener {
-        public abstract void myOnClick(int position);
+        public abstract void myOnClick(String RightKey);
+        public abstract void dxOnClick(Set dxRightKey);
     }
 }

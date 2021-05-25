@@ -83,8 +83,8 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
         <ImageView
-            android:layout_width="@dimen/dp_100"
-            android:layout_height="@dimen/dp_100"
+            android:layout_width="@dimen/dp_80"
+            android:layout_height="@dimen/dp_80"
             android:padding="@dimen/dp_20"
             android:src="@mipmap/finash"
             android:layout_marginTop="@dimen/dp_50"

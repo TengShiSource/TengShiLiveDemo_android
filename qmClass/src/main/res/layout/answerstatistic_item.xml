@@ -5,10 +5,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/b_black">
     <LinearLayout
-        android:id="@+id/choice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dp_5"
+        android:layout_marginTop="@dimen/dp_10"
         android:gravity="center_vertical"
         android:orientation="horizontal">
         <TextView
@@ -22,9 +21,9 @@
             android:id="@+id/seekBar"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="@dimen/dp_15"
-            android:minHeight="@dimen/dp_10"
-            android:maxHeight="@dimen/dp_10"
+            android:layout_height="@dimen/dp_20"
+            android:minHeight="@dimen/dp_15"
+            android:maxHeight="@dimen/dp_15"
             android:indeterminateOnly="false"
             android:progressDrawable="@drawable/seekbar_horizontal"
             android:thumb="@null"

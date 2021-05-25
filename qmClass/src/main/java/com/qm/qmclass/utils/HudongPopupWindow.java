@@ -3,26 +3,56 @@ package com.qm.qmclass.utils;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.CountDownTimer;
+import android.os.Handler;
+import android.text.Editable;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.text.style.CharacterStyle;
+import android.text.style.ForegroundColorSpan;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.alibaba.fastjson.JSON;
+import com.qm.qmclass.BuildConfig;
 import com.qm.qmclass.R;
 import com.qm.qmclass.activitys.TeacherLiveActivity;
+import com.qm.qmclass.adpter.AnswerListAdpter;
+import com.qm.qmclass.adpter.AnswerStatAdpter;
 import com.qm.qmclass.adpter.DMDetailsAdpter;
 import com.qm.qmclass.base.LiveDataManager;
+import com.qm.qmclass.model.AnswerInfor;
+import com.qm.qmclass.model.AnswerListInfo;
+import com.qm.qmclass.model.CourseInfo;
+import com.qm.qmclass.model.StudentAnswerStatInfo;
 import com.qm.qmclass.model.StudentSignInfor;
+import com.qm.qmclass.okhttp.BaseResponse;
+import com.qm.qmclass.okhttp.MyCallBack;
+import com.qm.qmclass.okhttp.OkHttpUtils;
+import com.tencent.rtmp.TXLiveBase;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.IllegalFormatCodePointException;
 import java.util.List;
+
+import okhttp3.Request;
+import okhttp3.Response;
 
 /*
  *互动下相关功能
@@ -35,6 +65,57 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
     private TextView signinNum;
     private DMDetailsAdpter dmDetailsAdpter;
     private int optionNum=4;
+    private TextView rightkey;
+    private NoScrollListview lvStatistics;
+    private TextView answerednum;
+    private TextView accuracy;
+    private NoScrollListview lvDetailed;
+    private AnswerStatAdpter answerStatAdpter;
+    private AnswerListAdpter answerListAdpter;
+    private boolean answerFinsh=false;
+    Handler answerStathandler=new Handler();
+    Handler answerListhandler=new Handler();
+    Runnable answerStatRunnable=new Runnable(){
+        @Override
+        public void run() {
+            getStudentAnswerStat();
+        }
+    };
+    Runnable answerListRunnable=new Runnable(){
+        @Override
+        public void run() {
+            getStudentAnswerList();
+        }
+    };
+    private TextView waittime;
+    private int recLen = 0;
+    Handler handler = new Handler();
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            recLen++;
+            long day=recLen*1000/(1000*60*60*24);
+            long hour=(recLen*1000-day*(1000*60*60*24))/(1000*60*60);
+            long minute=(recLen*1000-day*(1000*60*60*24)-hour*(1000*60*60))/(1000*60);
+            long second=(recLen*1000-day*(1000*60*60*24)-hour*(1000*60*60)-minute*(1000*60))/1000;
+            if (minute>9&&second>9){
+                waittime.setText("已等待 "+minute+":"+second);
+            }
+            if (minute<10&&second<10){
+                waittime.setText("已等待 0"+minute+":0"+second);
+            }
+            if (minute>9&&second<10){
+                waittime.setText("已等待 "+minute+":0"+second);
+            }
+            if (minute<10&&second>9){
+                waittime.setText("已等待 0"+minute+":"+second);
+            }
+            handler.postDelayed(this, 1000);
+        }
+    };
+    private boolean startTime=false;
+    private long minute=900000;
+    private long second=30000;
 
     public HudongPopupWindow(TeacherLiveActivity activity) {
         mactivity=activity;
@@ -697,13 +778,26 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         TextView answerTime=(TextView) contentView.findViewById(R.id.answer_time);
         TextView expValue=(TextView) contentView.findViewById(R.id.expValue);
         LinearLayout llStatistics=(LinearLayout) contentView.findViewById(R.id.ll_statistics);
-        TextView rightkey=(TextView) contentView.findViewById(R.id.rightkey);
-        ListView lvStatistics=(ListView) contentView.findViewById(R.id.lv_statistics);
-        TextView answerednum=(TextView) contentView.findViewById(R.id.answerednum);
-        TextView accuracy=(TextView) contentView.findViewById(R.id.accuracy);
+        rightkey=(TextView) contentView.findViewById(R.id.rightkey);
+        lvStatistics=(NoScrollListview) contentView.findViewById(R.id.lv_statistics);
+        answerednum=(TextView) contentView.findViewById(R.id.answerednum);
+        accuracy=(TextView) contentView.findViewById(R.id.accuracy);
         LinearLayout llDetailed=(LinearLayout) contentView.findViewById(R.id.ll_detailed);
-        ListView lvDetailed=(ListView) contentView.findViewById(R.id.lv_detailed);
+        lvDetailed=(NoScrollListview) contentView.findViewById(R.id.lv_detailed);
         TextView finshDt=(TextView) contentView.findViewById(R.id.finsh_dt);
+
+        answerFinsh=false;
+        tvStatistics.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+        viewStatistics.setVisibility(View.VISIBLE);
+        tvDetailed.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+        viewDetailed.setVisibility(View.INVISIBLE);
+
+        llStatistics.setVisibility(View.VISIBLE);
+        llDetailed.setVisibility(View.GONE);
+
+        finshDt.setBackground(mactivity.getDrawable(R.drawable.green_bg));
+        finshDt.setEnabled(true);
+
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -711,12 +805,118 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 liveDataManager.getQuestionAnswer().clear();
                 liveDataManager.setAnswerType(1);
                 liveDataManager.setQuestionMode(0);
+
                 liveDataManager.setTimeLimit(60);
                 liveDataManager.setExpValue(3);
-                hdpwListener.questionOnclick("close");
+
+                if (timer != null) {
+                    timer.cancel();
+                }
+
+                answerStatAdpter=null;
+                answerListAdpter=null;
+
+                if (answerStatRunnable!=null){
+                    answerStathandler.removeCallbacks(answerStatRunnable);
+                }
+                if (answerListRunnable!=null){
+                    answerListhandler.removeCallbacks(answerListRunnable);
+                }
+
+                questionClose();
+
                 dismiss();
             }
         });
+        statistics.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tvStatistics.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+                viewStatistics.setVisibility(View.VISIBLE);
+                tvDetailed.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+                viewDetailed.setVisibility(View.INVISIBLE);
+
+                llStatistics.setVisibility(View.VISIBLE);
+                llDetailed.setVisibility(View.GONE);
+                if (answerListRunnable!=null){
+                    answerListhandler.removeCallbacks(answerListRunnable);
+                }
+                if (!answerFinsh){
+                    getStudentAnswerStat();
+                }
+
+            }
+        });
+        detailed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tvStatistics.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+                viewStatistics.setVisibility(View.INVISIBLE);
+                tvDetailed.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+                viewDetailed.setVisibility(View.VISIBLE);
+
+                llStatistics.setVisibility(View.GONE);
+                llDetailed.setVisibility(View.VISIBLE);
+                if (answerStatRunnable!=null){
+                    answerStathandler.removeCallbacks(answerStatRunnable);
+                }
+                if (!answerFinsh) {
+                    getStudentAnswerList();
+                }
+
+            }
+        });
+        timer=new CountDownTimer(liveDataManager.getTimeLimit()*1000,1000){
+            @Override
+            public void onTick(long millisUntilFinished) {
+                long day=millisUntilFinished/(1000*60*60*24);
+                long hour=(millisUntilFinished-day*(1000*60*60*24))/(1000*60*60);
+                long minute=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60))/(1000*60);
+                long second=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60)-minute*(1000*60))/1000;
+                if (minute>9&&second>9){
+                    answerTime.setText(minute+":"+second);
+                }
+                if (minute<10&&second<10){
+                    answerTime.setText("0"+minute+":0"+second);
+                }
+                if (minute>9&&second<10){
+                    answerTime.setText(minute+":0"+second);
+                }
+                if (minute<10&&second>9){
+                    answerTime.setText("0"+minute+":"+second);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                answerFinsh=true;
+
+                if (timer != null) {
+                    timer.cancel();
+                }
+
+                answerStatAdpter=null;
+                answerListAdpter=null;
+
+                if (answerStatRunnable!=null){
+                    answerStathandler.removeCallbacks(answerStatRunnable);
+                }
+                if (answerListRunnable!=null){
+                    answerListhandler.removeCallbacks(answerListRunnable);
+                }
+
+                questionFinish();
+
+                finshDt.setBackground(mactivity.getDrawable(R.drawable.gray_bg));
+                finshDt.setEnabled(false);
+            }
+        };
+        timer.start();
+
+        expValue.setText(liveDataManager.getExpValue()+"分");
+
+        getStudentAnswerStat();
+
         finshDt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -726,11 +926,29 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 liveDataManager.setQuestionMode(0);
                 liveDataManager.setTimeLimit(60);
                 liveDataManager.setExpValue(3);
-                hdpwListener.questionOnclick("finish");
-                dismiss();
+
+                answerFinsh=true;
+
+                if (timer != null) {
+                    timer.cancel();
+                }
+
+                answerStatAdpter=null;
+                answerListAdpter=null;
+
+                if (answerStatRunnable!=null){
+                    answerStathandler.removeCallbacks(answerStatRunnable);
+                }
+                if (answerListRunnable!=null){
+                    answerListhandler.removeCallbacks(answerListRunnable);
+                }
+
+                questionFinish();
+
+                finshDt.setBackground(mactivity.getDrawable(R.drawable.gray_bg));
+                finshDt.setEnabled(false);
             }
         });
-
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
         setWidth(DensityUtil.dp2px(mactivity, 255));
         setOnDismissListener(this);
@@ -739,6 +957,661 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         setContentView(contentView);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+
+    private void getStudentAnswerStat(){
+        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/question/studentAnswerStat/"+liveDataManager.getQuestionId(), new MyCallBack<BaseResponse<StudentAnswerStatInfo>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<StudentAnswerStatInfo> result) {
+                if (result!=null&&result.getData()!=null){
+                    StudentAnswerStatInfo studentAnswerStatInfo=result.getData();
+                    rightkey.setText("正确答案："+studentAnswerStatInfo.getQuestionAnswer());
+                    if (studentAnswerStatInfo.getTotalCount()==null){
+                        answerednum.setText(studentAnswerStatInfo.getAnswerCount()+"/0");
+                    }else {
+                        answerednum.setText(studentAnswerStatInfo.getAnswerCount()+"/"+studentAnswerStatInfo.getTotalCount());
+                    }
+                    accuracy.setText(studentAnswerStatInfo.getCorrectPercent()+"%");
+                    if (answerStatAdpter==null){
+                        answerStatAdpter=new AnswerStatAdpter(mactivity, studentAnswerStatInfo.getAnswerStat(),studentAnswerStatInfo.getTotalCount());
+                        lvStatistics.setAdapter(answerStatAdpter);
+                    }else {
+                        answerStatAdpter.refresh(studentAnswerStatInfo.getAnswerStat(),studentAnswerStatInfo.getTotalCount());
+                    }
+                    answerStathandler.postDelayed(answerStatRunnable,1000);
+                }
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+
+            }
+
+            @Override
+            public void onError(Response response) {
+
+            }
+        });
+    }
+
+    private void getStudentAnswerList(){
+        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/question/studentAnswerList/"+liveDataManager.getQuestionId(), new MyCallBack<BaseResponse<List<AnswerListInfo>>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<List<AnswerListInfo>> result) {
+                if (result!=null&&result.getData()!=null){
+                    if (answerListAdpter==null){
+                        answerListAdpter=new AnswerListAdpter(mactivity, result.getData());
+                        lvDetailed.setAdapter(answerListAdpter);
+                    }else {
+                        answerListAdpter.refresh(result.getData());
+                    }
+                    answerListhandler.postDelayed(answerListRunnable,1000);
+                }
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+
+            }
+
+            @Override
+            public void onError(Response response) {
+
+            }
+        });
+    }
+
+    //抢答中
+    public void showRushQuestionPopupWindow(View view){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.hd_rushquestion,
+                null, false);
+        ImageView close=(ImageView)contentView.findViewById(R.id.close);
+        waittime=(TextView) contentView.findViewById(R.id.waittime);
+        TextView finishrush=(TextView) contentView.findViewById(R.id.finishrush);
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                handler.removeCallbacks(runnable);
+                questionClose();
+                dismiss();
+            }
+        });
+        handler.postDelayed(runnable, 1000);
+        finishrush.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                handler.removeCallbacks(runnable);
+                questionClose();
+                dismiss();
+            }
+        });
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(false);
+        setFocusable(false);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+    //学生答抢答题中
+    public void showRushAnswerPopupWindow(View view,String name,int timeLimit){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.hd_onrushanswer,
+                null, false);
+        ImageView close=(ImageView)contentView.findViewById(R.id.close);
+        TextView rushtips=(TextView) contentView.findViewById(R.id.rushtips);
+        TextView ansertime=(TextView) contentView.findViewById(R.id.ansertime);
+        TextView finishrush=(TextView) contentView.findViewById(R.id.finishrush);
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (timer != null) {
+                    timer.cancel();
+                }
+                questionClose();
+                dismiss();
+            }
+        });
+        String tip="本题被"+name+"抢答，正在答题中";
+        if(!TextUtils.isEmpty(tip)&&!TextUtils.isEmpty(name)){
+            if(tip.contains(name)){
+                int start=tip.indexOf(name);
+                int end=start+name.length();
+                SpannableStringBuilder spBuilder=new SpannableStringBuilder(tip);
+                CharacterStyle charaStyle=new ForegroundColorSpan(mactivity.getResources().getColor(R.color.textGreen));
+                spBuilder.setSpan(charaStyle, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                rushtips.setText(spBuilder);
+            }
+        }
+        timer=new CountDownTimer(timeLimit*1000,1000){
+            @Override
+            public void onTick(long millisUntilFinished) {
+                long day=millisUntilFinished/(1000*60*60*24);
+                long hour=(millisUntilFinished-day*(1000*60*60*24))/(1000*60*60);
+                long minute=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60))/(1000*60);
+                long second=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60)-minute*(1000*60))/1000;
+                if (minute>9&&second>9){
+                    ansertime.setText("答题倒计时 "+minute+":"+second);
+                }
+                if (minute<10&&second<10){
+                    ansertime.setText("答题倒计时 0"+minute+":0"+second);
+                }
+                if (minute>9&&second<10){
+                    ansertime.setText("答题倒计时 "+minute+":0"+second);
+                }
+                if (minute<10&&second>9){
+                    ansertime.setText("答题倒计时 0"+minute+":"+second);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                if (timer != null) {
+                    timer.cancel();
+                }
+                questionFinish();
+
+                dismiss();
+            }
+        };
+        timer.start();
+        finishrush.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (timer != null) {
+                    timer.cancel();
+                }
+                questionFinish();
+                dismiss();
+            }
+        });
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(false);
+        setFocusable(false);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+
+    //学生答抢答题结束
+    public void showRushAnswerFinishPopupWindow(View view,String nickName,int expValue,String questionAnswer,int result){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.hd_rushfinish,
+                null, false);
+        ImageView close=(ImageView)contentView.findViewById(R.id.close);
+        TextView name=(TextView) contentView.findViewById(R.id.name);
+        TextView tvexpValue=(TextView) contentView.findViewById(R.id.expValue);
+        TextView rightkey=(TextView) contentView.findViewById(R.id.rightkey);
+        TextView yesorno=(TextView) contentView.findViewById(R.id.yesorno);
+        name.setText(nickName);
+        tvexpValue.setText(expValue+"分");
+        rightkey.setText(questionAnswer);
+        if (result==0){
+            yesorno.setText("否");
+        }else if (result==1){
+            yesorno.setText("是");
+        }
+
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(false);
+        setFocusable(false);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+
+
+    //关闭答题（共用）
+    private void questionClose(){
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/questionClose/"+liveDataManager.getQuestionId(),"",new MyCallBack<BaseResponse<Long>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<Long> result) {
+                if (result.getData()!=null){
+                }
+
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+
+            }
+
+            @Override
+            public void onError(Response response) {
+
+            }
+        });
+    }
+    //结束答题（共用）
+    private void questionFinish(){
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/questionFinish/"+liveDataManager.getQuestionId(),"",new MyCallBack<BaseResponse<Long>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<Long> result) {
+                if (result.getData()!=null){
+                }
+
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+
+            }
+
+            @Override
+            public void onError(Response response) {
+
+            }
+        });
+    }
+
+    //计时器
+    public void showFixedTimePopupWindow(View view){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.hd_fixedtime,
+                null, false);
+        ImageView close=(ImageView)contentView.findViewById(R.id.close);
+        LinearLayout fixeTime=(LinearLayout) contentView.findViewById(R.id.fixeTime);
+        LinearLayout restart=(LinearLayout) contentView.findViewById(R.id.restart);
+        PickerView  minute_pv = (PickerView) contentView.findViewById(R.id.minute_pv);
+        PickerView  second_pv = (PickerView) contentView.findViewById(R.id.second_pv);
+        TextView countDown=(TextView) contentView.findViewById(R.id.countDown);
+        TextView startFixeTime=(TextView) contentView.findViewById(R.id.startFixeTime);
+        List<String> data = new ArrayList<String>();
+        List<String> seconds = new ArrayList<String>();
+        for (int i = 0; i < 31; i++) {
+            if (i < 10){
+                data.add("0" + i);
+            }else {
+                data.add("" + i);
+            }
+        }
+        for (int i = 0; i < 60; i++) {
+            if (i < 10){
+                seconds.add("0" + i);
+            }else {
+                seconds.add("" + i);
+            }
+        }
+        minute_pv.setData(data);
+        minute_pv.setOnSelectListener(new PickerView.onSelectListener() {
+
+            @Override
+            public void onSelect(String text) {
+                minute=Long.parseLong(text)*1000*60;
+            }
+        });
+        second_pv.setData(seconds);
+        second_pv.setOnSelectListener(new PickerView.onSelectListener() {
+            @Override
+            public void onSelect(String text) {
+                second=Long.parseLong(text)*1000;
+            }
+        });
+
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (timer != null) {
+                    timer.cancel();
+                }
+                dismiss();
+            }
+        });
+
+        startFixeTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!startTime){
+                    startTime=true;
+                    startFixeTime.setText("重新计时");
+                    fixeTime.setVisibility(View.GONE);
+                    restart.setVisibility(View.VISIBLE);
+                    timer=new CountDownTimer(minute+second,1000){
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                            long day=millisUntilFinished/(1000*60*60*24);
+                            long hour=(millisUntilFinished-day*(1000*60*60*24))/(1000*60*60);
+                            long minute=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60))/(1000*60);
+                            long second=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60)-minute*(1000*60))/1000;
+                            if (minute>9&&second>9){
+                                countDown.setText(minute+":"+second);
+                            }
+                            if (minute<10&&second<10){
+                                countDown.setText("0"+minute+":0"+second);
+                            }
+                            if (minute>9&&second<10){
+                                countDown.setText(minute+":0"+second);
+                            }
+                            if (minute<10&&second>9){
+                                countDown.setText("0"+minute+":"+second);
+                            }
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            if (timer != null) {
+                                timer.cancel();
+                            }
+                        }
+                    };
+                    timer.start();
+                }else {
+                    startTime=false;
+                    startFixeTime.setText("开始计时");
+                    fixeTime.setVisibility(View.VISIBLE);
+                    restart.setVisibility(View.GONE);
+                    if (timer != null) {
+                        timer.cancel();
+                    }
+                }
+            }
+        });
+
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(false);
+        setFocusable(false);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+    private int randomMoney=0;
+    private int averageMoney=0;
+    private int RedEnveLopeType=1;//1 随机红包  2  均分红包
+    //红包
+    public void showRedEnveLopePopupWindow(View view){
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.hd_redenvelope,
+                null, false);
+        ImageView close=(ImageView)contentView.findViewById(R.id.close);
+        LinearLayout randomRed=(LinearLayout) contentView.findViewById(R.id.random_red);
+        TextView tvRandom=(TextView) contentView.findViewById(R.id.tv_random);
+        View viewRandom=(View) contentView.findViewById(R.id.view_random);
+        LinearLayout averageRed=(LinearLayout) contentView.findViewById(R.id.average_red);
+        TextView tvAverage=(TextView) contentView.findViewById(R.id.tv_average);
+        View viewAverage=(View) contentView.findViewById(R.id.view_average);
+
+        LinearLayout llRandom=(LinearLayout) contentView.findViewById(R.id.ll_random);
+        TextView random50=(TextView) contentView.findViewById(R.id.random_50);
+        TextView random100=(TextView) contentView.findViewById(R.id.random_100);
+        TextView random150=(TextView) contentView.findViewById(R.id.random_150);
+        TextView random200=(TextView) contentView.findViewById(R.id.random_200);
+        EditText randomInput=(EditText) contentView.findViewById(R.id.random_input);
+
+        LinearLayout llAverage=(LinearLayout) contentView.findViewById(R.id.ll_average);
+        TextView average10=(TextView) contentView.findViewById(R.id.average_10);
+        TextView average20=(TextView) contentView.findViewById(R.id.average_20);
+        TextView average30=(TextView) contentView.findViewById(R.id.average_30);
+        TextView average40=(TextView) contentView.findViewById(R.id.average_40);
+        EditText averageInput=(EditText) contentView.findViewById(R.id.average_input);
+
+        EditText redEnvelopnum=(EditText) contentView.findViewById(R.id.redEnvelopnum);
+        TextView  onlinenum = (TextView) contentView.findViewById(R.id.onlinenum);
+        TextView  commit = (TextView) contentView.findViewById(R.id.commit);
+        int num=liveDataManager.getOnLineStudentsMap().size();
+        String tip="当前在线学生共"+num+"人";
+        if(!TextUtils.isEmpty(tip)){
+            if(tip.contains(String.valueOf(num))){
+                int start=tip.indexOf(String.valueOf(num));
+                int end=start+String.valueOf(num).length();
+                SpannableStringBuilder spBuilder=new SpannableStringBuilder(tip);
+                CharacterStyle charaStyle=new ForegroundColorSpan(mactivity.getResources().getColor(R.color.textGreen));
+                spBuilder.setSpan(charaStyle, start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                onlinenum.setText(spBuilder);
+            }
+        }
+        if (RedEnveLopeType==1){
+            tvRandom.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+            viewRandom.setVisibility(View.VISIBLE);
+            tvAverage.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+            viewAverage.setVisibility(View.INVISIBLE);
+            llRandom.setVisibility(View.VISIBLE);
+            llAverage.setVisibility(View.GONE);
+        }else {
+            tvRandom.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+            viewRandom.setVisibility(View.INVISIBLE);
+            tvAverage.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+            viewAverage.setVisibility(View.VISIBLE);
+            llRandom.setVisibility(View.GONE);
+            llAverage.setVisibility(View.VISIBLE);
+        }
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                randomMoney=0;
+                averageMoney=0;
+                RedEnveLopeType=1;
+                dismiss();
+            }
+        });
+        randomRed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RedEnveLopeType=1;
+                tvRandom.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+                viewRandom.setVisibility(View.VISIBLE);
+                tvAverage.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+                viewAverage.setVisibility(View.INVISIBLE);
+                llRandom.setVisibility(View.VISIBLE);
+                llAverage.setVisibility(View.GONE);
+            }
+        });
+        averageRed.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RedEnveLopeType=2;
+                tvRandom.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
+                viewRandom.setVisibility(View.INVISIBLE);
+                tvAverage.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
+                viewAverage.setVisibility(View.VISIBLE);
+                llRandom.setVisibility(View.GONE);
+                llAverage.setVisibility(View.VISIBLE);
+            }
+        });
+        random50.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                randomMoney=50;
+                random50.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
+                random100.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random150.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random200.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+            }
+        });
+        random100.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                randomMoney=100;
+                random50.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random100.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
+                random150.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random200.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+            }
+        });
+        random150.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                randomMoney=150;
+                random50.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random100.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random150.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
+                random200.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+            }
+        });
+        random200.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                randomMoney=200;
+                random50.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random100.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random150.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random200.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
+            }
+        });
+        randomInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (editable!=null){
+                    randomMoney=Integer.parseInt(editable.toString().trim());
+                }else {
+                    randomMoney=0;
+                }
+            }
+        });
+        average10.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                averageMoney=10;
+                average10.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
+                average20.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average30.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average40.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+            }
+        });
+        average20.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                averageMoney=20;
+                average10.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average20.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
+                average30.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average40.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+            }
+        });
+        average30.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                averageMoney=30;
+                average10.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average20.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average30.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
+                average40.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+            }
+        });
+        average40.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                averageMoney=40;
+                average10.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average20.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average30.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average40.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
+            }
+        });
+        averageInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (editable!=null){
+                    averageMoney=Integer.parseInt(editable.toString().trim());
+                }else {
+                    averageMoney=0;
+                }
+            }
+        });
+        commit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (redEnvelopnum.getText()!=null){
+                    if (RedEnveLopeType==1){
+                        envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),randomMoney,"1");
+                    }else if (RedEnveLopeType==2){
+                        envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),Integer.parseInt(redEnvelopnum.getText().toString())*averageMoney,"2");
+                    }
+                }
+                dismiss();
+            }
+        });
+
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setOutsideTouchable(false);
+        setFocusable(true);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+
+    //发红包
+    private void envelopRedPack(int num,int totalStudyCoin,String type){
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("num", num);
+        map.put("totalStudyCoin", totalStudyCoin);
+        map.put("type", type);
+        String json=JSON.toJSONString(map);
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/member/envelopRedPack",json,new MyCallBack<BaseResponse<String>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<String> result) {
+                if (result.getCode()==200){
+                    randomMoney=0;
+                    averageMoney=0;
+                    RedEnveLopeType=1;
+                    ToastUtil.showToast1(mactivity,"","发送红包成功");
+                }else {
+                    ToastUtil.showToast1(mactivity,"","发送红包失败");
+                }
+
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+                ToastUtil.showToast1(mactivity,"","发送红包失败");
+            }
+
+            @Override
+            public void onError(Response response) {
+                ToastUtil.showToast1(mactivity,"","发送红包失败");
+            }
+        });
     }
     @Override
     public void onDismiss() {
