@@ -116,6 +116,9 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
     private boolean startTime=false;
     private long minute=900000;
     private long second=30000;
+    private int randomMoney=0;
+    private int averageMoney=0;
+    private int RedEnveLopeType=1;//1 随机红包  2  均分红包
 
     public HudongPopupWindow(TeacherLiveActivity activity) {
         mactivity=activity;
@@ -197,6 +200,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 }
                 liveDataManager.setDMTime(60);
                 hdpwListener.dianMingOnclick("close");
+                liveDataManager.setDMSurplusTime(0);
                 dismiss();
             }
         });
@@ -208,6 +212,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 long minute=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60))/(1000*60);
                 long second=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60))/1000;
                 details.setText(second+"s后查看详情");
+                liveDataManager.setDMSurplusTime(millisUntilFinished);
             }
 
             @Override
@@ -217,6 +222,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 }
                 dismiss();
                 hdpwListener.dianMingOnclick("timeOut");
+                liveDataManager.setDMSurplusTime(0);
             }
         };
         timer.start();
@@ -751,6 +757,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             @Override
             public void onClick(View v) {
                 hdpwListener.questionOnclick("start");
+                liveDataManager.setOnQuestion(true);
                 dismiss();
             }
         });
@@ -808,6 +815,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
 
                 liveDataManager.setTimeLimit(60);
                 liveDataManager.setExpValue(3);
+                liveDataManager.setOnQuestion(false);
 
                 if (timer != null) {
                     timer.cancel();
@@ -885,6 +893,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 if (minute<10&&second>9){
                     answerTime.setText("0"+minute+":"+second);
                 }
+                liveDataManager.setQuestionSurplusTime(millisUntilFinished);
             }
 
             @Override
@@ -906,9 +915,10 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 }
 
                 questionFinish();
-
+                liveDataManager.setOnQuestion(false);
                 finshDt.setBackground(mactivity.getDrawable(R.drawable.gray_bg));
                 finshDt.setEnabled(false);
+                liveDataManager.setQuestionSurplusTime(0);
             }
         };
         timer.start();
@@ -944,7 +954,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 }
 
                 questionFinish();
-
+                liveDataManager.setOnQuestion(false);
                 finshDt.setBackground(mactivity.getDrawable(R.drawable.gray_bg));
                 finshDt.setEnabled(false);
             }
@@ -1078,6 +1088,10 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                     timer.cancel();
                 }
                 questionClose();
+                liveDataManager.setOnQuestion(false);
+
+
+
                 dismiss();
             }
         });
@@ -1119,7 +1133,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                     timer.cancel();
                 }
                 questionFinish();
-
+                liveDataManager.setOnQuestion(false);
                 dismiss();
             }
         };
@@ -1131,6 +1145,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                     timer.cancel();
                 }
                 questionFinish();
+                liveDataManager.setOnQuestion(false);
                 dismiss();
             }
         });
@@ -1280,6 +1295,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 if (timer != null) {
                     timer.cancel();
                 }
+                hdpwListener.fixedTimeOnclick("kill",0);
                 dismiss();
             }
         });
@@ -1321,6 +1337,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                         }
                     };
                     timer.start();
+                    hdpwListener.fixedTimeOnclick("start",minute+second);
                 }else {
                     startTime=false;
                     startFixeTime.setText("开始计时");
@@ -1329,6 +1346,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                     if (timer != null) {
                         timer.cancel();
                     }
+
                 }
             }
         });
@@ -1341,9 +1359,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         setContentView(contentView);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
     }
-    private int randomMoney=0;
-    private int averageMoney=0;
-    private int RedEnveLopeType=1;//1 随机红包  2  均分红包
+
     //红包
     public void showRedEnveLopePopupWindow(View view){
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.hd_redenvelope,
@@ -1437,6 +1453,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             @Override
             public void onClick(View v) {
                 randomMoney=50;
+                randomInput.setText("50");
                 random50.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
                 random100.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 random150.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
@@ -1447,6 +1464,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             @Override
             public void onClick(View v) {
                 randomMoney=100;
+                randomInput.setText("100");
                 random50.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 random100.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
                 random150.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
@@ -1457,6 +1475,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             @Override
             public void onClick(View v) {
                 randomMoney=150;
+                randomInput.setText("150");
                 random50.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 random100.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 random150.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
@@ -1467,36 +1486,33 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             @Override
             public void onClick(View v) {
                 randomMoney=200;
+                randomInput.setText("200");
                 random50.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 random100.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 random150.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 random200.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
             }
         });
-        randomInput.addTextChangedListener(new TextWatcher() {
+        randomInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                if (editable!=null){
-                    randomMoney=Integer.parseInt(editable.toString().trim());
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent event) {
+                if (textView.getText()!=null){
+                    randomMoney=Integer.parseInt(textView.getText().toString().trim());
                 }else {
                     randomMoney=0;
                 }
+                random50.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random100.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random150.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                random200.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                return false;
             }
         });
         average10.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 averageMoney=10;
+                averageInput.setText("10");
                 average10.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
                 average20.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 average30.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
@@ -1507,6 +1523,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             @Override
             public void onClick(View v) {
                 averageMoney=20;
+                averageInput.setText("20");
                 average10.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 average20.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
                 average30.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
@@ -1517,6 +1534,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             @Override
             public void onClick(View v) {
                 averageMoney=30;
+                averageInput.setText("30");
                 average10.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 average20.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 average30.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
@@ -1527,30 +1545,26 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             @Override
             public void onClick(View v) {
                 averageMoney=40;
+                averageInput.setText("40");
                 average10.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 average20.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 average30.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
                 average40.setBackground(mactivity.getDrawable(R.drawable.green_fillet_bg));
             }
         });
-        averageInput.addTextChangedListener(new TextWatcher() {
+        averageInput.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                if (editable!=null){
-                    averageMoney=Integer.parseInt(editable.toString().trim());
+            public boolean onEditorAction(TextView textView, int actionId, KeyEvent event) {
+                if (textView.getText()!=null){
+                    averageMoney=Integer.parseInt(textView.getText().toString().trim());
                 }else {
                     averageMoney=0;
                 }
+                average10.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average20.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average30.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                average40.setBackground(mactivity.getDrawable(R.drawable.darkgray_bg));
+                return false;
             }
         });
         commit.setOnClickListener(new View.OnClickListener() {
@@ -1558,12 +1572,23 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             public void onClick(View v) {
                 if (redEnvelopnum.getText()!=null){
                     if (RedEnveLopeType==1){
-                        envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),randomMoney,"1");
+                        if (randomMoney!=0){
+                            envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),randomMoney,"1");
+                        }else {
+                            ToastUtil.showToast1(mactivity,"","请输入红包金额");
+                        }
                     }else if (RedEnveLopeType==2){
-                        envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),Integer.parseInt(redEnvelopnum.getText().toString())*averageMoney,"2");
+                        if (averageMoney!=0){
+                            envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),Integer.parseInt(redEnvelopnum.getText().toString())*averageMoney,"2");
+                        }else {
+                            ToastUtil.showToast1(mactivity,"","请输入红包金额");
+                        }
                     }
+                    dismiss();
+                }else {
+                    ToastUtil.showToast1(mactivity,"","请输入红包个数");
                 }
-                dismiss();
+
             }
         });
 
@@ -1622,6 +1647,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
     public interface HDPWListener {
         void dianMingOnclick(String state);
         void questionOnclick(String state);
+        void fixedTimeOnclick(String state,long time);
     }
     public void setHDPWListener(HDPWListener hdpwListener) {
         this.hdpwListener = hdpwListener;

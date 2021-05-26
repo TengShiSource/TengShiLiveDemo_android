@@ -451,7 +451,7 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
 
     @Override
     public void onUserEnter(String userId) {
-        TXCLog.i("退出加入房间", "TICManager: onUserEnter :" + userId );
+        TXCLog.i("加入房间", "TICManager: onUserEnter :" + userId );
         String broadId=dataManager.getAppid() + "_" + dataManager.getCourseId() + "_pusher";
         if (!userId.equals(broadId)){
             Map<String, String> map = new HashMap<>();
@@ -462,6 +462,7 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
             if (liveDataManager.getAllStudentsMap().get(userId)!=null) {
                 liveDataManager.getAllStudentsMap().get(userId).setLianMaiState(1);
             }
+            liveDataManager.getLianMaiList().add(userId);
 //            创建TRTC视图
             TXCloudVideoView studentTRTCView = trtcView.getTRTCView();
             studentTRTCView.setUserId(userId);
@@ -508,7 +509,7 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
 
     @Override
     public void onUserExit(String userId, int reason) {
-        TXCLog.i("退出加入房间", "TICManager: onUserExit :" + userId );
+        TXCLog.i("退出房间", "TICManager: onUserExit :" + userId );
         Map<String, String> map = new HashMap<>();
         map.put("studentId", userId);
         map.put("type", "2");
@@ -519,6 +520,7 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
             liveDataManager.getAllStudentsMap().get(userId).setLianMaiState(3);
             teacherLiveActivity.changeStudentListLMstate(userId,3);
         }
+        liveDataManager.getLianMaiList().remove(userId);
 
         if (videoState.equals("JK")&&refreshJianKongListener!=null){
             refreshJianKongListener.refreshSomeOne(userId);
@@ -537,12 +539,15 @@ public class VideoListFragment extends Fragment implements TICManager.TICEventLi
         }
         qpPopupWindow.showQPPopupWindow(view,userCode);
         teacherLiveActivity.sendGroupCustomMessage("cameraFull","",userCode);
+
+        liveDataManager.setCameraFullStudent(userCode);
     }
     /*
      *退出全屏
      */
     public void cameraBack(String userCode){
         qpPopupWindow=null;
+        liveDataManager.setCameraFullStudent("");
         if (userCode.equals(dataManager.getUserCode())){
             TXCloudVideoView teacherTrtcView=liveDataManager.getTrtcViewmap().get(userCode);
             ViewGroup teacherTrtcViewParent=(ViewGroup) teacherTrtcView.getParent();

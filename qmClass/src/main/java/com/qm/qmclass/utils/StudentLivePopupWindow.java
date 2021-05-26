@@ -38,12 +38,14 @@ import com.qm.qmclass.adpter.OptionsAdpter;
 import com.qm.qmclass.adpter.XzAdpter;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
+import com.qm.qmclass.base.QMSDK;
 import com.qm.qmclass.model.AnswerInfor;
 import com.qm.qmclass.model.AnswerListInfo;
 import com.qm.qmclass.model.ChatContent;
 import com.qm.qmclass.okhttp.BaseResponse;
 import com.qm.qmclass.okhttp.MyCallBack;
 import com.qm.qmclass.okhttp.OkHttpUtils;
+import com.tencent.liteav.beauty.TXBeautyManager;
 import com.tencent.rtmp.ui.TXCloudVideoView;
 
 import java.util.ArrayList;
@@ -201,6 +203,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_set,
                 null, false);
         ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
+        Switch beauty=(Switch)contentView.findViewById(R.id.beauty);
         yincang.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -209,6 +212,15 @@ public class StudentLivePopupWindow extends PopupWindow {
         });
         TextView courseId=(TextView)contentView.findViewById(R.id.courseId);
         courseId.setText(String.valueOf(DataManager.getInstance().getCourseId()));
+        beauty.setChecked(liveDataManager.isOpenBeauty());
+
+        beauty.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                liveDataManager.setOpenBeauty(isChecked);
+                mpopupWindowListener.setBeauty();
+            }
+        });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
         setWidth(DensityUtil.dp2px(mactivity, 255));
         setOutsideTouchable(true);
@@ -965,6 +977,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         void showDanmu();
         void questionOnclick(String type);
         void signOnclick(long time);
+        void setBeauty();
     }
     public void setPopupWindowListener(PopupWindowListener popupWindowListener) {
         this.mpopupWindowListener = popupWindowListener;

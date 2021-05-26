@@ -31,6 +31,7 @@ import com.qm.qmclass.tencent.TICVideoRootView;
 import com.qm.qmclass.tencent.TRTCView;
 import com.qm.qmclass.utils.PermissionUtils;
 import com.qm.qmclass.utils.RoundImageView;
+import com.tencent.liteav.beauty.TXBeautyManager;
 import com.tencent.rtmp.ui.TXCloudVideoView;
 import com.tencent.trtc.TRTCCloud;
 import com.tencent.trtc.TRTCCloudDef;
@@ -238,6 +239,21 @@ public class TimeSDVideoListFragment extends Fragment implements TICManager.TICE
             }
         }
 
+    }
+    //设置美颜
+    public void setBeauty(){
+        TXBeautyManager txBeautyManager=mTrtcCloud.getBeautyManager();
+        if (liveDataManager.isOpenBeauty()){
+            txBeautyManager.setBeautyLevel(7);
+            txBeautyManager.setBeautyStyle(2);
+            txBeautyManager.setWhitenessLevel(7);
+            txBeautyManager.setRuddyLevel(3);
+        }else {
+            txBeautyManager.setBeautyLevel(0);
+            txBeautyManager.setBeautyStyle(1);
+            txBeautyManager.setWhitenessLevel(0);
+            txBeautyManager.setRuddyLevel(0);
+        }
     }
     //    创建一个新学生视频View
     private View createView(final String studentId) {

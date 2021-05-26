@@ -46,12 +46,14 @@ import com.qm.qmclass.adpter.XzAdpter;
 import com.qm.qmclass.adpter.YCAdpter;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
+import com.qm.qmclass.base.QMSDK;
 import com.qm.qmclass.model.LoginInfor;
 import com.qm.qmclass.model.QuestionInfo;
 import com.qm.qmclass.model.StudentInfor;
 import com.qm.qmclass.okhttp.BaseResponse;
 import com.qm.qmclass.okhttp.MyCallBack;
 import com.qm.qmclass.okhttp.OkHttpUtils;
+import com.tencent.liteav.beauty.TXBeautyManager;
 import com.tencent.rtmp.ui.TXCloudVideoView;
 
 import java.util.ArrayList;
@@ -185,31 +187,12 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             chatContentAdpter.add(data);
         }
     }
-    //弹幕
-//    @SuppressLint("WrongConstant")
-//    public void showDanmuPopupWindow(View view, List<ChatContent> chatContentList){
-//        setSoftInputMode(PopupWindow.INPUT_METHOD_NEEDED);
-//        setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
-//        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_danmu,
-//                null, false);
-//        ListView danmulistView=(ListView)contentView.findViewById(R.id.danmulistView);
-//        danmuAdpter=new DanmuAdpter(mactivity,chatContentList);
-//        danmulistView.setAdapter(danmuAdpter);
-//        setHeight(DensityUtil.dp2px(mactivity, 150));
-//        setWidth(DensityUtil.dp2px(mactivity, 235));
-//        setOutsideTouchable(false);
-//        setFocusable(false);
-//        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-//        setContentView(contentView);
-//        contentView.measure(makeDropDownMeasureSpec(this.getWidth()),
-//                makeDropDownMeasureSpec(this.getHeight()));
-//        PopupWindowCompat.showAsDropDown(this, view, 0, 0, Gravity.START);
-//    }
     //设置
     public void showSetPopupWindow(View view){
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_set,
                 null, false);
         ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
+        Switch beauty=(Switch)contentView.findViewById(R.id.beauty);
         yincang.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -218,6 +201,26 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         });
         TextView courseId=(TextView)contentView.findViewById(R.id.courseId);
         courseId.setText(String.valueOf(DataManager.getInstance().getCourseId()));
+        beauty.setChecked(liveDataManager.isOpenBeauty());
+        beauty.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                liveDataManager.setOpenBeauty(isChecked);
+                TXBeautyManager txBeautyManager=QMSDK.getTICManager().getTRTCClound().getBeautyManager();
+                if (isChecked){
+                    txBeautyManager.setBeautyLevel(7);
+                    txBeautyManager.setBeautyStyle(2);
+                    txBeautyManager.setWhitenessLevel(7);
+                    txBeautyManager.setRuddyLevel(3);
+                }else {
+                    txBeautyManager.setBeautyLevel(0);
+                    txBeautyManager.setBeautyStyle(1);
+                    txBeautyManager.setWhitenessLevel(0);
+                    txBeautyManager.setRuddyLevel(0);
+                }
+
+            }
+        });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
         setWidth(DensityUtil.dp2px(mactivity, 255));
         setOutsideTouchable(true);
@@ -526,9 +529,9 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         LinearLayout dianming=(LinearLayout)contentView.findViewById(R.id.dianming);
         LinearLayout dati=(LinearLayout)contentView.findViewById(R.id.dati);
         LinearLayout qiangda=(LinearLayout)contentView.findViewById(R.id.qiangda);
-        LinearLayout jifen=(LinearLayout)contentView.findViewById(R.id.jifen);
+//        LinearLayout jifen=(LinearLayout)contentView.findViewById(R.id.jifen);
         LinearLayout dingshi=(LinearLayout)contentView.findViewById(R.id.dingshi);
-        LinearLayout choujiang=(LinearLayout)contentView.findViewById(R.id.choujiang);
+//        LinearLayout choujiang=(LinearLayout)contentView.findViewById(R.id.choujiang);
         LinearLayout hongbao=(LinearLayout)contentView.findViewById(R.id.hongbao);
         yincang.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -557,13 +560,13 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
                 dismiss();
             }
         });
-        jifen.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mpopupWindowListener.huDongOnclick(4);
-                dismiss();
-            }
-        });
+//        jifen.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mpopupWindowListener.huDongOnclick(4);
+//                dismiss();
+//            }
+//        });
         dingshi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -571,13 +574,13 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
                 dismiss();
             }
         });
-        choujiang.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mpopupWindowListener.huDongOnclick(6);
-                dismiss();
-            }
-        });
+//        choujiang.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mpopupWindowListener.huDongOnclick(6);
+//                dismiss();
+//            }
+//        });
         hongbao.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -593,173 +596,6 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         setContentView(contentView);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
-    }
-    //下课
-    public void showClassOverPW(final View view){
-
-        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_classovertime,
-                null, false);
-        ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
-        Switch sClassover=(Switch)contentView.findViewById(R.id.s_classover);
-        Switch s5=(Switch) contentView.findViewById(R.id.s_5);
-        Switch s10=(Switch) contentView.findViewById(R.id.s_10);
-        Switch s15=(Switch) contentView.findViewById(R.id.s_15);
-        Switch s20=(Switch) contentView.findViewById(R.id.s_20);
-        Switch s25=(Switch) contentView.findViewById(R.id.s_25);
-        Switch s30=(Switch) contentView.findViewById(R.id.s_30);
-        yincang.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dismiss();
-            }
-        });
-        sClassover.setChecked(false);
-        s5.setChecked(false);
-        s10.setChecked(false);
-        s15.setChecked(false);
-        s20.setChecked(false);
-        s25.setChecked(false);
-        s30.setChecked(false);
-        sClassover.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    mpopupWindowListener.classOverAfter("0");
-                }
-            }
-        });
-        s5.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    mpopupWindowListener.classOverAfter("5");
-                }
-            }
-        });
-        s10.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    mpopupWindowListener.classOverAfter("10");
-                }
-            }
-        });
-        s15.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    mpopupWindowListener.classOverAfter("15");
-                }
-            }
-        });
-        s20.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    mpopupWindowListener.classOverAfter("20");
-                }
-            }
-        });
-        s25.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    mpopupWindowListener.classOverAfter("25");
-                }
-            }
-        });
-        s30.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    mpopupWindowListener.classOverAfter("30");
-                }
-            }
-        });
-        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
-        setOutsideTouchable(true);
-        setFocusable(true);
-        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        setContentView(contentView);
-        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
-    }
-//    退出课堂
-    public void showClassOverAtOnce(View view, final String time){
-        String msg="";
-        if (time.equals("0")){
-            msg="退出后本节课将结束，确定要退出课堂吗？";
-        }else{
-            msg="确定要退出课堂吗，请记得"+time+"分钟后回来，否则本节课将会结束？";
-        }
-        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.live_classover,
-                null, false);
-        TextView context=(TextView) contentView.findViewById(R.id.context);
-        TextView cancel=(TextView) contentView.findViewById(R.id.cancel);
-        TextView determine=(TextView) contentView.findViewById(R.id.determine);
-        context.setText(msg);
-        cancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mpopupWindowListener.cancelClassOver(time);
-                dismiss();
-            }
-        });
-        determine.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mpopupWindowListener.timeCountDown(time);
-                dismiss();
-            }
-        });
-        setHeight(DensityUtil.dp2px(mactivity, 150));
-        setWidth(DensityUtil.dp2px(mactivity, 220));
-        setOutsideTouchable(true);
-        setFocusable(true);
-        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        setContentView(contentView);
-        this.showAtLocation(view, Gravity.CENTER, 0, 0);
-    }
-//倒计时
-    public void showTimeCountDown(View view, String time){
-        this.dismiss();
-        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.time_down,
-                null, false);
-        final TextView context=(TextView) contentView.findViewById(R.id.context);
-        TextView back=(TextView) contentView.findViewById(R.id.back);
-        timer=new CountDownTimer(Integer.parseInt(time)*60000,1000){
-            @Override
-            public void onTick(long millisUntilFinished) {
-                long day=millisUntilFinished/(1000*60*60*24);
-                long hour=(millisUntilFinished-day*(1000*60*60*24))/(1000*60*60);
-                long minute=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60))/(1000*60);
-                long second=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60)-minute*(1000*60))/1000;
-                context.setText(minute+":"+second);
-            }
-
-            @Override
-            public void onFinish() {
-                mpopupWindowListener.timeCountDown("true");
-            }
-        };
-        timer.start();
-        back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (timer != null) {
-                    timer.cancel();
-                }
-                mpopupWindowListener.teacherBack();
-                dismiss();
-            }
-        });
-        setHeight(DensityUtil.dp2px(mactivity, 300));
-        setWidth(DensityUtil.dp2px(mactivity, 300));
-        setOutsideTouchable(false);
-        setFocusable(false);
-//        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        setContentView(contentView);
-        this.showAtLocation(view, Gravity.CENTER, 0, 0);
     }
     //选择白板工具
     public void showToolsPopupWindow(View view){
@@ -1371,10 +1207,6 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         void xiangZhuangOnclick(int type);
         void seekBarOnclick(int progress);
         void xianOnclick(int type);
-        void classOverAfter(String time);
-        void teacherBack();
-        void timeCountDown(String time);
-        void cancelClassOver(String time);
         void mute(boolean isforce);
         void showDanmu();
         void juShouOnclick(int position,String action);

@@ -36,6 +36,7 @@ import com.qm.qmclass.utils.PermissionUtils;
 import com.qm.qmclass.utils.PushUtils;
 import com.qm.qmclass.utils.RoundImageView;
 import com.qm.qmclass.utils.ToastUtil;
+import com.tencent.liteav.beauty.TXBeautyManager;
 import com.tencent.rtmp.ITXLivePlayListener;
 import com.tencent.rtmp.ITXLivePushListener;
 import com.tencent.rtmp.TXLiveConstants;
@@ -243,6 +244,7 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
         mLivePusher.setVideoQuality(TXLiveConstants.VIDEO_QUALITY_STANDARD_DEFINITION,true,false);
         mLivePusher.startCameraPreview(myselfVideoview);
 
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Calendar nowTime = Calendar.getInstance();
         nowTime.add(Calendar.MINUTE, 5);
@@ -260,6 +262,21 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
             Log.i("TAG", "startRTMPPush: license 校验失败");
         }else {
 
+        }
+    }
+    //设置美颜
+    public void setBeauty(){
+        TXBeautyManager txBeautyManager=mLivePusher.getBeautyManager();
+        if (liveDataManager.isOpenBeauty()){
+            txBeautyManager.setBeautyLevel(7);
+            txBeautyManager.setBeautyStyle(2);
+            txBeautyManager.setWhitenessLevel(7);
+            txBeautyManager.setRuddyLevel(3);
+        }else {
+            txBeautyManager.setBeautyLevel(0);
+            txBeautyManager.setBeautyStyle(1);
+            txBeautyManager.setWhitenessLevel(0);
+            txBeautyManager.setRuddyLevel(0);
         }
     }
     @Override

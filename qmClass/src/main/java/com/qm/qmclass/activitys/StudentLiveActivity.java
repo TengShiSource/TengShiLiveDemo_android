@@ -31,6 +31,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.qm.qmclass.BuildConfig;
 import com.qm.qmclass.R;
@@ -934,6 +935,16 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         sendCustomMessage(dataManager.getTeacherCode(),msg);
     }
 
+    @Override
+    public void setBeauty() {
+        if(studentVideoListFragment != null){
+            studentVideoListFragment.setBeauty();
+        }
+        if (timeSDVideoListFragment!=null){
+            timeSDVideoListFragment.setBeauty();
+        }
+    }
+
     /**
      * 裁剪
      */
@@ -1492,6 +1503,74 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             if (mBoard!=null) {
                 mBoard.setDrawEnable(false);
             }
+
+        }else if (jo.getString("action").equals("synStatus")){
+//            同步状态
+            JSONObject info = JSON.parseObject(jo.getString("status"));
+            if (info.getBoolean("talkDisable")){
+                liveDataManager.setJinYan(true);
+//            禁言
+                if(liveDataManager.isOpenDanmu()){
+//        禁止手机软键盘
+                    danmuInput.setInputType(InputType.TYPE_NULL);
+                    danmuInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_jinyan_edit));
+                }else {
+                    if (chatPopupWindow!=null&&chatPopupWindow.isShowing()) {
+                        EditText messageInput = chatPopupWindow.getContentView().findViewById(R.id.message_input);
+                        messageInput.setInputType(InputType.TYPE_NULL);
+                        messageInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_jinyan_edit));
+                    }
+                }
+            }else if (info.getBoolean("micDisable")){
+                if (timeSDVideoListFragment!=null){
+                    timeSDVideoListFragment.mute(true);
+                }
+            }else if (info.getLong("rollCall")!=0){
+                int timeLimit=info.getLong("rollCall").intValue();
+                if (dianMingPopupWindow==null){
+                    dianMingPopupWindow=new StudentLivePopupWindow(mactivity);
+                    dianMingPopupWindow.setPopupWindowListener(this);
+                }
+                dianMingPopupWindow.showDianMingPopupWindow(mactivity.getWindow().getDecorView(),timeLimit);
+            }else if (!info.getBoolean("teacherCameraStatus")){
+                liveDataManager.setTCameraOn(false);
+                if (studentVideoListFragment!=null){
+                    studentVideoListFragment.teacherCameraState();
+                }
+                if (timeSDVideoListFragment!=null){
+                    timeSDVideoListFragment.teacherCameraState();
+                }
+            }else if (!info.getString("cameraFull").equals("")){
+                String cameraFullInfo=info.getString("cameraFull");
+                if (qpPopupWindow==null){
+                    qpPopupWindow=new StudentLivePopupWindow(this);
+                }
+                if (timeSDVideoListFragment!=null){
+                    qpPopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),cameraFullInfo,"TRTC");
+                }else if (studentVideoListFragment!=null){
+                    qpPopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),cameraFullInfo,"VIDEO");
+                }
+            }else if (info.getString("micMembers")!=null){
+                List<String> micMembersList = (List<String>) JSONArray.parseArray(info.getString("micMembers"), String.class);
+                for (int i=0;i<micMembersList.size();i++){
+                    if (studentVideoListFragment!=null){
+                        studentVideoListFragment.classmatelianMai(micMembersList.get(i),"1");
+                    }
+                }
+            }else if (info.getString("questionStatus")!=null){
+                JSONObject questionInfo = JSON.parseObject(info.getString("questionStatus"));
+                Long questionId=questionInfo.getLong("questionId");
+                liveDataManager.setQuestionId(questionId);
+                int questionType=questionInfo.getInteger("questionType");
+                int expValue=questionInfo.getInteger("expValue");
+                int timeLimit=questionInfo.getInteger("questionSurplusTime");
+                String questionOptions=questionInfo.getString("questionOptions");
+                if (answerPopupWindow==null){
+                    answerPopupWindow=new StudentLivePopupWindow(mactivity);
+                    answerPopupWindow.setPopupWindowListener(this);
+                }
+                answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),questionId,questionType,expValue,timeLimit,questionOptions);
+            }
         }
     }
     /*
@@ -1694,7 +1773,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
               danmuInput.setInputType(InputType.TYPE_NULL);
               danmuInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_jinyan_edit));
             }else {
-                if (chatPopupWindow!=null) {
+                if (chatPopupWindow!=null&&chatPopupWindow.isShowing()) {
                     EditText messageInput = chatPopupWindow.getContentView().findViewById(R.id.message_input);
                     messageInput.setInputType(InputType.TYPE_NULL);
                     messageInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_jinyan_edit));
@@ -1807,6 +1886,12 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 dianMingPopupWindow.setPopupWindowListener(this);
             }
             dianMingPopupWindow.showDianMingPopupWindow(mactivity.getWindow().getDecorView(),timeLimit);
+        }else if (jo.getString("action").equals("timer")) {
+            //老师发起计时器
+            JSONObject info = JSON.parseObject(jo.getString("info"));
+            long time=info.getLong("time");
+        }else if (jo.getString("action").equals("killTimer")) {
+            //老师结束计时器
         }
     }
 

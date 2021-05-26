@@ -28,6 +28,8 @@ public class LiveDataManager {
     private LinkedHashMap<String, TXCloudVideoView> trtcViewmap = new LinkedHashMap<>();
     //学生端拉流视频
     private LinkedHashMap<String, View> videoViewMap = new LinkedHashMap<>();
+    //连麦学生列表
+    private List<String> lianMaiList = new ArrayList<>();
     //学生举手列表
     private List<String> jushouList = new ArrayList<>();
     //学生签到列表
@@ -46,12 +48,16 @@ public class LiveDataManager {
     private boolean isTMaikeOn=true;
     //弹幕是否打开
     private boolean isOpenDanmu=false;
+    //美颜是否打开
+    private boolean isOpenBeauty=false;
     //禁言状态
     private boolean isJinYan=false;
     //强制静音状态
     private boolean ismMandatory=false;
     //自己是否连麦（上台）
     private boolean myselfLianmai=false;
+    //摄像头全屏的人
+    private String cameraFullStudent=null;
     //学生举手状态
     private boolean jushou=false;
     //白板工具选择项
@@ -74,6 +80,10 @@ public class LiveDataManager {
     /*互动相关状态*/
     //点名时长默认一分钟
     private int DMTime=60;
+    //点名剩余时间
+    private long DMSurplusTime=0;
+    //是否在答题
+    private boolean isOnQuestion=false;
     //问题类型
     private int answerType=1;//1 单选, 2 多选, 3 判断
     //问题模式
@@ -88,6 +98,8 @@ public class LiveDataManager {
     private int timeLimit=60;
     //问题ID
     private Long questionId;
+    //答题剩余时间
+    private long questionSurplusTime=0;
 
 
 
@@ -388,5 +400,53 @@ public class LiveDataManager {
 
     public void setQuestionId(Long questionId) {
         this.questionId = questionId;
+    }
+
+    public boolean isOnQuestion() {
+        return isOnQuestion;
+    }
+
+    public void setOnQuestion(boolean onQuestion) {
+        isOnQuestion = onQuestion;
+    }
+
+    public List<String> getLianMaiList() {
+        return lianMaiList;
+    }
+
+    public void setLianMaiList(List<String> lianMaiList) {
+        this.lianMaiList = lianMaiList;
+    }
+
+    public String getCameraFullStudent() {
+        return cameraFullStudent;
+    }
+
+    public void setCameraFullStudent(String cameraFullStudent) {
+        this.cameraFullStudent = cameraFullStudent;
+    }
+
+    public long getDMSurplusTime() {
+        return DMSurplusTime;
+    }
+
+    public void setDMSurplusTime(long DMSurplusTime) {
+        this.DMSurplusTime = DMSurplusTime;
+    }
+
+    public long getQuestionSurplusTime() {
+        return questionSurplusTime;
+    }
+
+    public void setQuestionSurplusTime(long questionSurplusTime) {
+        this.questionSurplusTime = questionSurplusTime;
+    }
+
+    public boolean isOpenBeauty() {
+        return isOpenBeauty;
+    }
+
+    public void setOpenBeauty(boolean openBeauty) {
+        isOpenBeauty = openBeauty;
     }
 }

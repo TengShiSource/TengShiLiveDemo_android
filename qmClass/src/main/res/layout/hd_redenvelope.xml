@@ -148,11 +148,12 @@
             android:textSize="11dp"
             android:layout_marginTop="@dimen/dp_10"
             android:background="@drawable/gray_sktx"
-            android:textColor="@color/text_color_sub_info"
+            android:textColor="@color/colorWhite"
             android:textColorHint="@color/text_color_sub_info"
             android:layout_weight="1"
             android:padding="8dp"
             android:inputType="number"
+            android:imeOptions="actionDone"
             android:singleLine="true"
             android:hint="请输入额度" />
     </LinearLayout>
@@ -234,12 +235,12 @@
             android:textSize="11dp"
             android:layout_marginTop="@dimen/dp_10"
             android:background="@drawable/gray_sktx"
-            android:textColor="@color/text_color_sub_info"
+            android:textColor="@color/colorWhite"
             android:textColorHint="@color/text_color_sub_info"
             android:layout_weight="1"
             android:padding="8dp"
             android:inputType="number"
-            android:imeOptions="actionSend"
+            android:imeOptions="actionDone"
             android:singleLine="true"
             android:hint="请输入额度" />
     </LinearLayout>
@@ -269,11 +270,11 @@
             android:textSize="11dp"
             android:layout_marginTop="@dimen/dp_10"
             android:background="@drawable/gray_sktx"
-            android:textColor="@color/text_color_sub_info"
+            android:textColor="@color/colorWhite"
             android:textColorHint="@color/text_color_sub_info"
             android:padding="8dp"
             android:inputType="number"
-            android:imeOptions="actionSend"
+            android:imeOptions="actionDone"
             android:singleLine="true"
             android:hint="请输入额度" />
         <LinearLayout

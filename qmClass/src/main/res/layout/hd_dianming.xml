@@ -67,30 +67,30 @@
         <TextView
             android:id="@+id/time_30"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/dp_40"
+            android:layout_height="@dimen/dp_35"
             android:gravity="center"
             android:text="30s"
-            android:layout_marginTop="@dimen/dp_15"
+            android:layout_marginTop="@dimen/dp_10"
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/sp_13"
             android:background="@drawable/darkgray_bg"/>
         <TextView
             android:id="@+id/time_60"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/dp_40"
+            android:layout_height="@dimen/dp_35"
             android:gravity="center"
             android:text="1分钟"
-            android:layout_marginTop="@dimen/dp_15"
+            android:layout_marginTop="@dimen/dp_10"
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/sp_13"
             android:background="@drawable/green_fillet_bg"/>
         <TextView
             android:id="@+id/time_180"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/dp_40"
+            android:layout_height="@dimen/dp_35"
             android:gravity="center"
             android:text="3分钟"
-            android:layout_marginTop="@dimen/dp_15"
+            android:layout_marginTop="@dimen/dp_10"
             android:textColor="@color/colorWhite"
             android:textSize="@dimen/sp_13"
             android:background="@drawable/darkgray_bg"/>
@@ -98,7 +98,7 @@
     <TextView
         android:id="@+id/start_dm"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_40"
+        android:layout_height="@dimen/dp_35"
         android:layout_marginLeft="@dimen/dp_30"
         android:layout_marginRight="@dimen/dp_30"
         android:gravity="center"

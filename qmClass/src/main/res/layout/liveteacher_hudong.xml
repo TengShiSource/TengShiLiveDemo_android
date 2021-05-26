@@ -101,25 +101,25 @@
                 android:textColor="@color/colorWhite"
                 android:textSize="@dimen/sp_11" />
         </LinearLayout>
-        <LinearLayout
-            android:id="@+id/jifen"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/dp_65"
-            android:layout_columnWeight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="@dimen/dp_20"
-                android:layout_height="@dimen/dp_20"
-                android:src="@mipmap/jifen"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dp_5"
-                android:text="计分器"
-                android:textColor="@color/colorWhite"
-                android:textSize="@dimen/sp_11" />
-        </LinearLayout>
+<!--        <LinearLayout-->
+<!--            android:id="@+id/jifen"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="@dimen/dp_65"-->
+<!--            android:layout_columnWeight="1"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="vertical">-->
+<!--            <ImageView-->
+<!--                android:layout_width="@dimen/dp_20"-->
+<!--                android:layout_height="@dimen/dp_20"-->
+<!--                android:src="@mipmap/jifen"/>-->
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="@dimen/dp_5"-->
+<!--                android:text="计分器"-->
+<!--                android:textColor="@color/colorWhite"-->
+<!--                android:textSize="@dimen/sp_11" />-->
+<!--        </LinearLayout>-->
         <LinearLayout
             android:id="@+id/dingshi"
             android:layout_width="wrap_content"
@@ -139,25 +139,25 @@
                 android:textColor="@color/colorWhite"
                 android:textSize="@dimen/sp_11" />
         </LinearLayout>
-        <LinearLayout
-            android:id="@+id/choujiang"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/dp_65"
-            android:layout_columnWeight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="@dimen/dp_20"
-                android:layout_height="@dimen/dp_20"
-                android:src="@mipmap/choujiang"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/dp_5"
-                android:text="抽奖"
-                android:textColor="@color/colorWhite"
-                android:textSize="@dimen/sp_11" />
-        </LinearLayout>
+<!--        <LinearLayout-->
+<!--            android:id="@+id/choujiang"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="@dimen/dp_65"-->
+<!--            android:layout_columnWeight="1"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="vertical">-->
+<!--            <ImageView-->
+<!--                android:layout_width="@dimen/dp_20"-->
+<!--                android:layout_height="@dimen/dp_20"-->
+<!--                android:src="@mipmap/choujiang"/>-->
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="@dimen/dp_5"-->
+<!--                android:text="抽奖"-->
+<!--                android:textColor="@color/colorWhite"-->
+<!--                android:textSize="@dimen/sp_11" />-->
+<!--        </LinearLayout>-->
         <LinearLayout
             android:id="@+id/hongbao"
             android:layout_width="wrap_content"

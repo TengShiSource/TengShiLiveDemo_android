@@ -550,11 +550,27 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
             setPopupWindow.showSetPopupWindow(view);
         } else if (view.getId() == R.id.iv_classover) {
-            if (classOverPopupWindow==null){
-                classOverPopupWindow=new LivePopupWindow(mactivity);
-                classOverPopupWindow.setPopupWindowListener(this);
-            }
-            classOverPopupWindow.showClassOverPW(view);
+            DialogUtil.showDialog(this, "退出后本节课将结束，确定要退出课堂吗？",
+                    "确定",  "取消",false, new DialogUtil.AlertDialogBtnClickListener() {
+                        @Override
+                        public void clickPositive() {
+                            quitClass();
+                        }
+
+                        @Override
+                        public void clickNegative() {
+                        }
+                    });
+//            if (classOverPopupWindow==null){
+//                classOverPopupWindow=new LivePopupWindow(mactivity);
+//                classOverPopupWindow.setPopupWindowListener(this);
+//            }
+//            classOverPopupWindow.showClassOverPW(view);
+//            if (classOverAtOncePopupWindow==null){
+//                classOverAtOncePopupWindow=new LivePopupWindow(mactivity);
+//                classOverAtOncePopupWindow.setPopupWindowListener(this);
+//            }
+//            classOverAtOncePopupWindow.showClassOverAtOnce(mactivity.getWindow().getDecorView());
         } else if (view.getId() == R.id.iv_chehui) {
             mBoard.undo();
         } else if (view.getId() == R.id.iv_jieping) {
@@ -1206,76 +1222,6 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         }
     }
     /*
-     *退出课堂提示
-     */
-    @Override
-    public void classOverAfter(final String time) {
-        if (classOverAtOncePopupWindow==null){
-            classOverAtOncePopupWindow=new LivePopupWindow(mactivity);
-            classOverAtOncePopupWindow.setPopupWindowListener(this);
-        }
-        classOverAtOncePopupWindow.showClassOverAtOnce(mactivity.getWindow().getDecorView(),time);
-    }
-
-    @Override
-    public void teacherBack() {
-
-    }
-    /*
-     *退出课堂倒计时
-     */
-    @Override
-    public void timeCountDown(final String time) {
-        if (time.equals("0")){
-            classOverPopupWindow.dismiss();
-            quitClass();
-        }else {
-            DialogUtil.showClassoverDialog(this, time,
-                "回来",  false, new DialogUtil.AlertDialogBtnClickListener() {
-                    @Override
-                    public void clickPositive() {
-                        cancelClassOver(time);
-                        Toast.makeText(TeacherLiveActivity.this,"回来",Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void clickNegative() {
-                    }
-                });
-        }
-    }
-    /*
-     *取消下课
-     */
-    @Override
-    public void cancelClassOver(String time) {
-        if (classOverPopupWindow!=null){
-            if (time.equals("0")){
-                Switch sClassover=(Switch)classOverPopupWindow.getContentView().findViewById(R.id.s_classover);
-                sClassover.setChecked(false);
-            }else if (time.equals("5")){
-                Switch s5=(Switch) classOverPopupWindow.getContentView().findViewById(R.id.s_5);
-                s5.setChecked(false);
-            }else if (time.equals("10")){
-                Switch s10=(Switch) classOverPopupWindow.getContentView().findViewById(R.id.s_10);
-                s10.setChecked(false);
-            }else if (time.equals("15")){
-                Switch s15=(Switch) classOverPopupWindow.getContentView().findViewById(R.id.s_15);
-                s15.setChecked(false);
-            }else if (time.equals("20")){
-                Switch s20=(Switch) classOverPopupWindow.getContentView().findViewById(R.id.s_20);
-                s20.setChecked(false);
-            }else if (time.equals("25")){
-                Switch s25=(Switch) classOverPopupWindow.getContentView().findViewById(R.id.s_25);
-                s25.setChecked(false);
-            }else if (time.equals("30")){
-                Switch s30=(Switch) classOverPopupWindow.getContentView().findViewById(R.id.s_30);
-                s30.setChecked(false);
-            }
-
-        }
-    }
-    /*
      *点击静音
      */
     @Override
@@ -1317,21 +1263,6 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
                 }
             }
-//            else if (liveDataManager.getAllStudentsMap().get(userCode).getLianMaiState()==1){
-////                    老师发起让学生挂麦
-//                Map<String, String> map = new HashMap<>();
-//                map.put("action", "micClose");
-//                String str = JSON.toJSONString(map);
-//                final byte msg[] = str.getBytes();
-//                sendCustomMessage(userCode,msg);
-//                liveDataManager.getAllStudentsMap().get(userCode).setLianMaiState(3);
-//                refuseLianMai(userCode);
-//                changeStudentListLMstate(userCode,3);
-//                liveDataManager.getAllStudentsMap().get(userCode).setHuabiOn(false);
-//                if (showJuShouPopupWindow!=null&&showJuShouPopupWindow.isShowing()){
-//                    showJuShouPopupWindow.refreshJuShou(liveDataManager.getJushouList());
-//                }
-//            }
         }else if (action.equals("tichu")){
              //老师向学生发起连麦
              Map<String, String> map = new HashMap<>();
@@ -1375,10 +1306,10 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         }else if (position==5){
             if (fixedTimePopupWindow==null){
                 fixedTimePopupWindow=new HudongPopupWindow(mactivity);
+                fixedTimePopupWindow.setHDPWListener(this);
             }
             fixedTimePopupWindow.showFixedTimePopupWindow(mactivity.getWindow().getDecorView());
         }else if (position==6){
-
             Toast.makeText(TeacherLiveActivity.this,"抽奖",Toast.LENGTH_SHORT).show();
         }else if (position==7){
             if (redEnveLopePopupWindow==null){
@@ -1504,6 +1435,20 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
 
                 }
             });
+        }
+    }
+    /*
+     *计时器
+     */
+    @Override
+    public void fixedTimeOnclick(String state, long time) {
+        if (state.equals("start")){
+            Map<String, Long> map = new HashMap<>();
+            map.put("time", time);
+            String str = JSON.toJSONString(map);
+            sendGroupCustomMessage("timer",dataManager.getUserCode(),str);
+        }else if (state.equals("kill")){
+            sendGroupCustomMessage("killTimer",dataManager.getUserCode(),"");
         }
     }
 
@@ -2051,7 +1996,31 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     onDMPopupWindow.refreshONDM();
                 }
             }
-
+            //同步教室状态
+            Map<String, Object> statusMap = new HashMap<>();
+            statusMap.put("talkDisable", liveDataManager.isJinYan());//禁言状态
+            statusMap.put("micDisable", liveDataManager.isIsmMandatory());//静音状态
+            statusMap.put("rollCall",liveDataManager.getDMSurplusTime());//点名状态
+            statusMap.put("cameraFull", liveDataManager.getCameraFullStudent());//全屏
+            statusMap.put("micMembers", liveDataManager.getLianMaiList());//上台列表
+            statusMap.put("teacherCameraStatus", liveDataManager.isTCameraOn());//教师摄像头状态
+            if (liveDataManager.getQuestionMode()!=1&&liveDataManager.isOnQuestion()){
+                Map<String, Object> questionMap = new HashMap<>();
+                questionMap.put("answerType", liveDataManager.getAnswerType());
+                questionMap.put("questionOptions",liveDataManager.getQuestionOptions());
+                questionMap.put("expValue", liveDataManager.getExpValue());
+                questionMap.put("questionId", liveDataManager.getQuestionId());
+                questionMap.put("questionSurplusTime", liveDataManager.getQuestionSurplusTime());
+                statusMap.put("questionStatus", questionMap);//问题状态
+            }else {
+                statusMap.put("questionStatus", null);//问题状态
+            }
+            Map<String, Object> map = new HashMap<>();
+            map.put("action", "synStatus");
+            map.put("status", statusMap);
+            String synStatusStr = JSON.toJSONString(map);
+            final byte msg[] = synStatusStr.getBytes();
+            sendCustomMessage(fromUserId,msg);
         }
     }
 
