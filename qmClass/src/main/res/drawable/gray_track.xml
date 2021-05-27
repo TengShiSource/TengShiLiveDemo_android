@@ -4,9 +4,7 @@
     <!-- 高度30   此处设置宽度无效-->
     <size android:height="20dp"/>
     <!-- 圆角弧度 15 -->
-    <corners android:radius="10dp"/>
+    <corners android:radius="20dp"/>
     <!-- 变化率  定义从左到右的颜色不变 -->
-    <gradient
-        android:endColor="@color/colorGray"
-        android:startColor="@color/colorGray" />
+    <solid android:color="@color/colorGray"/>
 </shape>

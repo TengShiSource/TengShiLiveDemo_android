@@ -6,6 +6,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.CountDownTimer;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -150,7 +151,7 @@ public class StudentLivePopupWindow extends PopupWindow {
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -191,7 +192,7 @@ public class StudentLivePopupWindow extends PopupWindow {
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -222,7 +223,7 @@ public class StudentLivePopupWindow extends PopupWindow {
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -251,8 +252,8 @@ public class StudentLivePopupWindow extends PopupWindow {
                 dismiss();
             }
         });
-        setHeight(DensityUtil.dp2px(mactivity, 150));
-        setWidth(DensityUtil.dp2px(mactivity, 220));
+        setHeight((int)mactivity.getResources().getDimension(R.dimen.dp_150));
+        setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_220));
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -360,8 +361,8 @@ public class StudentLivePopupWindow extends PopupWindow {
             }
         });
 
-        setHeight(DensityUtil.dp2px(mactivity, 100));
-        setWidth(DensityUtil.dp2px(mactivity, 140));
+        setHeight((int)mactivity.getResources().getDimension(R.dimen.dp_100));
+        setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_140));
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -370,7 +371,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         contentView.measure(makeDropDownMeasureSpec(this.getWidth()),
                 makeDropDownMeasureSpec(this.getHeight()));
         int offsetX = -(this.getContentView().getMeasuredWidth()-view.getWidth());
-        int offsetY = -(this.getContentView().getMeasuredHeight()+view.getHeight()+DensityUtil.dp2px(mactivity, 5));
+        int offsetY = -(this.getContentView().getMeasuredHeight()+view.getHeight()+(int)mactivity.getResources().getDimension(R.dimen.dp_5));
         PopupWindowCompat.showAsDropDown(this, view, offsetX, offsetY, Gravity.START);
     }
     //选择画笔颜色
@@ -466,7 +467,7 @@ public class StudentLivePopupWindow extends PopupWindow {
             }
         });
 
-        setHeight(DensityUtil.dp2px(mactivity, 125));
+        setHeight((int)mactivity.getResources().getDimension(R.dimen.dp_135));
         if (liveDataManager.getWitchTools().equals("2")){
             penstyle.setVisibility(View.VISIBLE);
             xian.setVisibility(View.GONE);
@@ -475,7 +476,7 @@ public class StudentLivePopupWindow extends PopupWindow {
             tvprogress.setText(String.valueOf(liveDataManager.getLineProgress()));
             seekBar.setProgress(liveDataManager.getLineProgress());
             //        两列
-            setWidth(DensityUtil.dp2px(mactivity, 200));
+            setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_215));
 
         }else if (liveDataManager.getWitchTools().equals("1")){
             penstyle.setVisibility(View.VISIBLE);
@@ -492,19 +493,19 @@ public class StudentLivePopupWindow extends PopupWindow {
             tvprogress.setText(String.valueOf(liveDataManager.getLineProgress()));
             seekBar.setProgress(liveDataManager.getLineProgress());
             //        一列
-            setWidth(DensityUtil.dp2px(mactivity, 175));
+            setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_190));
         }else if (liveDataManager.getWitchTools().equals("3")) {
             penstyle.setVisibility(View.GONE);
             line.setVisibility(View.GONE);
             tvprogress.setText(String.valueOf(liveDataManager.getTextProgress()));
             seekBar.setProgress(liveDataManager.getTextProgress());
-            setWidth(DensityUtil.dp2px(mactivity, 130));
+            setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_150));
         }else {
             penstyle.setVisibility(View.GONE);
             line.setVisibility(View.GONE);
             tvprogress.setText(String.valueOf(liveDataManager.getLineProgress()));
             seekBar.setProgress(liveDataManager.getLineProgress());
-            setWidth(DensityUtil.dp2px(mactivity, 130));
+            setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_150));
         }
         setOutsideTouchable(true);
         setFocusable(true);
@@ -514,7 +515,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         contentView.measure(makeDropDownMeasureSpec(this.getWidth()),
                 makeDropDownMeasureSpec(this.getHeight()));
         int offsetX = -(this.getContentView().getMeasuredWidth()-view.getWidth());
-        int offsetY = -(this.getContentView().getMeasuredHeight()+view.getHeight()+DensityUtil.dp2px(mactivity, 5));
+        int offsetY = -(this.getContentView().getMeasuredHeight()+view.getHeight()+(int)mactivity.getResources().getDimension(R.dimen.dp_5));
         PopupWindowCompat.showAsDropDown(this, view, offsetX, offsetY, Gravity.START);
     }
     //视频全屏
@@ -620,7 +621,7 @@ public class StudentLivePopupWindow extends PopupWindow {
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -717,7 +718,7 @@ public class StudentLivePopupWindow extends PopupWindow {
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -791,7 +792,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         });
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -824,7 +825,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         });
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -891,7 +892,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         });
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -922,7 +923,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         });
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -965,7 +966,19 @@ public class StudentLivePopupWindow extends PopupWindow {
         }
         return View.MeasureSpec.makeMeasureSpec(View.MeasureSpec.getSize(measureSpec), mode);
     }
-
+    private int getPopWidth(){
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        mactivity.getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
+        int widthPixels = outMetrics.widthPixels;
+        int heightPixels = outMetrics.heightPixels;
+        int popWidth=0;
+        if(widthPixels < heightPixels) {
+            popWidth=heightPixels/3;
+        }else {
+            popWidth=widthPixels/3;
+        }
+        return popWidth;
+    }
     public interface PopupWindowListener {
         void chatSendOnclick(String data);
         void toolItemOnclick(String witch);

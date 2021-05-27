@@ -44,5 +44,5 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.6.2'
     /*防止崩溃库*/
 //    implementation 'com.tonystark.android:defense_crash:2.0.0'
-    implementation "me.jessyan:autosize:1.2.1"
+//    implementation "me.jessyan:autosize:1.2.1"
 }

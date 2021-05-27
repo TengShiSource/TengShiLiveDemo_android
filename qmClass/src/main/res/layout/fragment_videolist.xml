@@ -42,7 +42,7 @@
             android:layout_alignParentBottom="true">
             <LinearLayout
                 android:id="@+id/shouqi"
-                android:layout_width="25dp"
+                android:layout_width="@dimen/dp_20"
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:background="@drawable/video_right_bg">

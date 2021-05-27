@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/livebgdark"
+    android:background="@color/livebg"
     tools:ignore="MissingDefaultResource">
     <LinearLayout
         android:layout_width="match_parent"
@@ -39,7 +39,7 @@
             android:id="@+id/danmu"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:switchMinWidth="20dp"
+            android:switchMinWidth="@dimen/dp_20"
             android:layout_marginLeft="@dimen/dp_5"
             android:layout_gravity="center_vertical"
             android:track="@drawable/track"
@@ -56,7 +56,7 @@
         android:layout_weight="1"
         android:cacheColorHint="@android:color/transparent"
         android:divider="@null"
-        android:background="@color/livebgdark"
+        android:background="@color/livebg"
         android:fadingEdge="none"
         android:scrollbars="none"
         android:visibility="visible"

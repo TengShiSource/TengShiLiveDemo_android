@@ -1570,6 +1570,8 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                     answerPopupWindow.setPopupWindowListener(this);
                 }
                 answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),questionId,questionType,expValue,timeLimit,questionOptions);
+            }else if (info.getLong("timer")!=0){
+                int timeLimit=info.getLong("timer").intValue();
             }
         }
     }

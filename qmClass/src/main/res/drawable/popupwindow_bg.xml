@@ -4,7 +4,7 @@
     <!-- 实心 -->
     <solid android:color="#AC1f2123"/>
     <!-- 圆角 -->
-    <corners android:radius="10dp"/>
+    <corners android:radius="@dimen/dp_10"/>
     <!-- 边距 -->
     <padding
         android:top="0dp"

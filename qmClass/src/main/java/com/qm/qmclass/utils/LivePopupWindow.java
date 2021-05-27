@@ -29,8 +29,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.core.widget.PopupWindowCompat;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.alibaba.fastjson.JSONObject;
 import com.bumptech.glide.Glide;
@@ -170,7 +168,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -222,7 +220,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -274,7 +272,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -305,7 +303,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         yclist.setAdapter(ycAdpter);
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -339,7 +337,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         });
         jushoulistView.setAdapter(jushouAdpter);
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -379,7 +377,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -452,7 +450,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         getQuestionList();
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -590,7 +588,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         });
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -698,8 +696,8 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             }
         });
 
-        setHeight(DensityUtil.dp2px(mactivity, 100));
-        setWidth(DensityUtil.dp2px(mactivity, 140));
+        setHeight((int)mactivity.getResources().getDimension(R.dimen.dp_100));
+        setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_140));
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -708,7 +706,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         contentView.measure(makeDropDownMeasureSpec(this.getWidth()),
                 makeDropDownMeasureSpec(this.getHeight()));
         int offsetX = -(this.getContentView().getMeasuredWidth()-view.getWidth());
-        int offsetY = -(this.getContentView().getMeasuredHeight()+view.getHeight()+DensityUtil.dp2px(mactivity, 5));
+        int offsetY = -(this.getContentView().getMeasuredHeight()+view.getHeight()+(int)mactivity.getResources().getDimension(R.dimen.dp_5));
         PopupWindowCompat.showAsDropDown(this, view, offsetX, offsetY, Gravity.START);
     }
     //选择画笔颜色
@@ -804,7 +802,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             }
         });
 
-        setHeight(DensityUtil.dp2px(mactivity, 125));
+        setHeight((int)mactivity.getResources().getDimension(R.dimen.dp_135));
         if (liveDataManager.getWitchTools().equals("2")){
             penstyle.setVisibility(View.VISIBLE);
             xian.setVisibility(View.GONE);
@@ -813,7 +811,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             tvprogress.setText(String.valueOf(liveDataManager.getLineProgress()));
             seekBar.setProgress(liveDataManager.getLineProgress());
             //        两列
-            setWidth(DensityUtil.dp2px(mactivity, 200));
+            setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_215));
 
         }else if (liveDataManager.getWitchTools().equals("1")){
             penstyle.setVisibility(View.VISIBLE);
@@ -830,19 +828,19 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
             tvprogress.setText(String.valueOf(liveDataManager.getLineProgress()));
             seekBar.setProgress(liveDataManager.getLineProgress());
             //        一列
-            setWidth(DensityUtil.dp2px(mactivity, 175));
+            setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_190));
         }else if (liveDataManager.getWitchTools().equals("3")) {
             penstyle.setVisibility(View.GONE);
             line.setVisibility(View.GONE);
             tvprogress.setText(String.valueOf(liveDataManager.getTextProgress()));
             seekBar.setProgress(liveDataManager.getTextProgress());
-            setWidth(DensityUtil.dp2px(mactivity, 130));
+            setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_150));
         }else {
             penstyle.setVisibility(View.GONE);
             line.setVisibility(View.GONE);
             tvprogress.setText(String.valueOf(liveDataManager.getLineProgress()));
             seekBar.setProgress(liveDataManager.getLineProgress());
-            setWidth(DensityUtil.dp2px(mactivity, 130));
+            setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_150));
         }
         setOutsideTouchable(true);
         setFocusable(true);
@@ -852,7 +850,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         contentView.measure(makeDropDownMeasureSpec(this.getWidth()),
                 makeDropDownMeasureSpec(this.getHeight()));
         int offsetX = -(this.getContentView().getMeasuredWidth()-view.getWidth());
-        int offsetY = -(this.getContentView().getMeasuredHeight()+view.getHeight()+DensityUtil.dp2px(mactivity, 5));
+        int offsetY = -(this.getContentView().getMeasuredHeight()+view.getHeight()+(int)mactivity.getResources().getDimension(R.dimen.dp_5));
         PopupWindowCompat.showAsDropDown(this, view, offsetX, offsetY, Gravity.START);
     }
     //学生列表切换
@@ -876,8 +874,8 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
                 dismiss();
             }
         });
-        setHeight(DensityUtil.dp2px(mactivity, 80));
-        setWidth(DensityUtil.dp2px(mactivity, 140));
+        setHeight((int)mactivity.getResources().getDimension(R.dimen.dp_80));
+        setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_140));
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -910,7 +908,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         int width = outMetrics.widthPixels;
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(width-DensityUtil.dp2px(mactivity, 160));
+        setWidth(width-(int)mactivity.getResources().getDimension(R.dimen.dp_154));
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1131,7 +1129,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         addstlistView.setAdapter(addStudentAdpter);
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(true);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1197,6 +1195,19 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         return View.MeasureSpec.makeMeasureSpec(View.MeasureSpec.getSize(measureSpec), mode);
     }
 
+    private int getPopWidth(){
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        mactivity.getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
+        int widthPixels = outMetrics.widthPixels;
+        int heightPixels = outMetrics.heightPixels;
+        int popWidth=0;
+        if(widthPixels < heightPixels) {
+            popWidth=heightPixels/3;
+        }else {
+            popWidth=widthPixels/3;
+        }
+        return popWidth;
+    }
 
 
     public interface PopupWindowListener {

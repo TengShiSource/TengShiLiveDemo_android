@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,7 +30,7 @@ import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     private String baseurl="http://jledu.f3322.net:9208/live";
-    private Button join;
+    private TextView join;
     private TextView verifycode;
     private EditText nickname;
     private EditText classname;
@@ -40,12 +41,12 @@ public class MainActivity extends AppCompatActivity {
     private EditText roomid;
     private RadioButton rbTeacher;
     private RadioButton rbStudent;
-    private LinearLayout llRoom;
-    private LinearLayout llNickname;
-    private LinearLayout llClassname;
-    private LinearLayout llPhone;
-    private LinearLayout llTeacherpd;
-    private LinearLayout llStudentpd;
+    private RelativeLayout llRoom;
+    private RelativeLayout llNickname;
+    private RelativeLayout llClassname;
+    private RelativeLayout llPhone;
+    private RelativeLayout llTeacherpd;
+    private RelativeLayout llStudentpd;
     private LinearLayout llVerifycode;
     private QMClassManager qmClassManager;
     private String mobile;
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         SharedPreferencesUtils.getInstance(this,"qm_data");
-        join=(Button) findViewById(R.id.join);
+        join=(TextView) findViewById(R.id.join);
         verifycode=(TextView) findViewById(R.id.verifycode);
         nickname=(EditText) findViewById(R.id.nickname);
         classname=(EditText) findViewById(R.id.classname);
@@ -68,12 +69,12 @@ public class MainActivity extends AppCompatActivity {
         roomid=(EditText) findViewById(R.id.roomid);
         rbTeacher=(RadioButton) findViewById(R.id.rb_teacher);
         rbStudent=(RadioButton) findViewById(R.id.rb_student);
-        llRoom=(LinearLayout) findViewById(R.id.ll_room);
-        llNickname=(LinearLayout) findViewById(R.id.ll_nickname);
-        llClassname=(LinearLayout) findViewById(R.id.ll_classname);
-        llPhone=(LinearLayout) findViewById(R.id.ll_phone);
-        llTeacherpd=(LinearLayout) findViewById(R.id.ll_teacherpd);
-        llStudentpd=(LinearLayout) findViewById(R.id.ll_studentpd);
+        llRoom=(RelativeLayout) findViewById(R.id.ll_room);
+        llNickname=(RelativeLayout) findViewById(R.id.ll_nickname);
+        llClassname=(RelativeLayout) findViewById(R.id.ll_classname);
+        llPhone=(RelativeLayout) findViewById(R.id.ll_phone);
+        llTeacherpd=(RelativeLayout) findViewById(R.id.ll_teacherpd);
+        llStudentpd=(RelativeLayout) findViewById(R.id.ll_studentpd);
         llVerifycode=(LinearLayout) findViewById(R.id.ll_verifycode);
 
         qmClassManager= QMClassManager.getInstance();

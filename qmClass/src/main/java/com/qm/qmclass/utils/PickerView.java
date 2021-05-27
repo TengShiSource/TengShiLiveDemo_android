@@ -36,8 +36,8 @@ public class PickerView extends View {
     private int mCurrentSelected;
     private Paint mPaint;
 
-    private float mMaxTextSize = 80;
-    private float mMinTextSize = 40;
+    private float mMaxTextSize = 25;
+    private float mMinTextSize = 13;
 
     private float mMaxTextAlpha = 255;
     private float mMinTextAlpha = 120;
@@ -136,7 +136,7 @@ public class PickerView extends View {
         mViewHeight = getMeasuredHeight();
         mViewWidth = getMeasuredWidth();
         // 按照View的高度计算字体大小
-        mMaxTextSize = mViewHeight / 4.0f;
+        mMaxTextSize = mViewHeight / 6.0f;
         mMinTextSize = mMaxTextSize / 2f;
         isInit = true;
         invalidate();

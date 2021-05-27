@@ -50,7 +50,7 @@
                 android:id="@+id/beauty"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:switchMinWidth="20dp"
+                android:switchMinWidth="@dimen/dp_20"
                 android:track="@drawable/track"
                 android:thumb="@drawable/thumb"/>
         </LinearLayout>

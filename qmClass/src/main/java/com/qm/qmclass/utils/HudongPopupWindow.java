@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.style.CharacterStyle;
 import android.text.style.ForegroundColorSpan;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -177,7 +178,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -228,7 +229,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         timer.start();
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -301,7 +302,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -763,7 +764,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         });
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOnDismissListener(this);
         setOutsideTouchable(false);
         setFocusable(false);
@@ -960,7 +961,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOnDismissListener(this);
         setOutsideTouchable(false);
         setFocusable(false);
@@ -1066,7 +1067,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1150,7 +1151,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             }
         });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1184,7 +1185,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         });
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1296,6 +1297,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                     timer.cancel();
                 }
                 hdpwListener.fixedTimeOnclick("kill",0);
+                liveDataManager.setFixedSurplusTime(0);
                 dismiss();
             }
         });
@@ -1327,6 +1329,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                             if (minute<10&&second>9){
                                 countDown.setText("0"+minute+":"+second);
                             }
+                            liveDataManager.setFixedSurplusTime(millisUntilFinished);
                         }
 
                         @Override
@@ -1334,6 +1337,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                             if (timer != null) {
                                 timer.cancel();
                             }
+                            liveDataManager.setFixedSurplusTime(0);
                         }
                     };
                     timer.start();
@@ -1346,13 +1350,13 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                     if (timer != null) {
                         timer.cancel();
                     }
-
+                    liveDataManager.setFixedSurplusTime(0);
                 }
             }
         });
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1570,7 +1574,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         commit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (redEnvelopnum.getText()!=null){
+                if (redEnvelopnum.getText()!=null&&!redEnvelopnum.getText().equals("")){
                     if (RedEnveLopeType==1){
                         if (randomMoney!=0){
                             envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),randomMoney,"1");
@@ -1593,7 +1597,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         });
 
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
-        setWidth(DensityUtil.dp2px(mactivity, 255));
+        setWidth(getPopWidth());
         setOutsideTouchable(false);
         setFocusable(true);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
@@ -1642,7 +1646,19 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
     public void onDismiss() {
 
     }
-
+    private int getPopWidth(){
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        mactivity.getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
+        int widthPixels = outMetrics.widthPixels;
+        int heightPixels = outMetrics.heightPixels;
+        int popWidth=0;
+        if(widthPixels < heightPixels) {
+            popWidth=heightPixels/3;
+        }else {
+            popWidth=widthPixels/3;
+        }
+        return popWidth;
+    }
 
     public interface HDPWListener {
         void dianMingOnclick(String state);

@@ -214,6 +214,7 @@
                 android:gravity="center"
                 android:padding="@dimen/dp_2"
                 android:textColor="@color/colorWhite"
+                android:textSize="@dimen/sp_13"
                 android:text="1/1"/>
             <ImageView
                 android:id="@+id/iv_jiaye"
@@ -298,12 +299,6 @@
         android:orientation="vertical"
         android:layout_alignParentRight="true"
         android:layout_marginLeft="@dimen/dp_4">
-        <!--        <com.qm.module.common.utils.AutoPollRecyclerView-->
-        <!--            android:id="@+id/rv_video"-->
-        <!--            android:layout_width="match_parent"-->
-        <!--            android:layout_height="0dp"-->
-        <!--            android:layout_weight="1"-->
-        <!--            android:background="@color/colorWhite"/>-->
         <FrameLayout
             android:id="@+id/fl_frament"
             android:layout_width="match_parent"

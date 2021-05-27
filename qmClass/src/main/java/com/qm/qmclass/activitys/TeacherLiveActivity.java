@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -122,6 +123,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private static TextView tvText;
     private static ImageView ivHuabi;
     private static LinearLayout llHuabi;
+    private LinearLayout llVideolist;
     private FrameLayout flFrament;
     private ImageView ivVideolist;
     private ImageView ivStudentlist;
@@ -322,6 +324,13 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         ivHuabi=(ImageView) findViewById(R.id.iv_huabi);
         ivHuabi.setOnClickListener(this);
         llHuabi=(LinearLayout) findViewById(R.id.ll_huabi);
+
+//        llVideolist=(LinearLayout) findViewById(R.id.ll_videolist);
+//        RelativeLayout.LayoutParams lp=(RelativeLayout.LayoutParams)llVideolist.getLayoutParams();
+//        lp.width=getWidth();
+//        lp.height=RelativeLayout.LayoutParams.MATCH_PARENT;
+//        llVideolist.setLayoutParams(lp);
+
         flFrament=(FrameLayout) findViewById(R.id.fl_frament);
         ivVideolist=(ImageView) findViewById(R.id.iv_videolist);
         ivVideolist.setOnClickListener(this);
@@ -412,7 +421,19 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         colorList.add(10, R.mipmap.gray);
         colorList.add(11, R.mipmap.black);
     }
-
+    private int getWidth(){
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        mactivity.getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
+        int widthPixels = outMetrics.widthPixels;
+        int heightPixels = outMetrics.heightPixels;
+        int width=0;
+        if(widthPixels < heightPixels) {
+            width=heightPixels/6;
+        }else {
+            width=widthPixels/6;
+        }
+        return width;
+    }
     /**
      * 进入课堂
      */
@@ -2015,6 +2036,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }else {
                 statusMap.put("questionStatus", null);//问题状态
             }
+            statusMap.put("timer",liveDataManager.getFixedSurplusTime());//计时器剩余时间
+
             Map<String, Object> map = new HashMap<>();
             map.put("action", "synStatus");
             map.put("status", statusMap);

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:ignore="MissingDefaultResource"
-    android:background="@color/livebgdark"
+    android:background="@color/livebg"
     android:orientation="vertical">
     <LinearLayout
         android:layout_width="match_parent"
@@ -43,7 +43,7 @@
         android:orientation="horizontal"
         android:padding="@dimen/dp_10"
         android:layout_gravity="center"
-        android:background="@drawable/popupwindow_bg">
+        android:background="@color/livebg">
         <LinearLayout
             android:id="@+id/dianming"
             android:layout_width="wrap_content"

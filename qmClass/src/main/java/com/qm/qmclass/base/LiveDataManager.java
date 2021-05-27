@@ -100,6 +100,8 @@ public class LiveDataManager {
     private Long questionId;
     //答题剩余时间
     private long questionSurplusTime=0;
+    //计时器剩余时间
+    private long FixedSurplusTime=0;
 
 
 
@@ -448,5 +450,13 @@ public class LiveDataManager {
 
     public void setOpenBeauty(boolean openBeauty) {
         isOpenBeauty = openBeauty;
+    }
+
+    public long getFixedSurplusTime() {
+        return FixedSurplusTime;
+    }
+
+    public void setFixedSurplusTime(long fixedSurplusTime) {
+        FixedSurplusTime = fixedSurplusTime;
     }
 }

@@ -5,7 +5,7 @@
     <item android:id="@android:id/secondaryProgress">
         <clip>
             <shape>
-                <corners android:radius="2.0dip" />
+                <corners android:radius="@dimen/dp_2" />
                 <gradient android:startColor="#80ffd300" android:endColor="#a0ffcb00" android:angle="270.0" android:centerY="0.75" android:centerColor="#80ffb600" />
             </shape>
         </clip>

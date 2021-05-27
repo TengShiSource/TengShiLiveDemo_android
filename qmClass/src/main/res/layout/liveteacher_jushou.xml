@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:ignore="MissingDefaultResource"
-    android:background="@color/livebgdark"
+    android:background="@color/livebg"
     android:orientation="vertical">
     <LinearLayout
         android:layout_width="match_parent"
@@ -46,7 +46,7 @@
         android:layout_height="wrap_content"
         android:cacheColorHint="@android:color/transparent"
         android:divider="@null"
-        android:background="@color/livebgdark"
+        android:background="@color/livebg"
         android:fadingEdge="none"
         android:scrollbars="none"
         android:listSelector="@android:color/transparent" />
