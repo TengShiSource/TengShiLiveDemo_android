@@ -46,6 +46,8 @@ import com.qm.qmclass.fragment.StudentVideoListFragment;
 import com.qm.qmclass.fragment.TimeSDVideoListFragment;
 import com.qm.qmclass.model.AnswerListInfo;
 import com.qm.qmclass.model.ChatContent;
+import com.qm.qmclass.model.LoginInfor;
+import com.qm.qmclass.model.RedPackInfo;
 import com.qm.qmclass.model.StudentAnswerStatInfo;
 import com.qm.qmclass.model.StudentInfor;
 import com.qm.qmclass.model.YcFileInfo;
@@ -142,19 +144,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     private static TXLivePlayer mLivePlayer;
     private int count = 0;
 
-    private StudentLivePopupWindow chatPopupWindow;
-    private StudentLivePopupWindow questionPopupWindow;
-    private StudentLivePopupWindow setPopupWindow;
-    private StudentLivePopupWindow classOverPopupWindow;
-    private StudentLivePopupWindow toolsPopupWindow;
-    private StudentLivePopupWindow colorPopupWindow;
-    private StudentLivePopupWindow qpPopupWindow;
-    private StudentLivePopupWindow dianMingPopupWindow;
-    private StudentLivePopupWindow answerPopupWindow;
-    private StudentLivePopupWindow answerDetailPopupWindow;
-    private StudentLivePopupWindow rushPopupWindow;
-    private StudentLivePopupWindow rushFinishPopupWindow;
-    private StudentLivePopupWindow rushRedEnvelopePopupWindow;
+    private StudentLivePopupWindow studentLivePopupWindow;
 
     private static Activity mactivity;
     private DataManager dataManager;
@@ -245,6 +235,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         getSupportActionBar().hide();
         //设置全屏
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_student_live);
         mactivity=this;
 
@@ -252,6 +243,9 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
 
         dataManager=DataManager.getInstance();
         liveDataManager=LiveDataManager.getInstance();
+
+        studentLivePopupWindow=StudentLivePopupWindow.getInstance(this);
+        studentLivePopupWindow.setPopupWindowListener(this);
 
         initView();
 
@@ -382,6 +376,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                     Map<String, String> map = new HashMap<>();
                     map.put("avatarUrl", dataManager.getUserIcon());
                     map.put("expValue", dataManager.getExpValue());
+                    map.put("expIcon", dataManager.getExpIcon());
                     map.put("nickName", dataManager.getUserName());
                     map.put("studyCoin", dataManager.getStudyCoin());
                     map.put("userCode", dataManager.getUserCode());
@@ -645,13 +640,16 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     }
     @Override
     public void onClick(View view) {
+        if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+            studentLivePopupWindow.dismiss();
+        }
         if (view.getId() == R.id.iv_chat) {
-            if (chatPopupWindow==null){
-                chatPopupWindow=new StudentLivePopupWindow(mactivity);
-                chatPopupWindow.setPopupWindowListener(this);
-            }
+//            if (chatPopupWindow==null){
+//                chatPopupWindow=new StudentLivePopupWindow(mactivity);
+//                chatPopupWindow.setPopupWindowListener(this);
+//            }
             ivChat.setImageDrawable(getDrawable(R.mipmap.liaotian));
-            chatPopupWindow.showChatPopupWindow(view,liveDataManager.getChatContentList());
+            studentLivePopupWindow.showChatPopupWindow(view,liveDataManager.getChatContentList());
         } else if (view.getId() == R.id.iv_jushou) {
             if (liveDataManager.isJushou()){
                 liveDataManager.setJushou(false);
@@ -671,43 +669,39 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 sendCustomMessage(dataManager.getTeacherCode(),msg);
             }
         } else if (view.getId() == R.id.iv_question) {
-            if (questionPopupWindow==null){
-                questionPopupWindow=new StudentLivePopupWindow(mactivity);
-                questionPopupWindow.setPopupWindowListener(this);
-            }
-            questionPopupWindow.showQuestionPopupWindow(view);
+//            if (questionPopupWindow==null){
+//                questionPopupWindow=new StudentLivePopupWindow(mactivity);
+//                questionPopupWindow.setPopupWindowListener(this);
+//            }
+            studentLivePopupWindow.showQuestionPopupWindow(view);
         } else if (view.getId() == R.id.iv_set) {
-            if (setPopupWindow==null){
-                setPopupWindow=new StudentLivePopupWindow(mactivity);
-                setPopupWindow.setPopupWindowListener(this);
-            }
-            setPopupWindow.showSetPopupWindow(view);
+//            if (setPopupWindow==null){
+//                setPopupWindow=new StudentLivePopupWindow(mactivity);
+//                setPopupWindow.setPopupWindowListener(this);
+//            }
+            studentLivePopupWindow.showSetPopupWindow(view);
         } else if (view.getId() == R.id.iv_classover) {
-            if (classOverPopupWindow==null){
-                classOverPopupWindow=new StudentLivePopupWindow(mactivity);
-                classOverPopupWindow.setPopupWindowListener(this);
-            }
-            classOverPopupWindow.quitClass(view);
+            showClassOverDialog();
         } else if (view.getId() == R.id.iv_chehui) {
             mBoard.undo();
         }else if (view.getId() == R.id.iv_color) {
-            if (colorPopupWindow==null){
-                colorPopupWindow=new StudentLivePopupWindow(mactivity);
-                colorPopupWindow.setPopupWindowListener(this);
-            }
-            colorPopupWindow.showColorPopupWindow(tools,colorList);
+//            if (colorPopupWindow==null){
+//                colorPopupWindow=new StudentLivePopupWindow(mactivity);
+//                colorPopupWindow.setPopupWindowListener(this);
+//            }
+            studentLivePopupWindow.showColorPopupWindow(tools,colorList);
         }  else if (view.getId() == R.id.tv_text) {
-            if (colorPopupWindow==null){
-                colorPopupWindow=new StudentLivePopupWindow(mactivity);
-                colorPopupWindow.setPopupWindowListener(this);
-            }
-            colorPopupWindow.showColorPopupWindow(tools,colorList);
+//            if (colorPopupWindow==null){
+//                colorPopupWindow=new StudentLivePopupWindow(mactivity);
+//                colorPopupWindow.setPopupWindowListener(this);
+//            }
+            studentLivePopupWindow.showColorPopupWindow(tools,colorList);
         }else if (view.getId() == R.id.iv_huabi) {
-            if (toolsPopupWindow==null){
-                toolsPopupWindow=new StudentLivePopupWindow(mactivity);
-                toolsPopupWindow.setPopupWindowListener(this);
-            }
-            toolsPopupWindow.showToolsPopupWindow(tools);
+//            if (toolsPopupWindow==null){
+//                toolsPopupWindow=new StudentLivePopupWindow(mactivity);
+//                toolsPopupWindow.setPopupWindowListener(this);
+//            }
+            studentLivePopupWindow.showToolsPopupWindow(tools);
         }else if (view.getId() == R.id.iv_videolist) {
             ivVideolist.setImageDrawable(getResources().getDrawable(R.mipmap.videolist_lv));
             ivStudentlist.setImageDrawable(getResources().getDrawable(R.mipmap.studentlist));
@@ -732,7 +726,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         }else {
             sendGroupCustomMessage("msg", dataManager.getUserName(), data);
             String chatContent = dataManager.getUserName() + ": " + data;
-            chatPopupWindow.addChatContent(chatContent);
+            studentLivePopupWindow.addChatContent(chatContent);
         }
     }
     /*
@@ -934,7 +928,9 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         final byte msg[] = str.getBytes();
         sendCustomMessage(dataManager.getTeacherCode(),msg);
     }
-
+    /**
+     * 美颜
+     */
     @Override
     public void setBeauty() {
         if(studentVideoListFragment != null){
@@ -943,6 +939,38 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         if (timeSDVideoListFragment!=null){
             timeSDVideoListFragment.setBeauty();
         }
+    }
+    /**
+     * 红包
+     */
+    @Override
+    public void redPackOnclick() {
+        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/member/queryRedPackRecord", new MyCallBack<BaseResponse<List<RedPackInfo>>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<List<RedPackInfo>> result) {
+                if (result!=null&&result.getData()!=null){
+                    if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                        studentLivePopupWindow.dismiss();
+                    }
+                    studentLivePopupWindow.showRedPackListPopupWindow(mactivity.getWindow().getDecorView(),result.getData());
+                }
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+               ToastUtil.showToast1(mactivity,"","获取红包列表失败");
+            }
+
+            @Override
+            public void onError(Response response) {
+                ToastUtil.showToast1(mactivity,"","获取红包列表失败");
+            }
+        });
     }
 
     /**
@@ -1409,10 +1437,10 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    @Override
-    public void quitClass() {
-        quitOpenGroup();
-    }
+//    @Override
+//    public void quitClass() {
+//        quitOpenGroup();
+//    }
 
 
     //发送单独数据
@@ -1506,7 +1534,11 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
 
         }else if (jo.getString("action").equals("synStatus")){
 //            同步状态
+            if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                studentLivePopupWindow.dismiss();
+            }
             JSONObject info = JSON.parseObject(jo.getString("status"));
+            String questionStatus=info.getString("questionStatus");
             if (info.getBoolean("talkDisable")){
                 liveDataManager.setJinYan(true);
 //            禁言
@@ -1515,24 +1547,25 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                     danmuInput.setInputType(InputType.TYPE_NULL);
                     danmuInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_jinyan_edit));
                 }else {
-                    if (chatPopupWindow!=null&&chatPopupWindow.isShowing()) {
-                        EditText messageInput = chatPopupWindow.getContentView().findViewById(R.id.message_input);
-                        messageInput.setInputType(InputType.TYPE_NULL);
-                        messageInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_jinyan_edit));
+                    if (studentLivePopupWindow.getPOPTAG().equals("Chat")||studentLivePopupWindow.getPOPTAG().equals("")) {
+                        if (studentLivePopupWindow.isShowing()) {
+                            EditText messageInput = studentLivePopupWindow.getContentView().findViewById(R.id.message_input);
+                            messageInput.setInputType(InputType.TYPE_NULL);
+                            messageInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_jinyan_edit));
+                        }
                     }
                 }
-            }else if (info.getBoolean("micDisable")){
+            }
+            if (info.getBoolean("micDisable")){
                 if (timeSDVideoListFragment!=null){
                     timeSDVideoListFragment.mute(true);
                 }
-            }else if (info.getLong("rollCall")!=0){
+            }
+            if (info.getLong("rollCall")!=0){
                 int timeLimit=info.getLong("rollCall").intValue();
-                if (dianMingPopupWindow==null){
-                    dianMingPopupWindow=new StudentLivePopupWindow(mactivity);
-                    dianMingPopupWindow.setPopupWindowListener(this);
-                }
-                dianMingPopupWindow.showDianMingPopupWindow(mactivity.getWindow().getDecorView(),timeLimit);
-            }else if (!info.getBoolean("teacherCameraStatus")){
+                studentLivePopupWindow.showDianMingPopupWindow(mactivity.getWindow().getDecorView(),timeLimit);
+            }
+            if (!info.getBoolean("teacherCameraStatus")){
                 liveDataManager.setTCameraOn(false);
                 if (studentVideoListFragment!=null){
                     studentVideoListFragment.teacherCameraState();
@@ -1540,38 +1573,36 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 if (timeSDVideoListFragment!=null){
                     timeSDVideoListFragment.teacherCameraState();
                 }
-            }else if (!info.getString("cameraFull").equals("")){
+            }
+            if (info.getString("cameraFull")!=null&&!info.getString("cameraFull").equals("")){
                 String cameraFullInfo=info.getString("cameraFull");
-                if (qpPopupWindow==null){
-                    qpPopupWindow=new StudentLivePopupWindow(this);
-                }
                 if (timeSDVideoListFragment!=null){
-                    qpPopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),cameraFullInfo,"TRTC");
+                    studentLivePopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),cameraFullInfo,"TRTC");
                 }else if (studentVideoListFragment!=null){
-                    qpPopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),cameraFullInfo,"VIDEO");
+                    studentLivePopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),cameraFullInfo,"VIDEO");
                 }
-            }else if (info.getString("micMembers")!=null){
+            }
+            if (info.getString("micMembers")!=null){
                 List<String> micMembersList = (List<String>) JSONArray.parseArray(info.getString("micMembers"), String.class);
                 for (int i=0;i<micMembersList.size();i++){
                     if (studentVideoListFragment!=null){
                         studentVideoListFragment.classmatelianMai(micMembersList.get(i),"1");
                     }
                 }
-            }else if (info.getString("questionStatus")!=null){
-                JSONObject questionInfo = JSON.parseObject(info.getString("questionStatus"));
+            }
+            if (questionStatus!=null&&!questionStatus.equals("")){
+                JSONObject questionInfo = JSON.parseObject(questionStatus);
                 Long questionId=questionInfo.getLong("questionId");
                 liveDataManager.setQuestionId(questionId);
                 int questionType=questionInfo.getInteger("questionType");
                 int expValue=questionInfo.getInteger("expValue");
                 int timeLimit=questionInfo.getInteger("questionSurplusTime");
                 String questionOptions=questionInfo.getString("questionOptions");
-                if (answerPopupWindow==null){
-                    answerPopupWindow=new StudentLivePopupWindow(mactivity);
-                    answerPopupWindow.setPopupWindowListener(this);
-                }
-                answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),questionId,questionType,expValue,timeLimit,questionOptions);
-            }else if (info.getLong("timer")!=0){
+                studentLivePopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),questionId,questionType,expValue,timeLimit,questionOptions);
+            }
+            if (info.getLong("timer")!=0){
                 int timeLimit=info.getLong("timer").intValue();
+                studentLivePopupWindow.showFixedTimePopupWindow(mactivity.getWindow().getDecorView(),timeLimit);
             }
         }
     }
@@ -1627,18 +1658,12 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             int expValue=jo.getInteger("expValue");
             int timeLimit=jo.getInteger("timeLimit");
             String questionOptions=jo.getString("questionOptions");
-            if (answerPopupWindow==null){
-                answerPopupWindow=new StudentLivePopupWindow(mactivity);
-                answerPopupWindow.setPopupWindowListener(this);
+            if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                studentLivePopupWindow.dismiss();
             }
-            answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),questionId,questionType,expValue,timeLimit,questionOptions);
+            studentLivePopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),questionId,questionType,expValue,timeLimit,questionOptions);
         }else if (jo.getString("action").equals("questionFinish")) {
             //老师发起结束答题
-            if (answerPopupWindow!=null){
-                if (answerPopupWindow.isShowing()){
-                    answerPopupWindow.dismiss();
-                }
-            }
             OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/question/studentAnswerList/"+liveDataManager.getQuestionId(), new MyCallBack<BaseResponse<List<AnswerListInfo>>>() {
                 @Override
                 public void onLoadingBefore(Request request) {
@@ -1648,10 +1673,10 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 @Override
                 public void onSuccess(BaseResponse<List<AnswerListInfo>> result) {
                     if (result!=null&&result.getData()!=null){
-                        if (answerDetailPopupWindow==null){
-                            answerDetailPopupWindow=new StudentLivePopupWindow(mactivity);
+                        if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                            studentLivePopupWindow.dismiss();
                         }
-                        answerDetailPopupWindow.showAnswerDetailPopupWindow(mactivity.getWindow().getDecorView(),result.getData());
+                        studentLivePopupWindow.showAnswerDetailPopupWindow(mactivity.getWindow().getDecorView(),result.getData());
                     }
                 }
 
@@ -1667,20 +1692,19 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             });
         }else if (jo.getString("action").equals("questionClose")) {
             //老师发起取消答题
-            if (answerPopupWindow!=null){
-                if (answerPopupWindow.isShowing()){
-                    answerPopupWindow.dismiss();
+            if (studentLivePopupWindow.getPOPTAG().equals("Answer")||studentLivePopupWindow.getPOPTAG().equals("Rush")){
+                if (studentLivePopupWindow.isShowing()){
+                    studentLivePopupWindow.dismiss();
                 }
             }
         }else if (jo.getString("action").equals("rushQuestion")) {
             //老师发起抢答
             Long questionId=jo.getLong("questionId");
             liveDataManager.setQuestionId(questionId);
-            if (rushPopupWindow==null){
-                rushPopupWindow=new StudentLivePopupWindow(mactivity);
-                rushPopupWindow.setPopupWindowListener(this);
+            if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                studentLivePopupWindow.dismiss();
             }
-            rushPopupWindow.showRushPopupWindow(mactivity.getWindow().getDecorView());
+            studentLivePopupWindow.showRushPopupWindow(mactivity.getWindow().getDecorView(),questionId);
         }else if (jo.getString("action").equals("rushQuestionFinish")) {
             //老师发起抢答完成
             int userId=jo.getInteger("userId");
@@ -1689,18 +1713,14 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 int expValue=jo.getInteger("expValue");
                 int timeLimit=jo.getInteger("timeLimit");
                 String questionOptions=jo.getString("questionOptions");
-                if (rushPopupWindow!=null&&rushPopupWindow.isShowing()){
-                    rushPopupWindow.dismiss();
+                if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                    studentLivePopupWindow.dismiss();
                 }
-                if (answerPopupWindow==null){
-                    answerPopupWindow=new StudentLivePopupWindow(mactivity);
-                    answerPopupWindow.setPopupWindowListener(this);
-                }
-                answerPopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),liveDataManager.getQuestionId(),questionType,expValue,timeLimit,questionOptions);
+                studentLivePopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),liveDataManager.getQuestionId(),questionType,expValue,timeLimit,questionOptions);
             }else {
                 String nickName=jo.getString("nickName");
-                if (rushPopupWindow!=null&&rushPopupWindow.isShowing()){
-                    rushPopupWindow.refreshRush(nickName);
+                if (studentLivePopupWindow.getPOPTAG().equals("Rush")&&studentLivePopupWindow.isShowing()){
+                    studentLivePopupWindow.refreshRush(nickName);
                 }
             }
         }else if (jo.getString("action").equals("rushQuestionAnswerFinish")) {
@@ -1711,23 +1731,31 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                 int result=jo.getInteger("result");
                 String nickName=jo.getString("nickName");
                 String questionAnswer=jo.getString("questionAnswer");
-                if (rushPopupWindow!=null&&rushPopupWindow.isShowing()){
-                    rushPopupWindow.dismiss();
+                if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                    studentLivePopupWindow.dismiss();
                 }
-                if (rushFinishPopupWindow==null){
-                    rushFinishPopupWindow=new StudentLivePopupWindow(mactivity);
-                    rushFinishPopupWindow.setPopupWindowListener(this);
-                }
-                rushFinishPopupWindow.showRushFinishPopupWindow(mactivity.getWindow().getDecorView(),nickName,expValue,questionAnswer,result);
+                studentLivePopupWindow.showRushFinishPopupWindow(mactivity.getWindow().getDecorView(),nickName,expValue,questionAnswer,result);
             }
         }else if (jo.getString("action").equals("redEnvelopeGroup")) {
             //抢红包
             String redPackKey=jo.getString("key");
-            if (rushRedEnvelopePopupWindow==null){
-                rushRedEnvelopePopupWindow=new StudentLivePopupWindow(mactivity);
-                rushRedEnvelopePopupWindow.setPopupWindowListener(this);
+            if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                studentLivePopupWindow.dismiss();
             }
-            rushRedEnvelopePopupWindow.showRushRedEnvelopePopupWindow(mactivity.getWindow().getDecorView(),redPackKey);
+            studentLivePopupWindow.showRushRedEnvelopePopupWindow(mactivity.getWindow().getDecorView(),redPackKey);
+        }else if (jo.getString("action").equals("delayCourse")){
+            //课堂延时
+            dataManager.setEndTime(jo.getString("endTime"));
+            try {
+                endDate = simpleDateFormat.parse(dataManager.getEndTime());//结束时间
+                String currentTime=simpleDateFormat.format(date);
+                Date currentDate = simpleDateFormat.parse(currentTime);
+                recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-startDate.getTime()))/1000;
+                classState=2;
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            ToastUtil.showToast1(mactivity,"","本节课已延时");
         }
     }
     /*
@@ -1757,42 +1785,48 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             if (liveDataManager.isOpenDanmu()){
                 danmuContentAdpter.add(chatContent);
             }else {
-                if(chatPopupWindow!=null){
-                    if (!chatPopupWindow.isShowing()){
+                if(studentLivePopupWindow.getPOPTAG().equals("Chat")||studentLivePopupWindow.getPOPTAG().equals("")){
+                    if (!studentLivePopupWindow.isShowing()){
                         ivChat.setImageDrawable(getDrawable(R.mipmap.chat_red));
+                        liveDataManager.getChatContentList().add(chatContent);
+                    }else {
+                        studentLivePopupWindow.addChatContent(chatContent);
                     }
-                    chatPopupWindow.addChatContent(chatContent);
                 }else {
                     liveDataManager.getChatContentList().add(chatContent);
                     ivChat.setImageDrawable(getDrawable(R.mipmap.chat_red));
                 }
             }
         }else if(jo.getString("action").equals("talkDisable")){
-            liveDataManager.setJinYan(true);
 //            禁言
+            liveDataManager.setJinYan(true);
             if(liveDataManager.isOpenDanmu()){
 //        禁止手机软键盘
               danmuInput.setInputType(InputType.TYPE_NULL);
               danmuInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_jinyan_edit));
             }else {
-                if (chatPopupWindow!=null&&chatPopupWindow.isShowing()) {
-                    EditText messageInput = chatPopupWindow.getContentView().findViewById(R.id.message_input);
-                    messageInput.setInputType(InputType.TYPE_NULL);
-                    messageInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_jinyan_edit));
+                if (studentLivePopupWindow.getPOPTAG().equals("Chat")||studentLivePopupWindow.getPOPTAG().equals("")) {
+                    if (studentLivePopupWindow.isShowing()) {
+                        EditText messageInput = studentLivePopupWindow.getContentView().findViewById(R.id.message_input);
+                        messageInput.setInputType(InputType.TYPE_NULL);
+                        messageInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_jinyan_edit));
+                    }
                 }
             }
 
         }else if(jo.getString("action").equals("talkEnable")){
-            liveDataManager.setJinYan(false);
 //            解除禁言
+            liveDataManager.setJinYan(false);
             if(liveDataManager.isOpenDanmu()){
                 danmuInput.setInputType(InputType.TYPE_CLASS_TEXT);
                 danmuInput.setBackground(getResources().getDrawable(R.drawable.bg_danmu_edit));
             }else {
-                if (chatPopupWindow!=null){
-                    EditText messageInput=chatPopupWindow.getContentView().findViewById(R.id.message_input);
-                    messageInput.setInputType(InputType.TYPE_CLASS_TEXT);
-                    messageInput.setBackground(getResources().getDrawable(R.drawable.bg_edit));
+                if (studentLivePopupWindow.getPOPTAG().equals("Chat")||studentLivePopupWindow.getPOPTAG().equals("")){
+                    if (studentLivePopupWindow.isShowing()){
+                        EditText messageInput=studentLivePopupWindow.getContentView().findViewById(R.id.message_input);
+                        messageInput.setInputType(InputType.TYPE_CLASS_TEXT);
+                        messageInput.setBackground(getResources().getDrawable(R.drawable.bg_edit));
+                    }
                 }
             }
         }else if (jo.getString("action").equals("teacherJoin")){
@@ -1846,21 +1880,20 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         }else if (jo.getString("action").equals("cameraFull")) {
             //老师发起全屏
             String info=jo.getString("info");
-            if (qpPopupWindow==null){
-                qpPopupWindow=new StudentLivePopupWindow(this);
+            if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                studentLivePopupWindow.dismiss();
             }
             if (timeSDVideoListFragment!=null){
-                qpPopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),info,"TRTC");
+                studentLivePopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),info,"TRTC");
             }else if (studentVideoListFragment!=null){
-                qpPopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),info,"VIDEO");
+                studentLivePopupWindow.showQPPopupWindow(this.getWindow().getDecorView(),info,"VIDEO");
             }
 
         }else if (jo.getString("action").equals("cameraBack")) {
             //老师发起退出全屏
             String info=jo.getString("info");
-            if (qpPopupWindow!=null){
-                qpPopupWindow.dismiss();
-                qpPopupWindow=null;
+            if (studentLivePopupWindow.getPOPTAG().equals("QP")&&studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                studentLivePopupWindow.dismiss();
             }
             if (timeSDVideoListFragment!=null){
                 timeSDVideoListFragment.showView(info);
@@ -1883,17 +1916,28 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             //老师发起点名
             JSONObject info = JSON.parseObject(jo.getString("info"));
             int timeLimit=info.getInteger("timeLimit");
-            if (dianMingPopupWindow==null){
-                dianMingPopupWindow=new StudentLivePopupWindow(mactivity);
-                dianMingPopupWindow.setPopupWindowListener(this);
+            if (studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                studentLivePopupWindow.dismiss();
             }
-            dianMingPopupWindow.showDianMingPopupWindow(mactivity.getWindow().getDecorView(),timeLimit);
+            studentLivePopupWindow.showDianMingPopupWindow(mactivity.getWindow().getDecorView(),timeLimit);
         }else if (jo.getString("action").equals("timer")) {
             //老师发起计时器
             JSONObject info = JSON.parseObject(jo.getString("info"));
             long time=info.getLong("time");
+            if (!studentLivePopupWindow.getPOPTAG().equals("FixedTime")&&studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                studentLivePopupWindow.dismiss();
+            }
+            if (studentLivePopupWindow.getPOPTAG().equals("FixedTime")&&studentLivePopupWindow.isShowing()){
+                studentLivePopupWindow.restartFixedTime(time);
+            }else {
+                studentLivePopupWindow.showFixedTimePopupWindow(mactivity.getWindow().getDecorView(),time);
+            }
         }else if (jo.getString("action").equals("killTimer")) {
             //老师结束计时器
+            if (studentLivePopupWindow.getPOPTAG().equals("FixedTime")&&studentLivePopupWindow!=null&&studentLivePopupWindow.isShowing()){
+                studentLivePopupWindow.closeFixedTime();
+                studentLivePopupWindow.dismiss();
+            }
         }
     }
 
@@ -2174,21 +2218,25 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            DialogUtil.showDialog(this, "退出后本节课将会结束，确定要退出课堂吗？",
-                    "确定",  "取消",false, new DialogUtil.AlertDialogBtnClickListener() {
-                        @Override
-                        public void clickPositive() {
-                            quitOpenGroup();
-                        }
-
-                        @Override
-                        public void clickNegative() {
-                        }
-                    });
+            showClassOverDialog();
             return true;
         }else {
             return super.onKeyDown(keyCode, event);
         }
+    }
+
+    public void showClassOverDialog(){
+        DialogUtil.showDialog(this, "退出后本节课将会结束，确定要退出课堂吗？",
+                "确定",  "取消",false, new DialogUtil.AlertDialogBtnClickListener() {
+                    @Override
+                    public void clickPositive() {
+                        quitOpenGroup();
+                    }
+
+                    @Override
+                    public void clickNegative() {
+                    }
+                });
     }
     @Override
     protected void onDestroy() {

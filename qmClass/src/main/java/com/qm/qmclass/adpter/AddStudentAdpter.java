@@ -8,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.qm.qmclass.R;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.model.StudentInfor;
@@ -53,6 +54,7 @@ public class AddStudentAdpter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.addstudent_item, null);
             addSTHolderView.studentname = (TextView) convertView.findViewById(R.id.studentname);
             addSTHolderView.addstudent= (ImageView) convertView.findViewById(R.id.addstudent);
+            addSTHolderView.cup= (ImageView) convertView.findViewById(R.id.cup);
             convertView.setTag(addSTHolderView);
         } else {
             addSTHolderView = (AddSTHolderView) convertView.getTag();
@@ -63,6 +65,12 @@ public class AddStudentAdpter extends BaseAdapter {
             addSTHolderView.addstudent.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.videolist));
         }else if (liveDataManager.getAllStudentsMap().get(mlist.get(position).getUserCode()).getLianMaiState()==2){
             addSTHolderView.addstudent.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.onlianmai));
+        }
+        if (mlist.get(position).getExpIcon()!=null&&!mlist.get(position).getExpIcon().equals("")){
+            addSTHolderView.cup.setVisibility(View.VISIBLE);
+            Glide.with(mcontext).load(mlist.get(position).getExpIcon()).skipMemoryCache(true).into(addSTHolderView.cup);
+        }else {
+            addSTHolderView.cup.setVisibility(View.INVISIBLE);
         }
         addSTHolderView.studentname.setText(mlist.get(position).getNickName());
         addSTHolderView.addstudent.setOnClickListener(new View.OnClickListener() {
@@ -77,6 +85,7 @@ public class AddStudentAdpter extends BaseAdapter {
     public class AddSTHolderView {
         TextView studentname;
         ImageView addstudent;
+        ImageView cup;
     }
     public void refresh(List<StudentInfor> list,int state) {
         mlist = list;//传入list，然后调用notifyDataSetChanged方法

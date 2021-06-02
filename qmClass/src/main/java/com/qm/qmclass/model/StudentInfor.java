@@ -13,11 +13,13 @@ public class StudentInfor implements Serializable {
     private String nickName;
     private String avatarUrl;
     private int expValue;
+    private String expIcon;
     private int studyCoin;
     private int lianMaiState=3;//1 已连麦 2连麦中 3未连麦
     private boolean isHuabiOn=false;
     private boolean isCameraOn=false;//学生摄像头状态
     private boolean isMaikeOn=false;//学生麦克风状态
+    private int SKTXNUM=0;//上课提醒次数
 
     public String getUserCode() {
         return userCode;
@@ -97,5 +99,21 @@ public class StudentInfor implements Serializable {
 
     public void setMaikeOn(boolean maikeOn) {
         isMaikeOn = maikeOn;
+    }
+
+    public int getSKTXNUM() {
+        return SKTXNUM;
+    }
+
+    public void setSKTXNUM(int SKTXNUM) {
+        this.SKTXNUM = SKTXNUM;
+    }
+
+    public String getExpIcon() {
+        return expIcon;
+    }
+
+    public void setExpIcon(String expIcon) {
+        this.expIcon = expIcon;
     }
 }

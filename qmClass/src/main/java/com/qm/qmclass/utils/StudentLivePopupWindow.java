@@ -28,6 +28,7 @@ import android.widget.TextView;
 import androidx.core.widget.PopupWindowCompat;
 
 import com.alibaba.fastjson.JSON;
+import com.bumptech.glide.Glide;
 import com.qm.qmclass.BuildConfig;
 import com.qm.qmclass.R;
 import com.qm.qmclass.activitys.TeacherLiveActivity;
@@ -36,6 +37,7 @@ import com.qm.qmclass.adpter.ChatContentAdpter;
 import com.qm.qmclass.adpter.ColorAdpter;
 import com.qm.qmclass.adpter.JushouAdpter;
 import com.qm.qmclass.adpter.OptionsAdpter;
+import com.qm.qmclass.adpter.RedPackAdpter;
 import com.qm.qmclass.adpter.XzAdpter;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
@@ -43,6 +45,9 @@ import com.qm.qmclass.base.QMSDK;
 import com.qm.qmclass.model.AnswerInfor;
 import com.qm.qmclass.model.AnswerListInfo;
 import com.qm.qmclass.model.ChatContent;
+import com.qm.qmclass.model.LoginInfor;
+import com.qm.qmclass.model.RedPackInfo;
+import com.qm.qmclass.model.RushRedPack;
 import com.qm.qmclass.okhttp.BaseResponse;
 import com.qm.qmclass.okhttp.MyCallBack;
 import com.qm.qmclass.okhttp.OkHttpUtils;
@@ -59,7 +64,9 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class StudentLivePopupWindow extends PopupWindow {
-    private Activity mactivity;
+    public String POPTAG="";
+    private static volatile StudentLivePopupWindow INSTANCE;
+    private static Activity mactivity;
     private PopupWindowListener mpopupWindowListener;
     private CountDownTimer timer;
     private boolean chatChecked;
@@ -67,8 +74,8 @@ public class StudentLivePopupWindow extends PopupWindow {
     private ChatContentAdpter chatContentAdpter;
     private ColorAdpter colorAdpter;
     private XzAdpter xzAdpter;
-    private LiveDataManager liveDataManager;
-    private DataManager dataManager;
+    private static LiveDataManager liveDataManager;
+    private static DataManager dataManager;
     private String[] xz = {"shifang","shituo","kongfang","kongtuo"};
     private long dmtime;
     private long dttime;
@@ -81,15 +88,37 @@ public class StudentLivePopupWindow extends PopupWindow {
     private LinearLayout rush;
     private LinearLayout llresult;
     private TextView rushresult;
+    private RedPackAdpter redPackAdpter;
+    private LinearLayout llRushRedEnvelope;
+    private LinearLayout llRushRedResult;
+    private RoundImageView rushRedIcon;
+    private TextView fromsomeone;
+    private TextView tips;
+    private LinearLayout success;
+    private TextView quota;
+    private TextView successtips;
+    private TextView fail;
+    private static ImageView grade;
 
-    public StudentLivePopupWindow(Activity activity) {
+    private StudentLivePopupWindow() {
+
+    }
+    public static StudentLivePopupWindow getInstance(Activity activity) {
         mactivity=activity;
         liveDataManager=LiveDataManager.getInstance();
         dataManager=DataManager.getInstance();
+        if (INSTANCE == null) {
+            synchronized (StudentLivePopupWindow.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new StudentLivePopupWindow();
+                }
+            }
+        }
+        return INSTANCE;
     }
    //    聊天
     public void showChatPopupWindow(View view,List<String> chatContentList){
-
+        this.setPOPTAG("Chat");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_chat,
                 null, false);
         ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
@@ -165,6 +194,7 @@ public class StudentLivePopupWindow extends PopupWindow {
     }
     //提问
     public void showQuestionPopupWindow(View view){
+        this.setPOPTAG("Question");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_question,
                 null, false);
         ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
@@ -199,12 +229,22 @@ public class StudentLivePopupWindow extends PopupWindow {
         setContentView(contentView);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
     }
+    private static TextView redPack;
+    private static TextView integral;
 //设置
     public void showSetPopupWindow(View view){
+        this.setPOPTAG("Set");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_set,
                 null, false);
         ImageView yincang=(ImageView)contentView.findViewById(R.id.yincang);
         Switch beauty=(Switch)contentView.findViewById(R.id.beauty);
+        LinearLayout llRedPack=(LinearLayout)contentView.findViewById(R.id.ll_redPack);
+        integral=(TextView)contentView.findViewById(R.id.integral);
+        redPack=(TextView)contentView.findViewById(R.id.redPack);
+        grade=(ImageView)contentView.findViewById(R.id.grade);
+
+        getLoginInfo();
+
         yincang.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -222,6 +262,13 @@ public class StudentLivePopupWindow extends PopupWindow {
                 mpopupWindowListener.setBeauty();
             }
         });
+        llRedPack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mpopupWindowListener.redPackOnclick();
+                dismiss();
+            }
+        });
         setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
         setWidth(getPopWidth());
         setOutsideTouchable(true);
@@ -230,39 +277,41 @@ public class StudentLivePopupWindow extends PopupWindow {
         setContentView(contentView);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
     }
-//    退出课堂
-    public void quitClass(View view){
-        String msg="退出后本节课将会结束，确定要退出课堂吗？";
-        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.live_classover,
-                null, false);
-        TextView context=(TextView) contentView.findViewById(R.id.context);
-        TextView cancel=(TextView) contentView.findViewById(R.id.cancel);
-        TextView determine=(TextView) contentView.findViewById(R.id.determine);
-        context.setText(msg);
-        cancel.setOnClickListener(new View.OnClickListener() {
+
+    private static void getLoginInfo(){
+        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/member/getLoginInfo", new MyCallBack<BaseResponse<LoginInfor>>() {
             @Override
-            public void onClick(View v) {
-                dismiss();
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<LoginInfor> result) {
+                if (result!=null&&result.getData()!=null){
+                    dataManager.setExpValue(result.getData().getExpValue());
+                    dataManager.setExpIcon(result.getData().getExpIcon());
+                    dataManager.setStudyCoin(result.getData().getStudyCoin());
+
+                    Glide.with(mactivity).load(result.getData().getExpIcon()).skipMemoryCache(true).into(grade);
+                    redPack.setText(result.getData().getStudyCoin()+"币");
+                    integral.setText(String.valueOf(result.getData().getExpValue()));
+                }
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+
+            }
+
+            @Override
+            public void onError(Response response) {
+
             }
         });
-        determine.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mpopupWindowListener.quitClass();
-                dismiss();
-            }
-        });
-        setHeight((int)mactivity.getResources().getDimension(R.dimen.dp_150));
-        setWidth((int)mactivity.getResources().getDimension(R.dimen.dp_220));
-        setOutsideTouchable(true);
-        setFocusable(true);
-        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        setContentView(contentView);
-        this.showAtLocation(view, Gravity.CENTER, 0, 0);
     }
     //选择白板工具
     public void showToolsPopupWindow(View view){
-
+        this.setPOPTAG("Tools");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_tools,
                 null, false);
         LinearLayout llbi=(LinearLayout) contentView.findViewById(R.id.ll_bi);
@@ -376,7 +425,7 @@ public class StudentLivePopupWindow extends PopupWindow {
     }
     //选择画笔颜色
     public void showColorPopupWindow(View view,List<Integer> list){
-
+        this.setPOPTAG("Color");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.liveteacher_color,
                 null, false);
         RelativeLayout penstyle=(RelativeLayout) contentView.findViewById(R.id.penstyle);
@@ -520,6 +569,7 @@ public class StudentLivePopupWindow extends PopupWindow {
     }
     //视频全屏
     public void showQPPopupWindow(View view,String userCode,String type){
+        this.setPOPTAG("QP");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_qp,
                 null, false);
         RelativeLayout quanpingVideoview=(RelativeLayout) contentView.findViewById(R.id.quanpingview);
@@ -556,6 +606,7 @@ public class StudentLivePopupWindow extends PopupWindow {
     }
     //签到
     public void showDianMingPopupWindow(View view,int time){
+        this.setPOPTAG("DianMing");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_dianming,
                 null, false);
         ImageView close=(ImageView)contentView.findViewById(R.id.close);
@@ -630,6 +681,7 @@ public class StudentLivePopupWindow extends PopupWindow {
     }
     //答题器
     public void showAnswerPopupWindow(View view,Long code,int type,int exp,int time,String options){
+        this.setPOPTAG("Answer");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_answer,
                 null, false);
         ImageView close=(ImageView)contentView.findViewById(R.id.close);
@@ -647,7 +699,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         TextView commit=(TextView) contentView.findViewById(R.id.commit);
         question.setVisibility(View.VISIBLE);
         questionresult.setVisibility(View.GONE);
-        List<String> list = Arrays.asList(options.split(""));
+        List<String> list =Arrays.asList(options.split(""));
         List<String> optionlist = new ArrayList<String>(list);
         optionlist.remove(0);
 
@@ -776,6 +828,7 @@ public class StudentLivePopupWindow extends PopupWindow {
 
     //答题器明细
     public void showAnswerDetailPopupWindow(View view,List<AnswerListInfo> list){
+        this.setPOPTAG("AnswerDetail");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_answerdetail,
                 null, false);
         ImageView close=(ImageView)contentView.findViewById(R.id.close);
@@ -801,7 +854,8 @@ public class StudentLivePopupWindow extends PopupWindow {
     }
 
     //抢答题 抢
-    public void showRushPopupWindow(View view){
+    public void showRushPopupWindow(View view,Long questionId){
+        this.setPOPTAG("Rush");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_rush,
                 null, false);
         ImageView close=(ImageView)contentView.findViewById(R.id.close);
@@ -820,7 +874,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         tvRush.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                rushQuestion();
+                rushQuestion(questionId);
             }
         });
 
@@ -833,20 +887,20 @@ public class StudentLivePopupWindow extends PopupWindow {
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
     }
 
-    private void rushQuestion(){
+    private void rushQuestion(Long questionId){
         HashMap<String, Object> map = new HashMap<>();
         map.put("nickName", dataManager.getUserName());
-        map.put("questionId", liveDataManager.getQuestionId());
+        map.put("questionId", questionId);
         map.put("studentId", dataManager.getUserid());
         String jsonQuestion= JSON.toJSONString(map);
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/rushQuestion",jsonQuestion,new MyCallBack<BaseResponse<AnswerInfor>>() {
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/rushQuestion",jsonQuestion,new MyCallBack<BaseResponse<Boolean>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
             }
 
             @Override
-            public void onSuccess(BaseResponse<AnswerInfor> result) {
+            public void onSuccess(BaseResponse<Boolean> result) {
 
             }
 
@@ -868,6 +922,7 @@ public class StudentLivePopupWindow extends PopupWindow {
     }
     //抢答题 答题完成
     public void showRushFinishPopupWindow(View view,String nickName,int expValue,String questionAnswer,int result){
+        this.setPOPTAG("RushFinish");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_rushfinish,
                 null, false);
         ImageView close=(ImageView)contentView.findViewById(R.id.close);
@@ -902,13 +957,25 @@ public class StudentLivePopupWindow extends PopupWindow {
 
     //抢红包
     public void showRushRedEnvelopePopupWindow(View view,String redPackKey){
+        this.setPOPTAG("RushRedEnvelope");
         View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_rushredenvelope,
                 null, false);
         ImageView close=(ImageView)contentView.findViewById(R.id.close);
-        LinearLayout llRushRedEnvelope=(LinearLayout) contentView.findViewById(R.id.ll_rushRedEnvelope);
-//        llresult=(LinearLayout) contentView.findViewById(R.id.result);
-//        rushresult=(TextView) contentView.findViewById(R.id.rushresult);
+        llRushRedEnvelope=(LinearLayout) contentView.findViewById(R.id.ll_rushRedEnvelope);
         TextView tvRushRedEnvelope=(TextView) contentView.findViewById(R.id.tv_rushRedEnvelope);
+
+        llRushRedResult=(LinearLayout) contentView.findViewById(R.id.ll_rushRedResult);
+        rushRedIcon=(RoundImageView) contentView.findViewById(R.id.rushRed_icon);
+        fromsomeone=(TextView) contentView.findViewById(R.id.fromsomeone);
+        tips=(TextView) contentView.findViewById(R.id.tips);
+        success=(LinearLayout) contentView.findViewById(R.id.success);
+        quota=(TextView) contentView.findViewById(R.id.quota);
+        successtips=(TextView) contentView.findViewById(R.id.successtips);
+        fail=(TextView) contentView.findViewById(R.id.fail);
+
+        llRushRedEnvelope.setVisibility(View.VISIBLE);
+        llRushRedResult.setVisibility(View.GONE);
+
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -934,14 +1001,33 @@ public class StudentLivePopupWindow extends PopupWindow {
         HashMap<String, Object> map = new HashMap<>();
         map.put("redPackKey", redPackKey);
         String jsonQuestion= JSON.toJSONString(map);
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/member/rushRedPack",jsonQuestion,new MyCallBack<BaseResponse<String>>() {
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/member/rushRedPack",jsonQuestion,new MyCallBack<BaseResponse<RushRedPack>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
             }
 
             @Override
-            public void onSuccess(BaseResponse<String> result) {
+            public void onSuccess(BaseResponse<RushRedPack> result) {
+                if (result.getData()!=null){
+                    llRushRedEnvelope.setVisibility(View.GONE);
+                    llRushRedResult.setVisibility(View.VISIBLE);
+                    if (result.getData().getStudyCoin()!=0){
+                        success.setVisibility(View.VISIBLE);
+                        fail.setVisibility(View.GONE);
+                        Glide.with(mactivity).load(result.getData().getSourceAvatar()).skipMemoryCache(true).into(rushRedIcon);
+                        fromsomeone.setText("红包-来自"+result.getData().getSourceNickName());
+                        tips.setText("恭喜您获得");
+                        quota.setText(String.valueOf(result.getData().getStudyCoin()));
+                        successtips.setText("已存入 \"设置-红包\"");
+                    }else {
+                        success.setVisibility(View.GONE);
+                        fail.setVisibility(View.VISIBLE);
+                        Glide.with(mactivity).load(result.getData().getSourceAvatar()).skipMemoryCache(true).into(rushRedIcon);
+                        fromsomeone.setText("红包-来自"+result.getData().getSourceNickName());
+                        tips.setText("很遗憾您未抢到");
+                    }
+                }
 
             }
 
@@ -955,6 +1041,100 @@ public class StudentLivePopupWindow extends PopupWindow {
 
             }
         });
+    }
+    private TextView countDown;
+    //计时器
+    public void showFixedTimePopupWindow(View view,long time){
+        this.setPOPTAG("FixedTime");
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_fixedtime,
+                null, false);
+        ImageView close=(ImageView)contentView.findViewById(R.id.close);
+        countDown=(TextView) contentView.findViewById(R.id.countDown);
+
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (timer != null) {
+                    timer.cancel();
+                }
+                dismiss();
+            }
+        });
+
+        restartFixedTime(time);
+
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(getPopWidth());
+        setOutsideTouchable(false);
+        setFocusable(false);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
+    }
+    public void restartFixedTime(long time){
+        if (timer != null) {
+            timer.cancel();
+        }
+        timer=new CountDownTimer(time,1000){
+            @Override
+            public void onTick(long millisUntilFinished) {
+                long day=millisUntilFinished/(1000*60*60*24);
+                long hour=(millisUntilFinished-day*(1000*60*60*24))/(1000*60*60);
+                long minute=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60))/(1000*60);
+                long second=(millisUntilFinished-day*(1000*60*60*24)-hour*(1000*60*60)-minute*(1000*60))/1000;
+                if (minute>9&&second>9){
+                    countDown.setText(minute+":"+second);
+                }
+                if (minute<10&&second<10){
+                    countDown.setText("0"+minute+":0"+second);
+                }
+                if (minute>9&&second<10){
+                    countDown.setText(minute+":0"+second);
+                }
+                if (minute<10&&second>9){
+                    countDown.setText("0"+minute+":"+second);
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                if (timer != null) {
+                    timer.cancel();
+                }
+                dismiss();
+            }
+        };
+        timer.start();
+    }
+
+    public void closeFixedTime(){
+        if (timer != null) {
+            timer.cancel();
+        }
+    }
+    //红包列表
+    public void showRedPackListPopupWindow(View view,List<RedPackInfo> list){
+        this.setPOPTAG("RedPackList");
+        View contentView = LayoutInflater.from(mactivity).inflate(R.layout.livestudent_redpacklist,
+                null, false);
+        ImageView close=(ImageView)contentView.findViewById(R.id.close);
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
+        ListView redPacklistView=(ListView)contentView.findViewById(R.id.redPacklistView);
+        redPackAdpter=new RedPackAdpter(mactivity, list);
+        redPacklistView.setAdapter(redPackAdpter);
+
+        setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+        setWidth(getPopWidth());
+        setOutsideTouchable(true);
+        setFocusable(true);
+        setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        setContentView(contentView);
+        this.showAtLocation(view, Gravity.RIGHT, 0, 0);
     }
     @SuppressWarnings("ResourceType")
     private static int makeDropDownMeasureSpec(int measureSpec) {
@@ -986,16 +1166,25 @@ public class StudentLivePopupWindow extends PopupWindow {
         void xiangZhuangOnclick(int type);
         void seekBarOnclick(int progress);
         void xianOnclick(int type);
-        void quitClass();
+//        void quitClass();
         void showDanmu();
         void questionOnclick(String type);
         void signOnclick(long time);
         void setBeauty();
+        void redPackOnclick();
     }
     public void setPopupWindowListener(PopupWindowListener popupWindowListener) {
         this.mpopupWindowListener = popupWindowListener;
     }
     public static abstract class ChangeStudentListener{
         public abstract void changeStudentList(int state);
+    }
+
+    public String getPOPTAG() {
+        return POPTAG;
+    }
+
+    public void setPOPTAG(String POPTAG) {
+        this.POPTAG = POPTAG;
     }
 }

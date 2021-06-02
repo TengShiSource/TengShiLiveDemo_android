@@ -23,6 +23,7 @@ public class LoginInfor {
     private String avatar;
     private String studyCoin;
     private String expValue;
+    private String expIcon;
 
     public String getToken() {
         return token;
@@ -142,5 +143,13 @@ public class LoginInfor {
 
     public void setExpValue(String expValue) {
         this.expValue = expValue;
+    }
+
+    public String getExpIcon() {
+        return expIcon;
+    }
+
+    public void setExpIcon(String expIcon) {
+        this.expIcon = expIcon;
     }
 }

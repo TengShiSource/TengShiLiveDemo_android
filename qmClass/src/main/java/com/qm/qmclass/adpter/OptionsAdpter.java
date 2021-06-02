@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.qm.qmclass.R;
 import com.qm.qmclass.base.LiveDataManager;
 
+import java.util.ArrayList;
 import java.util.IllegalFormatCodePointException;
 import java.util.List;
 import java.util.Set;
@@ -22,7 +23,6 @@ public class OptionsAdpter extends BaseAdapter {
     private Context mcontext;
     private List<String> mlist;
     private MyClickListener mListener;
-    private LiveDataManager liveDataManager;
     private int mtype;
     private int selectPosition=-1;
     private Set<Integer> dxSelectPosition=new TreeSet<>();
@@ -34,7 +34,6 @@ public class OptionsAdpter extends BaseAdapter {
         mlist=list;
         mListener = listener;
         mtype=type;
-        liveDataManager=LiveDataManager.getInstance();
     }
     @Override
     public int getCount() {

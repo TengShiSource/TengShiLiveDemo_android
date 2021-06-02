@@ -49,6 +49,7 @@ public class StudentListFragment extends Fragment implements TeacherLiveActivity
     private StudentStateAdpter studentStateAdpter;
     private DataManager dataManager;
     private LiveDataManager liveDataManager;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -101,8 +102,11 @@ public class StudentListFragment extends Fragment implements TeacherLiveActivity
 
             @Override
             public void weishangkeOnClick(String userCode, View v) {
-                if (v.getId()==R.id.hujiao){
-                    Toast.makeText(teacherLiveActivity,userCode+"呼叫",Toast.LENGTH_SHORT).show();
+                if (v.getId()==R.id.tv_shangketixing){
+                    int num=liveDataManager.getAllStudentsMap().get(userCode).getSKTXNUM();
+                    liveDataManager.getAllStudentsMap().get(userCode).setSKTXNUM(num+1);
+                    liveDataManager.getOffLineStudentsMap().get(userCode).setSKTXNUM(num+1);
+                    showWeiShangKeList();
                 }
             }
         });

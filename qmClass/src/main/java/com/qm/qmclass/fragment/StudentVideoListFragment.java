@@ -127,10 +127,15 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
         myselfLianmai.setOnClickListener(this);
         myselfQiehuan.setOnClickListener(this);
         classmateVideo=(LinearLayout) view.findViewById(R.id.classmate_video);
-        CheckPermission();
-        hidenAnimation();
         teachername.setText(dataManager.getTeacherName());
         ivShexiangtou.setImageDrawable(studentLiveActivity.getDrawable(R.mipmap.shexiangtou_guan));
+
+        if (mLivePusher==null){
+            mLivePusher = new TXLivePusher(getActivity());
+            mLivePusher.setPushListener(this);
+        }
+        CheckPermission();
+        hidenAnimation();
         return view;
     }
 
@@ -225,12 +230,12 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
      * 推流自己摄像头
      */
     private void PushMyselfVideo(){
-        if (mLivePushConfig==null){
-            mLivePushConfig  = new TXLivePushConfig();
-        }
         if (mLivePusher==null){
             mLivePusher = new TXLivePusher(getActivity());
             mLivePusher.setPushListener(this);
+        }
+        if (mLivePushConfig==null){
+            mLivePushConfig  = new TXLivePushConfig();
         }
 // 一般情况下不需要修改 config 的默认配置
 //        横屏推流
@@ -266,18 +271,21 @@ public class StudentVideoListFragment extends Fragment implements View.OnClickLi
     }
     //设置美颜
     public void setBeauty(){
-        TXBeautyManager txBeautyManager=mLivePusher.getBeautyManager();
-        if (liveDataManager.isOpenBeauty()){
-            txBeautyManager.setBeautyLevel(7);
-            txBeautyManager.setBeautyStyle(2);
-            txBeautyManager.setWhitenessLevel(7);
-            txBeautyManager.setRuddyLevel(3);
-        }else {
-            txBeautyManager.setBeautyLevel(0);
-            txBeautyManager.setBeautyStyle(1);
-            txBeautyManager.setWhitenessLevel(0);
-            txBeautyManager.setRuddyLevel(0);
+        if (mLivePusher!=null){
+            TXBeautyManager txBeautyManager=mLivePusher.getBeautyManager();
+            if (liveDataManager.isOpenBeauty()){
+                txBeautyManager.setBeautyLevel(7);
+                txBeautyManager.setBeautyStyle(2);
+                txBeautyManager.setWhitenessLevel(7);
+                txBeautyManager.setRuddyLevel(3);
+            }else {
+                txBeautyManager.setBeautyLevel(0);
+                txBeautyManager.setBeautyStyle(1);
+                txBeautyManager.setWhitenessLevel(0);
+                txBeautyManager.setRuddyLevel(0);
+            }
         }
+
     }
     @Override
     public void onPushEvent(int event, Bundle bundle) {

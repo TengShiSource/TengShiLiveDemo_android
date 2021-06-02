@@ -15,6 +15,8 @@ public class DataManager {
     private String courseName;//课堂名称
     private String startTime;//课堂开始时间
     private String endTime;//课堂结束时间
+    private int recMethod=1;//1自动（默认） 2手动 3不录
+    private String openClassReminder="n";//默认n 是/否
     private String appid;//应用ID
     private int courseId;//课堂ID
     private String role;//角色
@@ -27,6 +29,7 @@ public class DataManager {
     private String userName;//用户名
     private int userid;
     private String expValue;
+    private String expIcon;
     private String studyCoin;
 
     private DataManager() {
@@ -173,5 +176,29 @@ public class DataManager {
 
     public void setStudyCoin(String studyCoin) {
         this.studyCoin = studyCoin;
+    }
+
+    public int getRecMethod() {
+        return recMethod;
+    }
+
+    public void setRecMethod(int recMethod) {
+        this.recMethod = recMethod;
+    }
+
+    public String getOpenClassReminder() {
+        return openClassReminder;
+    }
+
+    public void setOpenClassReminder(String openClassReminder) {
+        this.openClassReminder = openClassReminder;
+    }
+
+    public String getExpIcon() {
+        return expIcon;
+    }
+
+    public void setExpIcon(String expIcon) {
+        this.expIcon = expIcon;
     }
 }

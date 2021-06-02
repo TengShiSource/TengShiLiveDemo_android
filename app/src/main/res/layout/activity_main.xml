@@ -98,7 +98,7 @@
                 android:textSize="@dimen/sp_13"
                 android:layout_toRightOf="@+id/tv_phone"
                 android:background="@drawable/bg_edittext"
-                android:text="15688960655"/>
+                android:text="15688967055"/>
         </RelativeLayout>
         <RelativeLayout
             android:id="@+id/ll_teacherpd"

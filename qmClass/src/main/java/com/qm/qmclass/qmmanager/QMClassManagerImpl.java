@@ -82,13 +82,7 @@ public class QMClassManagerImpl extends QMClassManager {
             getCourseInfo();
         }
     }
-//    @Override
-//    public void joinClassroom(final String token) {
-//        role="student";
-//        if (SharedPreferencesUtils.putData(Constants.USER_Token,token)){
-//            getCourseInfo();
-//        }
-//    }
+
     private static void getCourseInfo(){
         OkHttpUtils.getInstance().Get(baseurl+"/lvbcourse/getCourseInfo", new MyCallBack<BaseResponse<CourseInfo>>() {
             @Override
@@ -108,6 +102,9 @@ public class QMClassManagerImpl extends QMClassManager {
                     dataManager.setTeacherIcon(courseInfo.getTeacher().getAvatarUrl());
                     dataManager.setStartTime(courseInfo.getCourse().getStartTime());
                     dataManager.setEndTime(courseInfo.getCourse().getEndTime());
+                    dataManager.setRecMethod(courseInfo.getOptions().getRecMethod());
+                    dataManager.setOpenClassReminder(courseInfo.getOptions().getOpenClassReminder());
+
                     mticManager.init(mContext, courseInfo.getTxAppId());
 
                     //        直播推流licence
@@ -148,6 +145,7 @@ public class QMClassManagerImpl extends QMClassManager {
                     dataManager.setUserIcon(result.getData().getAvatar());
                     if (result.getData().getUserRole().equals("s")){
                         dataManager.setExpValue(result.getData().getExpValue());
+                        dataManager.setExpIcon(result.getData().getExpIcon());
                         dataManager.setStudyCoin(result.getData().getStudyCoin());
                     }
                     if (result.getData().getUserRole()!=null&&!result.getData().getUserRole().equals("")){

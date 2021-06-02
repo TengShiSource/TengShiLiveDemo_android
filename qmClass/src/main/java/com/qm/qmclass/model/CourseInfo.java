@@ -1,6 +1,7 @@
 package com.qm.qmclass.model;
 
 import java.sql.Time;
+import java.util.List;
 
 /**
  * Created by lz on 2020/11/12.
@@ -230,6 +231,26 @@ public class CourseInfo {
             this.licenceKey = licenceKey;
         }
     }
+    public class ExpValueLevels{
+        private int score;
+        private String icon;
+
+        public int getScore() {
+            return score;
+        }
+
+        public void setScore(int score) {
+            this.score = score;
+        }
+
+        public String getIcon() {
+            return icon;
+        }
+
+        public void setIcon(String icon) {
+            this.icon = icon;
+        }
+    }
     public class Options{
         private String teacherCreateClass;
         private String teacherTransferDirector;
@@ -238,7 +259,8 @@ public class CourseInfo {
         private String teacherManageCourse;
         private int recMethod;
         private int courseMaxMembers;
-        private String expValueLevels;
+        private List<ExpValueLevels> expValueLevels;
+        private String openClassReminder;
 
         public String getTeacherCreateClass() {
             return teacherCreateClass;
@@ -296,12 +318,20 @@ public class CourseInfo {
             this.courseMaxMembers = courseMaxMembers;
         }
 
-        public String getExpValueLevels() {
+        public List<ExpValueLevels> getExpValueLevels() {
             return expValueLevels;
         }
 
-        public void setExpValueLevels(String expValueLevels) {
+        public void setExpValueLevels(List<ExpValueLevels> expValueLevels) {
             this.expValueLevels = expValueLevels;
+        }
+
+        public String getOpenClassReminder() {
+            return openClassReminder;
+        }
+
+        public void setOpenClassReminder(String openClassReminder) {
+            this.openClassReminder = openClassReminder;
         }
     }
     public class Teacher{

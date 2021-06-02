@@ -6,9 +6,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.qm.qmclass.R;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
@@ -22,6 +24,7 @@ public class StudentStateAdpter extends BaseAdapter {
     private List<StudentInfor> mlist;
     private int mstate;
     private LiveDataManager liveDataManager;
+    private DataManager dataManager;
     private StudentStateClickListener mstudentStateClickListener;
     public StudentStateAdpter(Context context, List<StudentInfor> list,int state,StudentStateClickListener studentStateClickListener) {
         inflater = LayoutInflater.from(context);
@@ -29,6 +32,7 @@ public class StudentStateAdpter extends BaseAdapter {
         mlist=list;
         mstate=state;
         liveDataManager=LiveDataManager.getInstance();
+        dataManager=DataManager.getInstance();
         mstudentStateClickListener=studentStateClickListener;
     }
     @Override
@@ -60,6 +64,7 @@ public class StudentStateAdpter extends BaseAdapter {
             shangkeHolderView.studentname = (TextView) convertView.findViewById(R.id.studentname);
             shangkeHolderView.maike= (ImageView) convertView.findViewById(R.id.maike);
             shangkeHolderView.tichu= (ImageView) convertView.findViewById(R.id.tichu);
+            shangkeHolderView.expIcon= (ImageView) convertView.findViewById(R.id.expIcon);
             convertView.setTag(shangkeHolderView);
             if (liveDataManager.getAllStudentsMap().get(mlist.get(position).getUserCode()).getLianMaiState()==1){
                 shangkeHolderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.guamai));
@@ -67,6 +72,12 @@ public class StudentStateAdpter extends BaseAdapter {
                 shangkeHolderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.videolist));
             }else if (liveDataManager.getAllStudentsMap().get(mlist.get(position).getUserCode()).getLianMaiState()==2){
                 shangkeHolderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.onlianmai));
+            }
+            if (mlist.get(position).getExpIcon()!=null&&!mlist.get(position).getExpIcon().equals("")){
+                shangkeHolderView.expIcon.setVisibility(View.VISIBLE);
+                Glide.with(mcontext).load(mlist.get(position).getExpIcon()).skipMemoryCache(true).into(shangkeHolderView.expIcon);
+            }else {
+                shangkeHolderView.expIcon.setVisibility(View.INVISIBLE);
             }
             shangkeHolderView.studentname.setText(mlist.get(position).getNickName());
             shangkeHolderView.maike.setOnClickListener(new View.OnClickListener() {
@@ -85,10 +96,27 @@ public class StudentStateAdpter extends BaseAdapter {
             weiShangkeHolderView = new WeiShangkeHolderView();
             convertView = inflater.inflate(R.layout.weishangke_item, null);
             weiShangkeHolderView.studentname = (TextView) convertView.findViewById(R.id.studentname);
-            weiShangkeHolderView.hujiao=(ImageView) convertView.findViewById(R.id.hujiao);
+            weiShangkeHolderView.shangketixing=(LinearLayout) convertView.findViewById(R.id.shangketixing);
+            shangkeHolderView.expIcon= (ImageView) convertView.findViewById(R.id.expIcon);
             convertView.setTag(weiShangkeHolderView);
             weiShangkeHolderView.studentname.setText(mlist.get(position).getNickName());
-            weiShangkeHolderView.hujiao.setOnClickListener(new View.OnClickListener() {
+            if (dataManager.getOpenClassReminder().equals("n")){
+                weiShangkeHolderView.shangketixing.setVisibility(View.GONE);
+            }else if (dataManager.getOpenClassReminder().equals("y")){
+                weiShangkeHolderView.shangketixing.setVisibility(View.VISIBLE);
+                if (mlist.get(position).getSKTXNUM()==0){
+                    weiShangkeHolderView.tvShangketixing.setText("上课提醒");
+                }else {
+                    weiShangkeHolderView.tvShangketixing.setText("上课提醒("+mlist.get(position).getSKTXNUM()+")");
+                }
+            }
+            if (mlist.get(position).getExpIcon()!=null&&!mlist.get(position).getExpIcon().equals("")){
+                shangkeHolderView.expIcon.setVisibility(View.VISIBLE);
+                Glide.with(mcontext).load(mlist.get(position).getExpIcon()).skipMemoryCache(true).into(shangkeHolderView.expIcon);
+            }else {
+                shangkeHolderView.expIcon.setVisibility(View.INVISIBLE);
+            }
+            weiShangkeHolderView.shangketixing.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     mstudentStateClickListener.weishangkeOnClick(mlist.get(position).getUserCode(),v);
@@ -102,10 +130,13 @@ public class StudentStateAdpter extends BaseAdapter {
         TextView studentname;
         ImageView maike;
         ImageView tichu;
+        ImageView expIcon;
     }
     public class WeiShangkeHolderView {
         TextView studentname;
-        ImageView hujiao;
+        LinearLayout shangketixing;
+        TextView tvShangketixing;
+        ImageView expIcon;
     }
     public void refresh(List<StudentInfor> list,int state) {
         mstate=state;

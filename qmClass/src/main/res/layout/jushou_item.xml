@@ -16,8 +16,7 @@
             <ImageView
                 android:id="@+id/cup"
                 android:layout_width="@dimen/dp_20"
-                android:layout_height="@dimen/dp_20"
-                android:src="@mipmap/jiangbei"/>
+                android:layout_height="@dimen/dp_20" />
         </LinearLayout>
         <LinearLayout
             android:layout_width="0dp"

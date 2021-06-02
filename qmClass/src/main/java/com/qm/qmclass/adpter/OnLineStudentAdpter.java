@@ -8,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.qm.qmclass.R;
 import com.qm.qmclass.model.StudentInfor;
 
@@ -46,13 +47,22 @@ public class OnLineStudentAdpter extends BaseAdapter {
             shangkeHolderView = new ShangkeHolderView();
             convertView = inflater.inflate(R.layout.online_item, null);
             shangkeHolderView.studentname = (TextView) convertView.findViewById(R.id.studentname);
+            shangkeHolderView.expIcon = (ImageView) convertView.findViewById(R.id.expIcon);
             convertView.setTag(shangkeHolderView);
             shangkeHolderView.studentname.setText(mlist.get(position).getNickName());
+            if (mlist.get(position).getExpIcon()!=null&&!mlist.get(position).getExpIcon().equals("")){
+                shangkeHolderView.expIcon.setVisibility(View.VISIBLE);
+                Glide.with(mcontext).load(mlist.get(position).getExpIcon()).skipMemoryCache(true).into(shangkeHolderView.expIcon);
+            }else {
+                shangkeHolderView.expIcon.setVisibility(View.INVISIBLE);
+            }
+
         return convertView;
     }
 
     public class ShangkeHolderView {
         TextView studentname;
+        ImageView expIcon;
     }
     public void refresh(List<StudentInfor> list) {
         mlist = list;//传入list，然后调用notifyDataSetChanged方法

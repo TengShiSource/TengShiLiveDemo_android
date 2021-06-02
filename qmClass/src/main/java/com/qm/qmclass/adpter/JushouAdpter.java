@@ -8,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.qm.qmclass.R;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.model.StudentInfor;
@@ -67,6 +68,12 @@ public class JushouAdpter extends BaseAdapter {
             holderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.videolist));
         }else if (liveDataManager.getAllStudentsMap().get(mlist.get(position)).getLianMaiState()==2){
             holderView.maike.setImageDrawable(mcontext.getResources().getDrawable(R.mipmap.onlianmai));
+        }
+        if (liveDataManager.getAllStudentsMap().get(mlist.get(position)).getExpIcon()!=null&&!liveDataManager.getAllStudentsMap().get(mlist.get(position)).getExpIcon().equals("")){
+            holderView.cup.setVisibility(View.VISIBLE);
+            Glide.with(mcontext).load(liveDataManager.getAllStudentsMap().get(mlist.get(position)).getExpIcon()).skipMemoryCache(true).into(holderView.cup);
+        }else {
+            holderView.cup.setVisibility(View.INVISIBLE);
         }
         holderView.maike.setOnClickListener(mListener);
         holderView.tichu.setOnClickListener(mListener);

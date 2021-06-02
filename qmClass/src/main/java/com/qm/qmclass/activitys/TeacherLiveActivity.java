@@ -157,10 +157,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private LivePopupWindow showJuShouPopupWindow;
     private LivePopupWindow mutePopupWindow;
     private LivePopupWindow setPopupWindow;
-    private LivePopupWindow classOverPopupWindow;
     private LivePopupWindow toolsPopupWindow;
     private LivePopupWindow colorPopupWindow;
-    private LivePopupWindow classOverAtOncePopupWindow;
     private LivePopupWindow huDongPopupWindow;
     private LivePopupWindow jiankongPopupWindow;
     private LivePopupWindow addSTPopupWindow;
@@ -218,8 +216,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
                     if (currentDate.getTime()>=startDate.getTime()) {
                         //已经上课00:00
-                        classState=2;
                         recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-startDate.getTime()))/1000;
+                        classState=2;
                     }
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -234,8 +232,9 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
                     if (endDate.getTime()-currentDate.getTime()<=600000) {
                         //已经上课00:00
-                        classState=3;
                         recLen=Integer.parseInt(String.valueOf(endDate.getTime()-currentDate.getTime()))/1000;
+                        classState=3;
+
                     }
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -250,8 +249,14 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
                     if (currentDate.getTime()>endDate.getTime()) {
                         //已经上课00:00
-                        classState=4;
-                        recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-endDate.getTime()))/1000;
+//                        classState=4;
+//                        recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-endDate.getTime()))/1000;
+                    }else if (currentDate.getTime()==endDate.getTime()){
+                        if (!DialogUtil.ysIsShowing()){
+                            classOverDelayed(1);
+                        }else {
+                            DialogUtil.reloadYsDialog();
+                        }
                     }
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -296,6 +301,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private void initView(){
         tvTitle=(TextView) findViewById(R.id.tv_title);
         tvTime=(TextView) findViewById(R.id.tv_time);
+        tvTime.setOnClickListener(this);
         ivSet=(ImageView) findViewById(R.id.iv_set);
         ivSet.setOnClickListener(this);
         ivChat=(ImageView) findViewById(R.id.iv_chat);
@@ -324,13 +330,6 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         ivHuabi=(ImageView) findViewById(R.id.iv_huabi);
         ivHuabi.setOnClickListener(this);
         llHuabi=(LinearLayout) findViewById(R.id.ll_huabi);
-
-//        llVideolist=(LinearLayout) findViewById(R.id.ll_videolist);
-//        RelativeLayout.LayoutParams lp=(RelativeLayout.LayoutParams)llVideolist.getLayoutParams();
-//        lp.width=getWidth();
-//        lp.height=RelativeLayout.LayoutParams.MATCH_PARENT;
-//        llVideolist.setLayoutParams(lp);
-
         flFrament=(FrameLayout) findViewById(R.id.fl_frament);
         ivVideolist=(ImageView) findViewById(R.id.iv_videolist);
         ivVideolist.setOnClickListener(this);
@@ -464,6 +463,9 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                 String str = JSON.toJSONString(map);
                 sendGroupCustomMessage("teacherJoin",dataManager.getUserCode(),str);
                 Log.e("TeacherLiveActivity","加入课堂成功");
+                if (dataManager.getRecMethod()==1){
+                    startRecord();
+                }
             }
 
             @Override
@@ -473,6 +475,35 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
         });
 
+    }
+    /*
+     *开始录课
+     */
+    private void startRecord(){
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/lvbcourse/startRecord","",new MyCallBack<BaseResponse<String>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<String> result) {
+                if (result.getCode()==200){
+                    ToastUtil.showToast1(mactivity,"","录课已开始");
+                }
+
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+                ToastUtil.showToast1(mactivity,"","录课失败");
+            }
+
+            @Override
+            public void onError(Response response) {
+                ToastUtil.showToast1(mactivity,"","录课失败");
+            }
+        });
     }
     /*
      *退出课堂
@@ -531,7 +562,9 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View view) {
-        if (view.getId() == R.id.iv_chat) {
+        if (view.getId() == R.id.tv_time){
+            classOverDelayed(0);
+        }else if (view.getId() == R.id.iv_chat) {
             if (chatPopupWindow==null){
                 chatPopupWindow=new LivePopupWindow(mactivity);
                 chatPopupWindow.setPopupWindowListener(this);
@@ -571,27 +604,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
             setPopupWindow.showSetPopupWindow(view);
         } else if (view.getId() == R.id.iv_classover) {
-            DialogUtil.showDialog(this, "退出后本节课将结束，确定要退出课堂吗？",
-                    "确定",  "取消",false, new DialogUtil.AlertDialogBtnClickListener() {
-                        @Override
-                        public void clickPositive() {
-                            quitClass();
-                        }
-
-                        @Override
-                        public void clickNegative() {
-                        }
-                    });
-//            if (classOverPopupWindow==null){
-//                classOverPopupWindow=new LivePopupWindow(mactivity);
-//                classOverPopupWindow.setPopupWindowListener(this);
-//            }
-//            classOverPopupWindow.showClassOverPW(view);
-//            if (classOverAtOncePopupWindow==null){
-//                classOverAtOncePopupWindow=new LivePopupWindow(mactivity);
-//                classOverAtOncePopupWindow.setPopupWindowListener(this);
-//            }
-//            classOverAtOncePopupWindow.showClassOverAtOnce(mactivity.getWindow().getDecorView());
+            showClassOverDialog();
         } else if (view.getId() == R.id.iv_chehui) {
             mBoard.undo();
         } else if (view.getId() == R.id.iv_jieping) {
@@ -1937,12 +1950,15 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
 
         }else if (jo.getString("action").equals("rushQuestionFinish")) {
           //老师发起抢答完成
-          int userId=jo.getInteger("userId");
+          String userCode=jo.getString("userCode");
           int timeLimit=jo.getInteger("timeLimit");
           if (rushAnswerPopupWindow==null){
               rushAnswerPopupWindow=new HudongPopupWindow(mactivity);
           }
-          rushAnswerPopupWindow.showRushAnswerPopupWindow(mactivity.getWindow().getDecorView(),liveDataManager.getOnLineStudentsMap().get(userId).getNickName(),timeLimit);
+          if (rushQuestionPopupWindow!=null&&rushQuestionPopupWindow.isShowing()){
+              rushQuestionPopupWindow.dismiss();
+          }
+          rushAnswerPopupWindow.showRushAnswerPopupWindow(mactivity.getWindow().getDecorView(),liveDataManager.getOnLineStudentsMap().get(userCode).getNickName(),timeLimit);
       }else if (jo.getString("action").equals("rushQuestionAnswerFinish")) {
           //抢答题答题完成
           int userId=jo.getInteger("userId");
@@ -1953,6 +1969,9 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
               String questionAnswer=jo.getString("questionAnswer");
               if (rushAnswerFinishPopupWindow==null){
                   rushAnswerFinishPopupWindow=new HudongPopupWindow(mactivity);
+              }
+              if (rushAnswerPopupWindow!=null&&rushAnswerPopupWindow.isShowing()){
+                  rushAnswerPopupWindow.dismiss();
               }
               rushAnswerFinishPopupWindow.showRushAnswerFinishPopupWindow(mactivity.getWindow().getDecorView(),nickName,expValue,questionAnswer,result);
           }
@@ -2026,9 +2045,13 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             statusMap.put("micMembers", liveDataManager.getLianMaiList());//上台列表
             statusMap.put("teacherCameraStatus", liveDataManager.isTCameraOn());//教师摄像头状态
             if (liveDataManager.getQuestionMode()!=1&&liveDataManager.isOnQuestion()){
+                String options="";
+                for (int i=0;i<liveDataManager.getQuestionOptions().size();i++){
+                    options=options+liveDataManager.getQuestionOptions().get(i);
+                }
                 Map<String, Object> questionMap = new HashMap<>();
-                questionMap.put("answerType", liveDataManager.getAnswerType());
-                questionMap.put("questionOptions",liveDataManager.getQuestionOptions());
+                questionMap.put("questionType", liveDataManager.getAnswerType());
+                questionMap.put("questionOptions",options);
                 questionMap.put("expValue", liveDataManager.getExpValue());
                 questionMap.put("questionId", liveDataManager.getQuestionId());
                 questionMap.put("questionSurplusTime", liveDataManager.getQuestionSurplusTime());
@@ -2421,7 +2444,56 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             }
         });
     }
+    /*
+     *延时关闭课堂
+     */
+    private void classOverDelayed(int state){
+        DialogUtil.showDelayedDialog(this,
+                state,false, new DialogUtil.DelayedDialogClickListener() {
+                    @Override
+                    public void determine(int time) {
+                        if (time==0){
+                            quitClass();
+                        }else {
+                            OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/lvbcourse/delayCourseEndTime/"+time,"",new MyCallBack<BaseResponse<String>>() {
+                                @Override
+                                public void onLoadingBefore(Request request) {
 
+                                }
+
+                                @Override
+                                public void onSuccess(BaseResponse<String> result) {
+                                    if (result.getCode()==200&&result.getData()!=null&&!result.getData().equals("")){
+                                        dataManager.setEndTime(result.getData());
+                                        try {
+                                            endDate = simpleDateFormat.parse(dataManager.getEndTime());//结束时间
+                                            String currentTime=simpleDateFormat.format(date);
+                                            Date currentDate = simpleDateFormat.parse(currentTime);//当前时间
+                                            recLen=Integer.parseInt(String.valueOf(currentDate.getTime()-startDate.getTime()))/1000;
+                                            classState=2;
+                                        } catch (ParseException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }else {
+                                        ToastUtil.showToast1(mactivity,"","延时下课失败");
+                                    }
+
+                                }
+
+                                @Override
+                                public void onFailure(Request request, Exception e) {
+                                    ToastUtil.showToast1(mactivity,"","延时下课失败");
+                                }
+
+                                @Override
+                                public void onError(Response response) {
+                                    ToastUtil.showToast1(mactivity,"","延时下课失败");
+                                }
+                            });
+                        }
+                    }
+                });
+    }
     @Override
     protected void onStart() {
         Log.e("生命周期","TeacherLiveActivity-onStart");
@@ -2455,21 +2527,24 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            DialogUtil.showDialog(this, "退出后本节课将结束，确定要退出课堂吗？",
-                    "确定",  "取消",false, new DialogUtil.AlertDialogBtnClickListener() {
-                        @Override
-                        public void clickPositive() {
-                            quitClass();
-                        }
-
-                        @Override
-                        public void clickNegative() {
-                        }
-                    });
+            showClassOverDialog();
             return true;
         }else {
             return super.onKeyDown(keyCode, event);
         }
+    }
+    public void showClassOverDialog(){
+        DialogUtil.showDialog(this, "退出后本节课将结束，确定要退出课堂吗？",
+                "确定",  "取消",false, new DialogUtil.AlertDialogBtnClickListener() {
+                    @Override
+                    public void clickPositive() {
+                        quitClass();
+                    }
+
+                    @Override
+                    public void clickNegative() {
+                    }
+                });
     }
     @Override
     protected void onDestroy() {

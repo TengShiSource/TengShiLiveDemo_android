@@ -121,6 +121,17 @@ public class JianaKongUtils{
 
         LinearLayout lianmai = (LinearLayout) view.findViewById(R.id.lianmai);
         LinearLayout shangketixing = (LinearLayout) view.findViewById(R.id.shangketixing);
+        TextView tvShangketixing=(TextView) view.findViewById(R.id.tv_shangketixing);
+        if (dataManager.getOpenClassReminder().equals("n")){
+            shangketixing.setVisibility(View.GONE);
+        }else if (dataManager.getOpenClassReminder().equals("y")){
+            shangketixing.setVisibility(View.VISIBLE);
+            if (liveDataManager.getAllStudentsMap().get(userCode).getSKTXNUM()==0){
+                tvShangketixing.setText("上课提醒");
+            }else {
+                tvShangketixing.setText("上课提醒("+liveDataManager.getAllStudentsMap().get(userCode).getSKTXNUM()+")");
+            }
+        }
 
         lianmai.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -176,7 +187,11 @@ public class JianaKongUtils{
         shangketixing.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                int num=liveDataManager.getAllStudentsMap().get(userCode).getSKTXNUM();
+                liveDataManager.getAllStudentsMap().get(userCode).setSKTXNUM(num+1);
+                liveDataManager.getOffLineStudentsMap().get(userCode).setSKTXNUM(num+1);
+                int tixnum=num+1;
+                tvShangketixing.setText("上课提醒("+tixnum+")");
             }
         });
         return view;

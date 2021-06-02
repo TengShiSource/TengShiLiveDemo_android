@@ -119,7 +119,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
     private long second=30000;
     private int randomMoney=0;
     private int averageMoney=0;
-    private int RedEnveLopeType=1;//1 随机红包  2  均分红包
+    private int RedEnveLopeType=2;//2随机红包  1 均分红包
 
     public HudongPopupWindow(TeacherLiveActivity activity) {
         mactivity=activity;
@@ -1054,6 +1054,12 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             public void onClick(View v) {
                 handler.removeCallbacks(runnable);
                 questionClose();
+                liveDataManager.getQuestionOptions().clear();
+                liveDataManager.getQuestionAnswer().clear();
+                liveDataManager.setAnswerType(1);
+                liveDataManager.setQuestionMode(0);
+                liveDataManager.setTimeLimit(60);
+                liveDataManager.setExpValue(3);
                 dismiss();
             }
         });
@@ -1063,6 +1069,12 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             public void onClick(View v) {
                 handler.removeCallbacks(runnable);
                 questionClose();
+                liveDataManager.getQuestionOptions().clear();
+                liveDataManager.getQuestionAnswer().clear();
+                liveDataManager.setAnswerType(1);
+                liveDataManager.setQuestionMode(0);
+                liveDataManager.setTimeLimit(60);
+                liveDataManager.setExpValue(3);
                 dismiss();
             }
         });
@@ -1072,6 +1084,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         setContentView(contentView);
+        setOnDismissListener(this);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
     }
     //学生答抢答题中
@@ -1091,7 +1104,12 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 questionClose();
                 liveDataManager.setOnQuestion(false);
 
-
+                liveDataManager.getQuestionOptions().clear();
+                liveDataManager.getQuestionAnswer().clear();
+                liveDataManager.setAnswerType(1);
+                liveDataManager.setQuestionMode(0);
+                liveDataManager.setTimeLimit(60);
+                liveDataManager.setExpValue(3);
 
                 dismiss();
             }
@@ -1133,8 +1151,16 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 if (timer != null) {
                     timer.cancel();
                 }
-                questionFinish();
+                questionClose();
                 liveDataManager.setOnQuestion(false);
+
+                liveDataManager.getQuestionOptions().clear();
+                liveDataManager.getQuestionAnswer().clear();
+                liveDataManager.setAnswerType(1);
+                liveDataManager.setQuestionMode(0);
+                liveDataManager.setTimeLimit(60);
+                liveDataManager.setExpValue(3);
+
                 dismiss();
             }
         };
@@ -1145,8 +1171,16 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 if (timer != null) {
                     timer.cancel();
                 }
-                questionFinish();
+                questionClose();
                 liveDataManager.setOnQuestion(false);
+
+                liveDataManager.getQuestionOptions().clear();
+                liveDataManager.getQuestionAnswer().clear();
+                liveDataManager.setAnswerType(1);
+                liveDataManager.setQuestionMode(0);
+                liveDataManager.setTimeLimit(60);
+                liveDataManager.setExpValue(3);
+
                 dismiss();
             }
         });
@@ -1156,6 +1190,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         setFocusable(false);
         setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         setContentView(contentView);
+        setOnDismissListener(this);
         this.showAtLocation(view, Gravity.RIGHT, 0, 0);
     }
 
@@ -1180,6 +1215,14 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                liveDataManager.getQuestionOptions().clear();
+                liveDataManager.getQuestionAnswer().clear();
+                liveDataManager.setAnswerType(1);
+                liveDataManager.setQuestionMode(0);
+                liveDataManager.setTimeLimit(60);
+                liveDataManager.setExpValue(3);
+
                 dismiss();
             }
         });
@@ -1196,53 +1239,55 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
 
     //关闭答题（共用）
     private void questionClose(){
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/questionClose/"+liveDataManager.getQuestionId(),"",new MyCallBack<BaseResponse<Long>>() {
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/questionClose/"+liveDataManager.getQuestionId(),"",new MyCallBack<BaseResponse<Boolean>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
             }
 
             @Override
-            public void onSuccess(BaseResponse<Long> result) {
-                if (result.getData()!=null){
+            public void onSuccess(BaseResponse<Boolean> result) {
+                if (result.getData()){
+                    ToastUtil.showToast1(mactivity,"","答题已关闭");
                 }
 
             }
 
             @Override
             public void onFailure(Request request, Exception e) {
-
+                ToastUtil.showToast1(mactivity,"","答题关闭失败");
             }
 
             @Override
             public void onError(Response response) {
-
+                ToastUtil.showToast1(mactivity,"","答题关闭失败");
             }
         });
     }
     //结束答题（共用）
     private void questionFinish(){
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/questionFinish/"+liveDataManager.getQuestionId(),"",new MyCallBack<BaseResponse<Long>>() {
+        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/questionFinish/"+liveDataManager.getQuestionId(),"",new MyCallBack<BaseResponse<Boolean>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
             }
 
             @Override
-            public void onSuccess(BaseResponse<Long> result) {
-                if (result.getData()!=null){
+            public void onSuccess(BaseResponse<Boolean> result) {
+                if (result.getData()){
+                    ToastUtil.showToast1(mactivity,"","答题已结束");
                 }
 
             }
 
             @Override
             public void onFailure(Request request, Exception e) {
-
+                ToastUtil.showToast1(mactivity,"","答题结束失败");
             }
 
             @Override
             public void onError(Response response) {
-
+                ToastUtil.showToast1(mactivity,"","答题结束失败");
             }
         });
     }
@@ -1298,6 +1343,8 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 }
                 hdpwListener.fixedTimeOnclick("kill",0);
                 liveDataManager.setFixedSurplusTime(0);
+                minute=900000;
+                second=30000;
                 dismiss();
             }
         });
@@ -1405,7 +1452,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 onlinenum.setText(spBuilder);
             }
         }
-        if (RedEnveLopeType==1){
+        if (RedEnveLopeType==2){
             tvRandom.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
             viewRandom.setVisibility(View.VISIBLE);
             tvAverage.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
@@ -1425,14 +1472,14 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             public void onClick(View v) {
                 randomMoney=0;
                 averageMoney=0;
-                RedEnveLopeType=1;
+                RedEnveLopeType=2;
                 dismiss();
             }
         });
         randomRed.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RedEnveLopeType=1;
+                RedEnveLopeType=2;
                 tvRandom.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
                 viewRandom.setVisibility(View.VISIBLE);
                 tvAverage.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
@@ -1444,7 +1491,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         averageRed.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RedEnveLopeType=2;
+                RedEnveLopeType=1;
                 tvRandom.setTextColor(mactivity.getResources().getColor(R.color.text_color_sub_info));
                 viewRandom.setVisibility(View.INVISIBLE);
                 tvAverage.setTextColor(mactivity.getResources().getColor(R.color.colorWhite));
@@ -1575,17 +1622,17 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
             @Override
             public void onClick(View v) {
                 if (redEnvelopnum.getText()!=null&&!redEnvelopnum.getText().equals("")){
-                    if (RedEnveLopeType==1){
+                    if (RedEnveLopeType==2){
                         if (randomMoney!=0){
-                            envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),randomMoney,"1");
+                            envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),randomMoney,"2");
                         }else {
-                            ToastUtil.showToast1(mactivity,"","请输入红包金额");
+                            ToastUtil.showToast1(mactivity,"","请输入红包额度");
                         }
-                    }else if (RedEnveLopeType==2){
+                    }else if (RedEnveLopeType==1){
                         if (averageMoney!=0){
-                            envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),Integer.parseInt(redEnvelopnum.getText().toString())*averageMoney,"2");
+                            envelopRedPack(Integer.parseInt(redEnvelopnum.getText().toString()),Integer.parseInt(redEnvelopnum.getText().toString())*averageMoney,"1");
                         }else {
-                            ToastUtil.showToast1(mactivity,"","请输入红包金额");
+                            ToastUtil.showToast1(mactivity,"","请输入红包额度");
                         }
                     }
                     dismiss();
@@ -1623,7 +1670,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
                 if (result.getCode()==200){
                     randomMoney=0;
                     averageMoney=0;
-                    RedEnveLopeType=1;
+                    RedEnveLopeType=2;
                     ToastUtil.showToast1(mactivity,"","发送红包成功");
                 }else {
                     ToastUtil.showToast1(mactivity,"","发送红包失败");
@@ -1644,7 +1691,10 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
     }
     @Override
     public void onDismiss() {
-
+        handler.removeCallbacks(runnable);
+        if (timer != null) {
+            timer.cancel();
+        }
     }
     private int getPopWidth(){
         DisplayMetrics outMetrics = new DisplayMetrics();
