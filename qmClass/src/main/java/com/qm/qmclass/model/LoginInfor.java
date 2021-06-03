@@ -9,7 +9,7 @@ import java.sql.Date;
  */
 public class LoginInfor {
     private String token;
-    private int userid;
+    private int userId;
     private String username;
     private long loginTime;
     private long expireTime;
@@ -33,12 +33,12 @@ public class LoginInfor {
         this.token = token;
     }
 
-    public int getUserid() {
-        return userid;
+    public int getUserId() {
+        return userId;
     }
 
-    public void setUserid(int userid) {
-        this.userid = userid;
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
     public String getUsername() {

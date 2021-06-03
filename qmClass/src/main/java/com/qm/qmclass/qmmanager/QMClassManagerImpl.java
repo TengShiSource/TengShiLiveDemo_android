@@ -139,7 +139,7 @@ public class QMClassManagerImpl extends QMClassManager {
                     String userCode=result.getData().getUserCode();
                     String userSig=result.getData().getUserSig();
                     dataManager.setRole(result.getData().getUserRole());
-                    dataManager.setUserid(result.getData().getUserid());
+                    dataManager.setUserid(result.getData().getUserId());
                     dataManager.setUserCode(userCode);
                     dataManager.setUserName(result.getData().getUsername());
                     dataManager.setUserIcon(result.getData().getAvatar());

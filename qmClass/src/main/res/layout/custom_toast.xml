@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="我就是那个toast"
-            android:padding="@dimen/dp_8"
+            android:padding="@dimen/dp_10"
             android:background="@drawable/bg_toast"
             android:textColor="@color/colorWhite"
             android:textSize="13sp" />

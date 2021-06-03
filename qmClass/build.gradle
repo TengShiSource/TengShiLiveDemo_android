@@ -55,20 +55,16 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     //TRTC
-    implementation(name:'LiteAVSDK_Professional_8.4.9947', ext:'aar')
+    api(name:'LiteAVSDK_Professional_8.4.9947', ext:'aar')
     //IMSDK
-//    implementation "com.tencent.imsdk:imsdk:5.1.50"
-    implementation (name: "imsdk-5.1.56", ext: "aar")
+    api (name: "imsdk-5.1.56", ext: "aar")
     //TEduBoard
-//    implementation "com.tencent.teduboard:TEduBoardSdk:2.5.5.70"
-    implementation (name: "TEduBoardSdk-release", ext: "aar")
-    implementation 'com.tencent.tiw.logger:TIWLogger:1.0.1.26'
-//    implementation 'com.tencent.tbs.tbssdk:sdk:43939'
-    implementation files('libs/tbs_sdk_thirdapp_v4.3.0.93.jar')
-    implementation files('libs/fastjson-1.2.68.jar')
-
-    implementation "com.squareup.okhttp3:okhttp:3.6.0"
-    implementation 'com.google.code.gson:gson:2.6.2'
-    implementation 'com.github.bumptech.glide:glide:3.7.0'
-
+    api (name: "TEduBoardSdk-release", ext: "aar")
+    api 'com.tencent.tiw.logger:TIWLogger:1.0.1.26'
+    api files('libs/tbs_sdk_thirdapp_v4.3.0.93.jar')
+    api files('libs/fastjson-1.2.68.jar')
+    api files('libs/gson-2.8.0.jar')
+    api files('libs/glide-3.6.0.jar')
+    api files('libs/okhttp-3.4.1.jar')
+    api files('libs/okio-1.9.0.jar')
 }

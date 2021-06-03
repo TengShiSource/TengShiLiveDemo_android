@@ -40,9 +40,4 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
     implementation project(':qmClass')
-    implementation "com.squareup.okhttp3:okhttp:3.6.0"
-    implementation 'com.google.code.gson:gson:2.6.2'
-    /*防止崩溃库*/
-//    implementation 'com.tonystark.android:defense_crash:2.0.0'
-//    implementation "me.jessyan:autosize:1.2.1"
 }

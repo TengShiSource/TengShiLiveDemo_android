@@ -22,7 +22,7 @@
         android:background="@drawable/bg_edittext"
         android:textSize="@dimen/sp_13"
         android:padding="@dimen/dp_10"
-        android:layout_marginTop="@dimen/dp_10"
+        android:layout_marginTop="@dimen/dp_20"
         android:hint="请输入课堂名称" />
     <EditText
         android:id="@+id/teacherPassWord"
@@ -47,7 +47,7 @@
         android:layout_marginTop="@dimen/dp_10"
         android:hint="请输入学生登录密码 (选填)" />
     <EditText
-        android:id="@+id/roomid"
+        android:id="@+id/classTime"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_50"
         android:layout_marginLeft="@dimen/dp_20"
@@ -91,7 +91,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"/>
     <LinearLayout
-        android:id="@+id/student_join"
+        android:id="@+id/createCourse"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/dp_20"

@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.util.Log;
 import com.qm.qmclass.qmmanager.QMClassManager;
 import com.qm.qmclass.utils.CrashHandler;
+import com.qm.qmclass.utils.SharedPreferencesUtils;
 
 
 /**
@@ -29,6 +30,7 @@ public class BaseApp extends Application {
         application=this;
         handler = new CrashHandler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
+        SharedPreferencesUtils.getInstance(this,"qm_data");
         // defense_crash防止崩溃
 //        DefenseCrash.initialize();
         // 安装防火墙
