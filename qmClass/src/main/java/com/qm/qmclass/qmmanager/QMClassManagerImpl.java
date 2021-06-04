@@ -21,6 +21,7 @@ import com.qm.qmclass.tencent.TICManager;
 import com.qm.qmclass.tencent.utils.SdkUtil;
 import com.qm.qmclass.utils.CrashHandler;
 import com.qm.qmclass.utils.SharedPreferencesUtils;
+import com.qm.qmclass.utils.ToastUtil;
 import com.tencent.rtmp.TXLiveBase;
 
 import okhttp3.Request;
@@ -92,7 +93,7 @@ public class QMClassManagerImpl extends QMClassManager {
 
             @Override
             public void onSuccess(BaseResponse<CourseInfo> result) {
-                if (result!=null&&result.getData()!=null){
+                if (result.getCode()==200&&result!=null&&result.getData()!=null){
                     CourseInfo courseInfo=result.getData();
                     dataManager.setCourseId(courseInfo.getCourse().getId());
                     dataManager.setCourseName(courseInfo.getCourse().getCourseName());
@@ -111,6 +112,8 @@ public class QMClassManagerImpl extends QMClassManager {
                     TXLiveBase.getInstance().setLicence(mContext, courseInfo.getLvbPush().getLicenceURL(), courseInfo.getLvbPush().getLicenceKey());
 
                     getLoginInfo();
+                }else {
+                    ToastUtil.showToast1((Activity) mContext,"",result.getMsg());
                 }
             }
 
@@ -135,7 +138,7 @@ public class QMClassManagerImpl extends QMClassManager {
 
             @Override
             public void onSuccess(BaseResponse<LoginInfor> result) {
-                if (result!=null&&result.getData()!=null){
+                if (result.getCode()==200&&result!=null&&result.getData()!=null){
                     String userCode=result.getData().getUserCode();
                     String userSig=result.getData().getUserSig();
                     dataManager.setRole(result.getData().getUserRole());
@@ -151,6 +154,8 @@ public class QMClassManagerImpl extends QMClassManager {
                     if (result.getData().getUserRole()!=null&&!result.getData().getUserRole().equals("")){
                         Login(userCode,userSig);
                     }
+                }else {
+                    ToastUtil.showToast1((Activity) mContext,"",result.getMsg());
                 }
             }
 

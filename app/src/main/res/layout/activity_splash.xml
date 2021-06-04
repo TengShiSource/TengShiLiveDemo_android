@@ -9,6 +9,5 @@
         android:id="@+id/iv_qidong"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="fitXY"
-        android:src="@mipmap/qidong"/>
+        android:scaleType="fitXY" />
 </LinearLayout>
