@@ -144,8 +144,8 @@ public class QMClassManagerImpl extends QMClassManager {
                     dataManager.setRole(result.getData().getUserRole());
                     dataManager.setUserid(result.getData().getUserId());
                     dataManager.setUserCode(userCode);
-                    dataManager.setUserName(result.getData().getUsername());
-                    dataManager.setUserIcon(result.getData().getAvatar());
+                    dataManager.setUserName(result.getData().getNickName());
+                    dataManager.setUserIcon(result.getData().getAvatarUrl());
                     if (result.getData().getUserRole().equals("s")){
                         dataManager.setExpValue(result.getData().getExpValue());
                         dataManager.setExpIcon(result.getData().getExpIcon());

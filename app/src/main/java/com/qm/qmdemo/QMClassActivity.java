@@ -244,6 +244,9 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
         map.put("originExpValue", "4");
         map.put("nickName", SharedPreferencesUtils.getString("nickName",""));
         map.put("deviceToken", "22");
+        map.put("avatarUrl",SharedPreferencesUtils.getString("avatarUrl",""));
+        map.put("studyCoin", "0");
+        map.put("userId", Integer.valueOf(SharedPreferencesUtils.getString("userId","")));
         String jsonObject=new JSONObject(map).toString();
 
         OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/member/registUser",jsonObject,new MyCallBack<BaseResponse<String>>() {

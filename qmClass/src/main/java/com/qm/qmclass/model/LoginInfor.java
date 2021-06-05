@@ -10,7 +10,8 @@ import java.sql.Date;
 public class LoginInfor {
     private String token;
     private int userId;
-    private String username;
+    private String userName;
+    private String nickName;
     private long loginTime;
     private long expireTime;
     private String ipaddr;
@@ -20,7 +21,7 @@ public class LoginInfor {
     private String userCode;
     private String userSig;
     private String userRole;
-    private String avatar;
+    private String avatarUrl;
     private String studyCoin;
     private String expValue;
     private String expIcon;
@@ -41,13 +42,6 @@ public class LoginInfor {
         this.userId = userId;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public long getLoginTime() {
         return loginTime;
@@ -121,13 +115,6 @@ public class LoginInfor {
         this.userCode = userCode;
     }
 
-    public String getAvatar() {
-        return avatar;
-    }
-
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
-    }
 
     public String getStudyCoin() {
         return studyCoin;
@@ -151,5 +138,29 @@ public class LoginInfor {
 
     public void setExpIcon(String expIcon) {
         this.expIcon = expIcon;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 }

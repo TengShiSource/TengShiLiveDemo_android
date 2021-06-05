@@ -2,25 +2,41 @@ package com.qm.qmdemo;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.Manifest;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.qm.qmclass.BuildConfig;
 import com.qm.qmclass.okhttp.BaseResponse;
 import com.qm.qmclass.okhttp.MyCallBack;
 import com.qm.qmclass.okhttp.OkHttpUtils;
+import com.qm.qmclass.utils.PermissionUtils;
 import com.qm.qmclass.utils.RoundImageView;
 import com.qm.qmclass.utils.SharedPreferencesUtils;
 import com.qm.qmclass.utils.ToastUtil;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -37,6 +53,7 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
     private EditText key;
     private LinearLayout test;
     private LinearLayout determine;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +62,7 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
         back=(ImageView) findViewById(R.id.back);
         back.setOnClickListener(this);
         llIcon=(LinearLayout) findViewById(R.id.ll_icon);
+        llIcon.setOnClickListener(this);
         icon=(RoundImageView) findViewById(R.id.icon);
         userId=(TextView) findViewById(R.id.userId);
         nickname=(EditText) findViewById(R.id.nickname);
@@ -54,7 +72,6 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
         test.setOnClickListener(this);
         determine=(LinearLayout) findViewById(R.id.determine);
         determine.setOnClickListener(this);
-
         if (!SharedPreferencesUtils.getBoolean("isFirstLogin",true)){
             userId.setText(SharedPreferencesUtils.getString("userId",""));
             nickname.setText(SharedPreferencesUtils.getString("nickName",""));
@@ -72,11 +89,22 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (!SharedPreferencesUtils.getString("avatarUrl","").equals("")){
+            Glide.with(SetActivity.this).load(SharedPreferencesUtils.getString("avatarUrl","")).skipMemoryCache(true).into(icon);
+        }
+    }
+
+    @Override
     public void onClick(View view) {
         if (view.getId() == R.id.back) {
             Intent intent = new Intent();
             setResult(RESULT_OK,intent);
             finish();
+        }else if (view.getId() == R.id.ll_icon){
+            Intent intent=new Intent(this,IconActivity.class);
+            startActivity(intent);
         }else if (view.getId() == R.id.test){
             String mappId=appId.getText().toString();
             String mkey=key.getText().toString();
@@ -149,6 +177,7 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
             }
         });
     }
+
     /**
      * 生成8位随机数
      * @return
