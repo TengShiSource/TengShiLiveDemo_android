@@ -1,4 +1,4 @@
-package com.qm.qmdemo;
+package com.qm.qmdemo.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -7,13 +7,12 @@ import android.view.View;
 import android.widget.GridView;
 import android.widget.ImageView;
 
-import com.alibaba.fastjson.JSONObject;
-import com.qm.qmclass.BuildConfig;
-import com.qm.qmclass.adpter.QuestionAdpter;
-import com.qm.qmclass.okhttp.BaseResponse;
-import com.qm.qmclass.okhttp.MyCallBack;
-import com.qm.qmclass.okhttp.OkHttpUtils;
-import com.qm.qmclass.utils.SharedPreferencesUtils;
+import com.qm.qmdemo.BuildConfig;
+import com.qm.qmdemo.adpter.IconAdpter;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.okhttp.BaseResponse;
+import com.qm.qmdemo.okhttp.MyCallBack;
+import com.qm.qmdemo.okhttp.OkHttpUtils;
 
 import java.util.List;
 

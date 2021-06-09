@@ -42,6 +42,7 @@ import com.qm.qmclass.adpter.JushouAdpter;
 import com.qm.qmclass.adpter.QuestionAdpter;
 import com.qm.qmclass.adpter.XzAdpter;
 import com.qm.qmclass.adpter.YCAdpter;
+import com.qm.qmclass.base.Constants;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.base.QMSDK;
@@ -460,7 +461,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
 
     //获取问题列表
     public void getQuestionList(){
-        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/pazzle/pazzleList?resolveFlag="+answerState, new MyCallBack<BaseResponse<List<QuestionInfo>>>() {
+        OkHttpUtils.getInstance().Get(Constants.SERVER_URL+"/pazzle/pazzleList?resolveFlag="+answerState, new MyCallBack<BaseResponse<List<QuestionInfo>>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -492,7 +493,7 @@ public class LivePopupWindow extends PopupWindow implements PopupWindow.OnDismis
         HashMap<String, Object> map = new HashMap<>();
         map.put("pazzleId", pazzleId);
         String jsonObject=new JSONObject(map).toJSONString();
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/pazzle/resolvePazzle/"+pazzleId,"",new MyCallBack<BaseResponse<Boolean>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/pazzle/resolvePazzle/"+pazzleId,"",new MyCallBack<BaseResponse<Boolean>>() {
             @Override
             public void onLoadingBefore(Request request) {
 

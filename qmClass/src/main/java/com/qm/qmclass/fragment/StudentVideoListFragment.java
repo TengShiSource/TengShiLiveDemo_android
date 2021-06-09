@@ -1,8 +1,6 @@
 package com.qm.qmclass.fragment;
 
 import android.Manifest;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,7 +12,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,16 +19,10 @@ import androidx.fragment.app.Fragment;
 
 import com.alibaba.fastjson.JSON;
 import com.bumptech.glide.Glide;
-import com.google.gson.Gson;
 import com.qm.qmclass.R;
 import com.qm.qmclass.activitys.StudentLiveActivity;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
-import com.qm.qmclass.base.QMSDK;
-import com.qm.qmclass.okhttp.OkHttpUtils;
-import com.qm.qmclass.tencent.TICManager;
-import com.qm.qmclass.tencent.TICVideoRootView;
-import com.qm.qmclass.utils.GetPictureUtil;
 import com.qm.qmclass.utils.PermissionUtils;
 import com.qm.qmclass.utils.PushUtils;
 import com.qm.qmclass.utils.RoundImageView;
@@ -45,20 +36,14 @@ import com.tencent.rtmp.TXLivePlayer;
 import com.tencent.rtmp.TXLivePushConfig;
 import com.tencent.rtmp.TXLivePusher;
 import com.tencent.rtmp.ui.TXCloudVideoView;
-import com.tencent.trtc.TRTCCloud;
-import com.tencent.trtc.TRTCCloudDef;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import static com.tencent.rtmp.TXLiveConstants.PAUSE_FLAG_PAUSE_VIDEO;
-import static com.tencent.rtmp.TXLiveConstants.RENDER_ROTATION_LANDSCAPE;
-import static com.tencent.trtc.TRTCCloudDef.TRTCSystemVolumeTypeMedia;
 
 
 public class StudentVideoListFragment extends Fragment implements View.OnClickListener, StudentLiveActivity.VideoFragmentListener,ITXLivePushListener {

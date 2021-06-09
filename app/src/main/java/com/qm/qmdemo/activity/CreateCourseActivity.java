@@ -1,4 +1,4 @@
-package com.qm.qmdemo;
+package com.qm.qmdemo.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -12,12 +12,15 @@ import android.widget.RadioGroup;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.qm.qmclass.BuildConfig;
-import com.qm.qmclass.okhttp.BaseResponse;
-import com.qm.qmclass.okhttp.MyCallBack;
-import com.qm.qmclass.okhttp.OkHttpUtils;
-import com.qm.qmclass.utils.SharedPreferencesUtils;
-import com.qm.qmclass.utils.ToastUtil;
+
+import com.qm.qmdemo.BuildConfig;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.okhttp.BaseResponse;
+import com.qm.qmdemo.okhttp.MyCallBack;
+import com.qm.qmdemo.okhttp.OkHttpUtils;
+import com.qm.qmdemo.utils.SharedPreferencesUtils;
+import com.qm.qmdemo.utils.ToastUtil;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;

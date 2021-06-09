@@ -1,4 +1,4 @@
-package com.qm.qmdemo;
+package com.qm.qmdemo.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -6,6 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+
+import com.qm.qmdemo.R;
 
 public class ShareActivity extends AppCompatActivity implements View.OnClickListener {
     private ImageView back;

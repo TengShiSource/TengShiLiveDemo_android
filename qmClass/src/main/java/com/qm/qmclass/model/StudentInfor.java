@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * Created by lz on 2020/11/12.
  */
-public class StudentInfor implements Serializable {
+public class StudentInfor{
     private String userCode;
     private int userId;
     private String nickName;

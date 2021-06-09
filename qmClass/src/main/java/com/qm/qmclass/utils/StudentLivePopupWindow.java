@@ -39,6 +39,7 @@ import com.qm.qmclass.adpter.JushouAdpter;
 import com.qm.qmclass.adpter.OptionsAdpter;
 import com.qm.qmclass.adpter.RedPackAdpter;
 import com.qm.qmclass.adpter.XzAdpter;
+import com.qm.qmclass.base.Constants;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.base.QMSDK;
@@ -279,7 +280,7 @@ public class StudentLivePopupWindow extends PopupWindow {
     }
 
     private static void getLoginInfo(){
-        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/member/getLoginInfo", new MyCallBack<BaseResponse<LoginInfor>>() {
+        OkHttpUtils.getInstance().Get(Constants.SERVER_URL+"/member/getLoginInfo", new MyCallBack<BaseResponse<LoginInfor>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -786,7 +787,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         map.put("studentAnswer", studentAnswer);
         map.put("studentId", dataManager.getUserid());
         String jsonQuestion= JSON.toJSONString(map);
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/answer",jsonQuestion,new MyCallBack<BaseResponse<AnswerInfor>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/question/answer",jsonQuestion,new MyCallBack<BaseResponse<AnswerInfor>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -893,7 +894,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         map.put("questionId", questionId);
         map.put("studentId", dataManager.getUserid());
         String jsonQuestion= JSON.toJSONString(map);
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/rushQuestion",jsonQuestion,new MyCallBack<BaseResponse<Boolean>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/question/rushQuestion",jsonQuestion,new MyCallBack<BaseResponse<Boolean>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -1001,7 +1002,7 @@ public class StudentLivePopupWindow extends PopupWindow {
         HashMap<String, Object> map = new HashMap<>();
         map.put("redPackKey", redPackKey);
         String jsonQuestion= JSON.toJSONString(map);
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/member/rushRedPack",jsonQuestion,new MyCallBack<BaseResponse<RushRedPack>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/member/rushRedPack",jsonQuestion,new MyCallBack<BaseResponse<RushRedPack>>() {
             @Override
             public void onLoadingBefore(Request request) {
 

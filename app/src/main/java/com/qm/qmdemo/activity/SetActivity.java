@@ -1,16 +1,9 @@
-package com.qm.qmdemo;
+package com.qm.qmdemo.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.Manifest;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,25 +11,18 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.qm.qmclass.BuildConfig;
-import com.qm.qmclass.okhttp.BaseResponse;
-import com.qm.qmclass.okhttp.MyCallBack;
-import com.qm.qmclass.okhttp.OkHttpUtils;
-import com.qm.qmclass.utils.PermissionUtils;
-import com.qm.qmclass.utils.RoundImageView;
-import com.qm.qmclass.utils.SharedPreferencesUtils;
-import com.qm.qmclass.utils.ToastUtil;
+import com.qm.qmdemo.BuildConfig;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.okhttp.BaseResponse;
+import com.qm.qmdemo.okhttp.MyCallBack;
+import com.qm.qmdemo.okhttp.OkHttpUtils;
+import com.qm.qmdemo.utils.RoundImageView;
+import com.qm.qmdemo.utils.SharedPreferencesUtils;
+import com.qm.qmdemo.utils.ToastUtil;
 
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.security.SecureRandom;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -103,7 +89,7 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
             setResult(RESULT_OK,intent);
             finish();
         }else if (view.getId() == R.id.ll_icon){
-            Intent intent=new Intent(this,IconActivity.class);
+            Intent intent=new Intent(this, IconActivity.class);
             startActivity(intent);
         }else if (view.getId() == R.id.test){
             String mappId=appId.getText().toString();
@@ -129,7 +115,7 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
                     Intent intent = new Intent();
                     setResult(RESULT_OK,intent);
                 }else {
-                    Intent intent=new Intent(this,QMClassActivity.class);
+                    Intent intent=new Intent(this, QMClassActivity.class);
                     startActivity(intent);
                 }
                 SharedPreferencesUtils.putData("isFirstLogin",false);

@@ -1,4 +1,4 @@
-package com.qm.qmdemo;
+package com.qm.qmdemo.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -8,7 +8,8 @@ import android.os.Handler;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.qm.qmclass.utils.SharedPreferencesUtils;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.utils.SharedPreferencesUtils;
 
 public class SplashActivity extends AppCompatActivity {
 private ImageView ivQidong;
@@ -23,11 +24,11 @@ private ImageView ivQidong;
             @Override
             public void run() {
                 if (SharedPreferencesUtils.getBoolean("isFirstLogin",true)){
-                    Intent intent=new Intent(SplashActivity.this,SetActivity.class);
+                    Intent intent=new Intent(SplashActivity.this, SetActivity.class);
                     startActivity(intent);
                     finish();
                 }else {
-                    Intent intent=new Intent(SplashActivity.this,QMClassActivity.class);
+                    Intent intent=new Intent(SplashActivity.this, QMClassActivity.class);
                     startActivity(intent);
                     finish();
                 }

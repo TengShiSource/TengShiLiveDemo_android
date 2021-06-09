@@ -3,10 +3,13 @@ package com.qm.qmclass.qmmanager;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.util.Log;
+import android.widget.Toast;
 
-import com.qm.qmclass.BuildConfig;
+import com.qm.qmclass.a.s;
+import com.qm.qmclass.a.t;
 import com.qm.qmclass.activitys.StudentLiveActivity;
 import com.qm.qmclass.activitys.TeacherLiveActivity;
 import com.qm.qmclass.base.Constants;
@@ -19,7 +22,6 @@ import com.qm.qmclass.okhttp.MyCallBack;
 import com.qm.qmclass.okhttp.OkHttpUtils;
 import com.qm.qmclass.tencent.TICManager;
 import com.qm.qmclass.tencent.utils.SdkUtil;
-import com.qm.qmclass.utils.CrashHandler;
 import com.qm.qmclass.utils.SharedPreferencesUtils;
 import com.qm.qmclass.utils.ToastUtil;
 import com.tencent.rtmp.TXLiveBase;
@@ -28,7 +30,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class QMClassManagerImpl extends QMClassManager {
-    private static String baseurl= BuildConfig.SERVER_URL;
+    private static String baseurl= Constants.SERVER_URL;
     private final static byte[] SYNC = new byte[1];
     private static volatile QMClassManager instance;
     private static TICManager mticManager;
@@ -113,7 +115,8 @@ public class QMClassManagerImpl extends QMClassManager {
 
                     getLoginInfo();
                 }else {
-                    ToastUtil.showToast1((Activity) mContext,"",result.getMsg());
+//                    ToastUtil.showToast1((Activity) mContext,"",result.getMsg());
+                    Toast.makeText(mContext,result.getMsg(),Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -155,7 +158,8 @@ public class QMClassManagerImpl extends QMClassManager {
                         Login(userCode,userSig);
                     }
                 }else {
-                    ToastUtil.showToast1((Activity) mContext,"",result.getMsg());
+//                    ToastUtil.showToast1((Activity) mContext,"",result.getMsg());
+                    Toast.makeText(mContext,result.getMsg(),Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -178,11 +182,12 @@ public class QMClassManagerImpl extends QMClassManager {
                 //标志登录成功
                 Log.e("Login", "登录腾讯云成功" + userCode);
                 if (dataManager.getRole().equals("t")){
-                    Intent intent=new Intent(mContext, TeacherLiveActivity.class);
+                    Intent intent=new Intent(mContext, t.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
                     mContext.startActivity(intent);
                 }else if(dataManager.getRole().equals("s")){
-                    Intent intent=new Intent(mContext, StudentLiveActivity.class);
-//                        intent.putExtra("RoomId",dataManager.getCourseId());
+                    Intent intent=new Intent(mContext, s.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
                     mContext.startActivity(intent);
                 }
 
@@ -194,7 +199,6 @@ public class QMClassManagerImpl extends QMClassManager {
             }
         });
     }
-
 //    private static void createTXClassroom(){
 //        mticManager.createClassroom(dataManager.getCourseId(), TICManager.TICClassScene.TIC_CLASS_SCENE_VIDEO_CALL, new TICManager.TICCallback() {
 //            @Override

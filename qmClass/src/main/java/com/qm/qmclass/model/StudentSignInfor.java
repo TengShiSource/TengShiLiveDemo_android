@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Created by lz on 2020/11/12.
  */
-public class StudentSignInfor implements Serializable {
+public class StudentSignInfor{
     private String userCode;
     private String time;
 

@@ -33,6 +33,7 @@ import com.qm.qmclass.activitys.TeacherLiveActivity;
 import com.qm.qmclass.adpter.AnswerListAdpter;
 import com.qm.qmclass.adpter.AnswerStatAdpter;
 import com.qm.qmclass.adpter.DMDetailsAdpter;
+import com.qm.qmclass.base.Constants;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.model.AnswerInfor;
 import com.qm.qmclass.model.AnswerListInfo;
@@ -971,7 +972,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
     }
 
     private void getStudentAnswerStat(){
-        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/question/studentAnswerStat/"+liveDataManager.getQuestionId(), new MyCallBack<BaseResponse<StudentAnswerStatInfo>>() {
+        OkHttpUtils.getInstance().Get(Constants.SERVER_URL+"/question/studentAnswerStat/"+liveDataManager.getQuestionId(), new MyCallBack<BaseResponse<StudentAnswerStatInfo>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -1011,7 +1012,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
     }
 
     private void getStudentAnswerList(){
-        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/question/studentAnswerList/"+liveDataManager.getQuestionId(), new MyCallBack<BaseResponse<List<AnswerListInfo>>>() {
+        OkHttpUtils.getInstance().Get(Constants.SERVER_URL+"/question/studentAnswerList/"+liveDataManager.getQuestionId(), new MyCallBack<BaseResponse<List<AnswerListInfo>>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -1239,7 +1240,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
 
     //关闭答题（共用）
     private void questionClose(){
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/questionClose/"+liveDataManager.getQuestionId(),"",new MyCallBack<BaseResponse<Boolean>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/question/questionClose/"+liveDataManager.getQuestionId(),"",new MyCallBack<BaseResponse<Boolean>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -1266,7 +1267,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
     }
     //结束答题（共用）
     private void questionFinish(){
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/questionFinish/"+liveDataManager.getQuestionId(),"",new MyCallBack<BaseResponse<Boolean>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/question/questionFinish/"+liveDataManager.getQuestionId(),"",new MyCallBack<BaseResponse<Boolean>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -1659,7 +1660,7 @@ public class HudongPopupWindow extends PopupWindow implements PopupWindow.OnDism
         map.put("totalStudyCoin", totalStudyCoin);
         map.put("type", type);
         String json=JSON.toJSONString(map);
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/member/envelopRedPack",json,new MyCallBack<BaseResponse<String>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/member/envelopRedPack",json,new MyCallBack<BaseResponse<String>>() {
             @Override
             public void onLoadingBefore(Request request) {
 

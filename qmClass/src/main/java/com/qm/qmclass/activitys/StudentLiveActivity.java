@@ -38,6 +38,7 @@ import com.qm.qmclass.R;
 import com.qm.qmclass.adpter.AnswerListAdpter;
 import com.qm.qmclass.adpter.AnswerStatAdpter;
 import com.qm.qmclass.adpter.DanmuContentAdpter;
+import com.qm.qmclass.base.Constants;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.base.QMSDK;
@@ -945,7 +946,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
      */
     @Override
     public void redPackOnclick() {
-        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/member/queryRedPackRecord", new MyCallBack<BaseResponse<List<RedPackInfo>>>() {
+        OkHttpUtils.getInstance().Get(Constants.SERVER_URL+"/member/queryRedPackRecord", new MyCallBack<BaseResponse<List<RedPackInfo>>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -1027,7 +1028,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
                     try {
                         Bitmap headImage = BitmapFactory.decodeStream(this.getContentResolver().openInputStream(uritempFile));
                         File file = getFile(headImage);//把Bitmap转成File
-                        OkHttpUtils.getInstance().PostWithFile(BuildConfig.SERVER_URL+"/upload/file",file,new MyCallBack<BaseResponse<String>>() {
+                        OkHttpUtils.getInstance().PostWithFile(Constants.SERVER_URL+"/upload/file",file,new MyCallBack<BaseResponse<String>>() {
                             @Override
                             public void onLoadingBefore(Request request) {
 
@@ -1065,7 +1066,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
         map.put("pazzleUrl", url);
         map.put("studentId", dataManager.getUserid());
         String jsonObject=new JSONObject(map).toJSONString();
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/pazzle/pazzle",jsonObject,new MyCallBack<BaseResponse<Boolean>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/pazzle/pazzle",jsonObject,new MyCallBack<BaseResponse<Boolean>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -1664,7 +1665,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
             studentLivePopupWindow.showAnswerPopupWindow(mactivity.getWindow().getDecorView(),questionId,questionType,expValue,timeLimit,questionOptions);
         }else if (jo.getString("action").equals("questionFinish")) {
             //老师发起结束答题
-            OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/question/studentAnswerList/"+liveDataManager.getQuestionId(), new MyCallBack<BaseResponse<List<AnswerListInfo>>>() {
+            OkHttpUtils.getInstance().Get(Constants.SERVER_URL+"/question/studentAnswerList/"+liveDataManager.getQuestionId(), new MyCallBack<BaseResponse<List<AnswerListInfo>>>() {
                 @Override
                 public void onLoadingBefore(Request request) {
 
@@ -2248,7 +2249,7 @@ public class StudentLiveActivity extends AppCompatActivity implements View.OnCli
 
     }
     public void getOnLineStudents(){
-        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/student/getOnlineStudents", new MyCallBack<BaseResponse<List<StudentInfor>>>() {
+        OkHttpUtils.getInstance().Get(Constants.SERVER_URL+"/student/getOnlineStudents", new MyCallBack<BaseResponse<List<StudentInfor>>>() {
             @Override
             public void onLoadingBefore(Request request) {
 

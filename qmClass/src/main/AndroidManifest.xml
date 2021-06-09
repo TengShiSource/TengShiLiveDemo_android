@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.qm.qmclass">
+
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -34,13 +35,14 @@
     <uses-permission android:name="android.permission.BROADCAST_PACKAGE_CHANGED" />
     <uses-permission android:name="android.permission.BROADCAST_PACKAGE_INSTALL" />
     <uses-permission android:name="android.permission.BROADCAST_PACKAGE_REPLACED" />
+
     <application>
-        <activity android:name=".activitys.TeacherLiveActivity"
+        <activity android:name=".a.t"
             android:launchMode="standard"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="landscape"
             android:windowSoftInputMode="stateAlwaysHidden"></activity>
-        <activity android:name=".activitys.StudentLiveActivity"
+        <activity android:name=".a.s"
             android:launchMode="standard"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="landscape"

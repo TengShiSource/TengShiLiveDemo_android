@@ -3,12 +3,11 @@ package com.qm.qmdemo;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
+
 import com.qm.qmclass.qmmanager.QMClassManager;
-import com.qm.qmclass.utils.CrashHandler;
-import com.qm.qmclass.utils.SharedPreferencesUtils;
+import com.qm.qmdemo.utils.CrashHandler;
+import com.qm.qmdemo.utils.PushHelper;
+import com.qm.qmdemo.utils.SharedPreferencesUtils;
 
 
 /**
@@ -31,14 +30,20 @@ public class BaseApp extends Application {
         handler = new CrashHandler();
         Thread.setDefaultUncaughtExceptionHandler(handler);
         SharedPreferencesUtils.getInstance(this,"qm_data");
-        // defense_crash防止崩溃
-//        DefenseCrash.initialize();
-        // 安装防火墙
-//        DefenseCrash.install(this);
+
+        //预初始化
+        PushHelper.preInit(this);
+        //正式初始化
+        initPushSDK();
+
+        qmClassManager=QMClassManager.getInstance();
+        qmClassManager.init(this);
     }
+
     public static QMClassManager getQMClassManager() {
         return qmClassManager;
     }
+
     public static BaseApp getInstance(){
 
         if(instance == null){
@@ -51,6 +56,25 @@ public class BaseApp extends Application {
 
     }
 
+    /**
+     * 初始化推送SDK，在用户隐私政策协议同意后，再做初始化
+     */
+    private void initPushSDK() {
+        /*
+         * 当用户同意隐私政策协议时，直接进行初始化；
+         * 当用户未同意隐私政策协议时，需等用户同意后，再通过PushHelper.init(...)方法进行初始化。
+         */
+        boolean agreed = true;
+        if (agreed && PushHelper.isMainProcess(this)) {
+            //建议在线程中执行初始化
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    PushHelper.init(getApplicationContext());
+                }
+            }).start();
+        }
+    }
 
     public static BaseApp get(Context context){
         return (BaseApp) context.getApplicationContext();

@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.kezong.fat-aar'
 
 android {
     compileSdkVersion 28
@@ -18,16 +19,25 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
-            buildConfigField 'String', 'SERVER_URL', '"http://jledu.f3322.net:9208/live"'
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            android.libraryVariants.all { variant ->
+                variant.outputs.all {
+                    outputFileName = "QMClass_v${defaultConfig.versionName}.aar"
+                }
+            }
         }
         debug {
-            buildConfigField 'String', 'SERVER_URL', '"http://jledu.f3322.net:9208/live"'
+
         }
         dev {
-            buildConfigField 'String', 'SERVER_URL', '"http://jledu.f3322.net:9208/live"'
+            minifyEnabled false
             debuggable true
+            android.libraryVariants.all { variant ->
+                variant.outputs.all {
+                    outputFileName = "QMClass_v${defaultConfig.versionName}.aar"
+                }
+            }
         }
     }
     sourceSets {
@@ -48,20 +58,31 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    /** 打包成jar **/
+//    task makeJar(type: Copy) {
+//
+//        from('build/intermediates/bundles/release/')
+//        into('build/libs/')
+//        include('classes.jar')
+//        rename ('classes.jar', 'qmClass.jar')
+//    }
+//    makeJar.dependsOn(build)
 }
-
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     //TRTC
-    api(name:'LiteAVSDK_Professional_8.4.9947', ext:'aar')
+    embed(name:'LiteAVSDK_Professional_8.4.9947', ext:'aar')
     //IMSDK
-    api (name: "imsdk-5.1.56", ext: "aar")
+    embed (name: "imsdk-5.1.56", ext: "aar")
     //TEduBoard
-    api (name: "TEduBoardSdk-release", ext: "aar")
-    api 'com.tencent.tiw.logger:TIWLogger:1.0.1.26'
-    api files('libs/tbs_sdk_thirdapp_v4.3.0.93.jar')
+    embed (name: "TEduBoardSdk-release", ext: "aar")
+//    implementation 'com.tencent.tiw.logger:TIWLogger:1.0.1.26'
+    implementation files('libs/tbs_sdk_thirdapp_v4.3.0.93.jar')
+
+    implementation files('libs/TIWLogger.jar')
+
     api files('libs/fastjson-1.2.68.jar')
     api files('libs/gson-2.8.0.jar')
     api files('libs/glide-3.6.0.jar')

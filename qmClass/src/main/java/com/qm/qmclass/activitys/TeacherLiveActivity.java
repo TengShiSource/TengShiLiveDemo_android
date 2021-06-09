@@ -38,6 +38,7 @@ import com.google.gson.JsonObject;
 import com.qm.qmclass.BuildConfig;
 import com.qm.qmclass.R;
 import com.qm.qmclass.adpter.DanmuContentAdpter;
+import com.qm.qmclass.base.Constants;
 import com.qm.qmclass.base.DataManager;
 import com.qm.qmclass.base.LiveDataManager;
 import com.qm.qmclass.base.QMSDK;
@@ -108,6 +109,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         TICManager.TICIMStatusListener {
     private TextView tvTitle;
     private TextView tvTime;
+    private ImageView ivRecording;
     private ImageView ivSet;
     private ImageView ivChat;
     private ImageView ivJushou;
@@ -202,6 +204,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     private Date endDate;//结束时间
     private int classState=-1;
     private int recLen = 0;
+    private boolean recordState=false;
     Handler handler = new Handler();
     Runnable runnable = new Runnable() {
         @Override
@@ -304,6 +307,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         tvTime.setOnClickListener(this);
         ivSet=(ImageView) findViewById(R.id.iv_set);
         ivSet.setOnClickListener(this);
+        ivRecording=(ImageView) findViewById(R.id.iv_recording);
+        ivRecording.setOnClickListener(this);
         ivChat=(ImageView) findViewById(R.id.iv_chat);
         ivChat.setOnClickListener(this);
         ivJushou=(ImageView) findViewById(R.id.iv_jushou);
@@ -362,6 +367,12 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
         ivJiaye.setOnClickListener(this);
         tools=(LinearLayout) findViewById(R.id.tools);
         toolFanye=(LinearLayout) findViewById(R.id.tool_fanye);
+
+        if (dataManager.getRecMethod()==1||dataManager.getRecMethod()==2){
+            ivRecording.setVisibility(View.VISIBLE);
+        }else {
+            ivRecording.setVisibility(View.GONE);
+        }
 
         ivVideolist.setImageDrawable(getResources().getDrawable(R.mipmap.videolist_lv));
         ivStudentlist.setImageDrawable(getResources().getDrawable(R.mipmap.studentlist));
@@ -480,7 +491,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
      *开始录课
      */
     private void startRecord(){
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/lvbcourse/startRecord","",new MyCallBack<BaseResponse<String>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/lvbcourse/startRecord","",new MyCallBack<BaseResponse<String>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -489,7 +500,8 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onSuccess(BaseResponse<String> result) {
                 if (result.getCode()==200){
-                    ToastUtil.showToast1(mactivity,"","录课已开始");
+                    recordState=true;
+                    ivRecording.setImageDrawable(getDrawable(R.mipmap.onrecord));
                 }
 
             }
@@ -502,6 +514,36 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             @Override
             public void onError(Response response) {
                 ToastUtil.showToast1(mactivity,"","录课失败");
+            }
+        });
+    }
+    /*
+     *结束录课
+     */
+    private void stopRecord(){
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/lvbcourse/stopRecord","",new MyCallBack<BaseResponse<String>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<String> result) {
+                if (result.getCode()==200){
+                    recordState=false;
+                    ivRecording.setImageDrawable(getDrawable(R.mipmap.recording));
+                }
+
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+                ToastUtil.showToast1(mactivity,"","录课停止失败");
+            }
+
+            @Override
+            public void onError(Response response) {
+                ToastUtil.showToast1(mactivity,"","录课停止失败");
             }
         });
     }
@@ -564,6 +606,12 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
     public void onClick(View view) {
         if (view.getId() == R.id.tv_time){
             classOverDelayed(0);
+        }else if (view.getId() == R.id.iv_recording){
+            if (recordState){
+                stopRecord();
+            }else {
+                startRecord();
+            }
         }else if (view.getId() == R.id.iv_chat) {
             if (chatPopupWindow==null){
                 chatPopupWindow=new LivePopupWindow(mactivity);
@@ -1379,7 +1427,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             HashMap<String, Object> map = new HashMap<>();
             map.put("records", liveDataManager.getSignedList());
             String jsonQuestion=JSON.toJSONString(map);
-            OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/lvbcourse/rollcallRecord",jsonQuestion,new MyCallBack<BaseResponse<Boolean>>() {
+            OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/lvbcourse/rollcallRecord",jsonQuestion,new MyCallBack<BaseResponse<Boolean>>() {
                 @Override
                 public void onLoadingBefore(Request request) {
 
@@ -1429,7 +1477,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
             map.put("teacherId", dataManager.getUserid());
             map.put("timeLimit", liveDataManager.getTimeLimit());
             String jsonQuestion=JSON.toJSONString(map);
-            OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/question/question",jsonQuestion,new MyCallBack<BaseResponse<Long>>() {
+            OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/question/question",jsonQuestion,new MyCallBack<BaseResponse<Long>>() {
                 @Override
                 public void onLoadingBefore(Request request) {
 
@@ -1545,7 +1593,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(intent, GET_PHOTO);
         }else if (type.equals("remote")){
-            OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/member/getCoursewareList","",new MyCallBack<BaseResponse<List<YcFileInfo>>>() {
+            OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/member/getCoursewareList","",new MyCallBack<BaseResponse<List<YcFileInfo>>>() {
                 @Override
                 public void onLoadingBefore(Request request) {
 
@@ -2394,7 +2442,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
      *启动白板推流
      */
     private void startPushBoardStream(){
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/lvbcourse/startPushBoardStream","",new MyCallBack<BaseResponse<String>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/lvbcourse/startPushBoardStream","",new MyCallBack<BaseResponse<String>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -2422,7 +2470,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
      *关闭课堂
      */
     private void classOver(){
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/lvbcourse/classOver","",new MyCallBack<BaseResponse<ClassOver>>() {
+        OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/lvbcourse/classOver","",new MyCallBack<BaseResponse<ClassOver>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -2455,7 +2503,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
                         if (time==0){
                             quitClass();
                         }else {
-                            OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/lvbcourse/delayCourseEndTime/"+time,"",new MyCallBack<BaseResponse<String>>() {
+                            OkHttpUtils.getInstance().PostWithJson(Constants.SERVER_URL+"/lvbcourse/delayCourseEndTime/"+time,"",new MyCallBack<BaseResponse<String>>() {
                                 @Override
                                 public void onLoadingBefore(Request request) {
 
@@ -2556,7 +2604,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
 
     }
     public void getStudents(){
-        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/member/getStudents", new MyCallBack<BaseResponse<List<StudentInfor>>>() {
+        OkHttpUtils.getInstance().Get(Constants.SERVER_URL+"/member/getStudents", new MyCallBack<BaseResponse<List<StudentInfor>>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
@@ -2595,7 +2643,7 @@ public class TeacherLiveActivity extends AppCompatActivity implements View.OnCli
      *　获取在线学生列表
      */
     public void getOnLineStudents(){
-            OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/student/getOnlineStudents", new MyCallBack<BaseResponse<List<StudentInfor>>>() {
+            OkHttpUtils.getInstance().Get(Constants.SERVER_URL+"/student/getOnlineStudents", new MyCallBack<BaseResponse<List<StudentInfor>>>() {
                 @Override
                 public void onLoadingBefore(Request request) {
 
