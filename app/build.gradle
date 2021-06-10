@@ -55,7 +55,6 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
-    implementation project(':qmClass')
 
     //友盟基础库相关依赖（必须）
     api 'com.umeng.umsdk:common:9.3.8'
@@ -76,6 +75,8 @@ dependencies {
     implementation 'com.umeng.umsdk:apm:1.2.0'
 
     implementation 'cn.jzvd:jiaozivideoplayer:7.6.0'
+
+    implementation (name: "QMClass_v1.0", ext: "aar")
 
 //    api files('libs/fastjson-1.2.68.jar')
 //    api "com.alibaba:fastjson:1.2.68"

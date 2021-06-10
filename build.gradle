@@ -23,7 +23,6 @@ allprojects {
         maven { url 'https://repo1.maven.org/maven2/' }
         flatDir{
             dirs 'libs'
-            dirs project(':qmClass').file('libs')
         }
     }
 }

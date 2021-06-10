@@ -20,12 +20,7 @@ public class LogInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) {
         Request request = chain.request();
-        Response response = null;
-        try {
-            response = chain.proceed(request);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Response response = chain.proceed(request);
         printInfo(request, response);
         return response;
     }

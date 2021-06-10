@@ -3,7 +3,6 @@ package com.qm.qmdemo.utils;
 import android.content.Context;
 import android.util.Log;
 
-import com.qm.qmclass.utils.SharedPreferencesUtils;
 import com.qm.qmdemo.Constants;
 import com.taobao.accs.ACCSClient;
 import com.taobao.accs.AccsClientConfig;

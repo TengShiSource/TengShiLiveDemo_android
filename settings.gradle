@@ -1,3 +1,2 @@
-include ':qmClass'
 include ':app'
 rootProject.name = "QMDemo"
