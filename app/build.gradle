@@ -76,8 +76,7 @@ dependencies {
 
     implementation 'cn.jzvd:jiaozivideoplayer:7.6.0'
 
-    implementation (name: "QMClass_v1.0", ext: "aar")
-
+    implementation 'com.qm:qmClass:1.0'
 //    api files('libs/fastjson-1.2.68.jar')
 //    api "com.alibaba:fastjson:1.2.68"
 //    api "com.squareup.okhttp3:okhttp:3.6.0"
