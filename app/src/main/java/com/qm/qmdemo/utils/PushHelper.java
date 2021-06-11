@@ -82,14 +82,14 @@ public class PushHelper {
                 Log.i(TAG, "deviceToken --> " + deviceToken);
                 SharedPreferencesUtils.putData("deviceToken",deviceToken);
                 //可设置别名，推送时使用别名推送
-                String type = "uid";
-                String alias = "123456";
-                pushAgent.setAlias(alias, type, new UTrack.ICallBack() {
-                    @Override
-                    public void onMessage(boolean success, String message) {
-                        Log.i(TAG, "setAlias " + success + " msg:" + message);
-                    }
-                });
+//                String type = "uid";
+//                String alias = "123456";
+//                pushAgent.setAlias(alias, type, new UTrack.ICallBack() {
+//                    @Override
+//                    public void onMessage(boolean success, String message) {
+//                        Log.i(TAG, "setAlias " + success + " msg:" + message);
+//                    }
+//                });
             }
 
             @Override

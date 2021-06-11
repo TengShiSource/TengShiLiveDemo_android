@@ -79,6 +79,7 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
         teacherPwd= (EditText)findViewById(R.id.teacherPwd);
         studentPwd= (EditText)findViewById(R.id.studentPwd);
         studentJoin= (LinearLayout)findViewById(R.id.student_join);
+        studentJoin.setOnClickListener(this);
         historyCourse= (LinearLayout)findViewById(R.id.historyCourse);
         historyCourse.setOnClickListener(this);
 

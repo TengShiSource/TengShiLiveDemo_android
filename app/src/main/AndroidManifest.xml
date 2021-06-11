@@ -29,7 +29,7 @@
             android:screenOrientation="portrait"/>
         <activity android:name=".activity.HistoryCourseActivity" />
         <activity android:name=".activity.IconActivity" />
-        <activity android:name=".activity.QMClassActivity" />
+        <activity android:name=".activity.QMClassActivity" android:screenOrientation="portrait"/>
         <activity android:name=".activity.ShareActivity" />
         <activity android:name=".activity.SetActivity" />
         <activity android:name=".activity.CreateCourseActivity" />

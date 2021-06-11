@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -19,6 +20,8 @@ import com.qm.qmdemo.okhttp.OkHttpUtils;
 import com.qm.qmdemo.utils.RoundImageView;
 import com.qm.qmdemo.utils.SharedPreferencesUtils;
 import com.qm.qmdemo.utils.ToastUtil;
+import com.umeng.message.PushAgent;
+import com.umeng.message.UTrack;
 
 import org.json.JSONObject;
 
@@ -105,6 +108,16 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
             }
         }else if (view.getId() == R.id.determine){
             SharedPreferencesUtils.putData("userId",userId.getText().toString());
+            //获取消息推送实例
+            final PushAgent pushAgent = PushAgent.getInstance(this);
+            String type = "Account";
+            String alias = userId.getText().toString();
+            pushAgent.setAlias(alias, type, new UTrack.ICallBack() {
+                @Override
+                public void onMessage(boolean success, String message) {
+                    Log.i("SetActivity", "setAlias " + success + " msg:" + message);
+                }
+            });
             if (nickname.getText().toString()!=null&&!nickname.getText().toString().equals("")){
                 SharedPreferencesUtils.putData("nickName",nickname.getText().toString());
             }else {

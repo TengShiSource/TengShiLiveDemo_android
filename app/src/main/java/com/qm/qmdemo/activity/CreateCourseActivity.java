@@ -84,6 +84,8 @@ public class CreateCourseActivity extends AppCompatActivity implements View.OnCl
             }
             HashMap<String, Object> map = new HashMap<>();
             map.put("recMethod", recordState);
+            map.put("openClassReminder", "y");
+            map.put("callbackUrl", "http://jledu.f3322.net:9208/live/test/callback");
             String courseOptions=JSON.toJSONString(map);
             String teacherPwd=teacherPassWord.getText().toString();
             String studentPwd=studentPassWord.getText().toString();
