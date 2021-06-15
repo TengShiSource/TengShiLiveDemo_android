@@ -33,6 +33,7 @@
         android:background="@drawable/bg_edittext"
         android:textSize="@dimen/sp_13"
         android:padding="@dimen/dp_10"
+        android:inputType="textPassword"
         android:layout_marginTop="@dimen/dp_10"
         android:hint="请输入教师登录密码  (选填)" />
     <EditText
@@ -44,6 +45,7 @@
         android:background="@drawable/bg_edittext"
         android:textSize="@dimen/sp_13"
         android:padding="@dimen/dp_10"
+        android:inputType="textPassword"
         android:layout_marginTop="@dimen/dp_10"
         android:hint="请输入学生登录密码 (选填)" />
     <EditText
@@ -55,6 +57,7 @@
         android:background="@drawable/bg_edittext"
         android:textSize="@dimen/sp_13"
         android:padding="@dimen/dp_10"
+        android:inputType="number"
         android:layout_marginTop="@dimen/dp_10"
         android:hint="请输入课程时长（分），默认60分  (选填)" />
     <RadioGroup
