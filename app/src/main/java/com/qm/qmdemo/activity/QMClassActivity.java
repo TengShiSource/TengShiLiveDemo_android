@@ -30,7 +30,9 @@ import java.util.HashMap;
 
 import okhttp3.Request;
 import okhttp3.Response;
-
+/**
+ * demo主页
+ */
 public class QMClassActivity extends AppCompatActivity implements View.OnClickListener {
     private TextView userId;
     private TextView name;
@@ -172,7 +174,6 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
             @Override
             public void onSuccess(BaseResponse<JSONObject> result) {
                 if (result.getCode()==200){
-//                    JSONObject courseParam = JSON.parseObject(result.getData());
                     JSONObject courseParam = result.getData();
                     SharedPreferencesUtils.putData("courseId",courseParam.getInteger("id"));
                     classBegins.setVisibility(View.VISIBLE);
@@ -267,7 +268,7 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
 
             @Override
             public void onFailure(Request request, Exception e) {
-
+                ToastUtil.showToast1(QMClassActivity.this,"",e.toString());
             }
 
             @Override

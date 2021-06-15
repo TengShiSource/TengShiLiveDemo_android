@@ -31,7 +31,9 @@ import java.util.Random;
 
 import okhttp3.Request;
 import okhttp3.Response;
-
+/**
+ * 设置
+ */
 public class SetActivity extends AppCompatActivity implements View.OnClickListener {
     private ImageView back;
     private LinearLayout llIcon;
@@ -167,7 +169,7 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
 
             @Override
             public void onFailure(Request request, Exception e) {
-
+                ToastUtil.showToast1(SetActivity.this,"",e.toString());
             }
 
             @Override

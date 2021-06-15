@@ -18,7 +18,9 @@ import java.util.List;
 
 import okhttp3.Request;
 import okhttp3.Response;
-
+/**
+ * 头像
+ */
 public class IconActivity extends AppCompatActivity {
 
     private ImageView back;

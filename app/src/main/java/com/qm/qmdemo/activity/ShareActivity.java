@@ -8,7 +8,9 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.qm.qmdemo.R;
-
+/**
+ * 分享
+ */
 public class ShareActivity extends AppCompatActivity implements View.OnClickListener {
     private ImageView back;
     @Override

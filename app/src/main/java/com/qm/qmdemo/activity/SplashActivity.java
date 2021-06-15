@@ -10,7 +10,9 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.qm.qmdemo.R;
 import com.qm.qmdemo.utils.SharedPreferencesUtils;
-
+/**
+ * 启动页
+ */
 public class SplashActivity extends AppCompatActivity {
 private ImageView ivQidong;
     @Override
@@ -33,7 +35,7 @@ private ImageView ivQidong;
                     finish();
                 }
             }
-        }, 2000);
+        }, 3000);
 
     }
 }

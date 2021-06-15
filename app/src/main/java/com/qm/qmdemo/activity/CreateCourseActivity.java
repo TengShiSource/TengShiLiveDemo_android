@@ -27,7 +27,9 @@ import java.util.HashMap;
 
 import okhttp3.Request;
 import okhttp3.Response;
-
+/**
+ * 创建课程
+ */
 public class CreateCourseActivity extends AppCompatActivity implements View.OnClickListener {
     private ImageView back;
     private EditText roomName;
@@ -131,7 +133,7 @@ public class CreateCourseActivity extends AppCompatActivity implements View.OnCl
 
             @Override
             public void onFailure(Request request, Exception e) {
-
+                ToastUtil.showToast1(CreateCourseActivity.this,"",e.toString());
             }
 
             @Override

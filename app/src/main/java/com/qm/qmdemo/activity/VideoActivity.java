@@ -18,8 +18,9 @@ import com.qm.qmdemo.utils.RoundImageView;
 import java.util.List;
 
 import cn.jzvd.JzvdStd;
-
-
+/**
+ * 历史课程播放页
+ */
 public class VideoActivity extends AppCompatActivity {
     private ImageView back;
     private JzvdStd videoplayer;
