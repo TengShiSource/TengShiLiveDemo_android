@@ -96,6 +96,7 @@
         android:padding="@dimen/dp_10"
         android:maxLength="8"
         android:layout_marginTop="@dimen/dp_10"
+        android:inputType="number"
         android:hint="请输入课堂编号" />
     <LinearLayout
         android:id="@+id/classBegins"
@@ -133,6 +134,7 @@
         android:layout_toRightOf="@+id/tv_room"
         android:textSize="@dimen/sp_13"
         android:padding="@dimen/dp_10"
+        android:inputType="textPassword"
         android:layout_marginTop="@dimen/dp_10"
         android:hint="请输入教师密码" />
     <LinearLayout
@@ -176,6 +178,7 @@
         android:layout_toRightOf="@+id/tv_room"
         android:textSize="@dimen/sp_13"
         android:padding="@dimen/dp_10"
+        android:inputType="textPassword"
         android:layout_marginTop="@dimen/dp_10"
         android:hint="请输入学生密码" />
     <LinearLayout
