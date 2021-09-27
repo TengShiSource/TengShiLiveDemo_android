@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@null"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="@dimen/dp_300"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_dialog"
+        tools:ignore="UselessParent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minWidth="@dimen/dp_300"
+            android:orientation="horizontal"
+            android:paddingTop="@dimen/dp_12">
+
+            <ImageView
+                android:id="@+id/icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center_vertical"
+                android:src="@mipmap/ic_launcher_round"/>
+
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="@dimen/dp_7"
+               android:layout_marginRight="@dimen/dp_7"
+                android:textColor="@color/holo_button_normal"
+                android:textStyle="bold"
+                android:textSize="14sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="@dimen/dp_50"
+            android:minWidth="@dimen/dp_300"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_7"
+                android:layout_marginRight="@dimen/dp_7"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingBottom="10dp"
+                android:paddingTop="10dp"
+                android:textSize="11sp"
+                android:textColor="@color/holo_button_normal"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/dp_300"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingBottom="@dimen/dp_12"
+            android:paddingTop="@dimen/dp_10"
+            android:paddingLeft="@dimen/dp_30"
+            android:paddingRight="@dimen/dp_30">
+            <TextView
+                android:id="@+id/positiveButton"
+                android:layout_width="@dimen/dp_80"
+                android:layout_height="wrap_content"
+                android:background="@drawable/dialog_button"
+                android:padding="@dimen/dp_7"
+                android:text="是是的到"
+                android:textSize="10sp"
+                android:gravity="center"
+                android:textColor="@android:color/white"/>
+            <TextView
+                android:id="@+id/view"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+            <TextView
+                android:id="@+id/negativeButton"
+                android:layout_width="@dimen/dp_80"
+                android:layout_height="wrap_content"
+                android:background="@drawable/dialog_button_hui"
+                android:padding="@dimen/dp_7"
+                android:gravity="center"
+                android:textSize="10sp"
+                android:textColor="@android:color/white"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

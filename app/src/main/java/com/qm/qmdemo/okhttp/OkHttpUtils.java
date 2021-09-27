@@ -41,6 +41,7 @@ public class OkHttpUtils {
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(10, TimeUnit.SECONDS)
                 .writeTimeout(30, TimeUnit.SECONDS)
+                .addInterceptor(new TokenHeaderInterceptor())
                 .addInterceptor(new LogInterceptor())
                 .build();
         mHandler = new Handler(Looper.getMainLooper());

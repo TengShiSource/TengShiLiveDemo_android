@@ -39,7 +39,22 @@
     <remote-repository>
       <option name="id" value="maven4" />
       <option name="name" value="maven4" />
-      <option name="url" value="http://192.168.3.249:8081/nexus/content/repositories/releases/" />
+      <option name="url" value="https://raw.githubusercontent.com/TengShiSource/TengShiLive_Android/main" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven4" />
+      <option name="name" value="maven4" />
+      <option name="url" value="https://raw.githubusercontent.com/TengShiSource/TengShiLive_Android/master" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven4" />
+      <option name="name" value="maven4" />
+      <option name="url" value="http://raw.githubusercontent.com/TengShiSource/TengShiLive_Android/master" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven4" />
+      <option name="name" value="maven4" />
+      <option name="url" value="https://s01.oss.sonatype.org/content/repositories/releases/" />
     </remote-repository>
   </component>
 </project>

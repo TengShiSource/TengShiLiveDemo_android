@@ -9,7 +9,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,7 +29,7 @@ android {
         release {
             minifyEnabled false
             debuggable true
-            buildConfigField 'String', 'SERVER_URL', '"http://jledu.f3322.net:9208/live"'
+            buildConfigField 'String', 'SERVER_URL', '"https://live.qmzhjy.com/live"'
             signingConfig signingConfigs.release
 //            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
@@ -43,6 +43,19 @@ android {
             debuggable true
             buildConfigField 'String', 'SERVER_URL', '"http://jledu.f3322.net:9208/live"'
             signingConfig signingConfigs.debug
+        }
+    }
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+//            outputFileName  ="app" +"_"+ buildType.name +"_v" + defaultConfig.versionName + ".apk"
+//            if (variant.buildType.name=="release"){
+//                outputFileName  ="app" +"_${variant.productFlavors[0].name}_"+ buildType.name +".apk"
+//            }else {
+            outputFileName  ="TengShiLiveDemo.apk"
+//            }
+
+
         }
     }
 }
@@ -73,16 +86,15 @@ dependencies {
 
     //集成U-APM（可选）
     implementation 'com.umeng.umsdk:apm:1.2.0'
-
-    compile  'com.umeng.umsdk:share-core:7.1.4'//分享核心库，必选
-
-    compile  'com.umeng.umsdk:share-qq:7.1.4'
-    compile  'com.tencent.tauth:qqopensdk:3.51.2'//QQ官方SDK依赖库
-    compile  'com.umeng.umsdk:share-wx:7.1.4'
-    compile  'com.tencent.mm.opensdk:wechat-sdk-android-without-mta:6.6.5'//微信官方SDK依赖库
-
+//    compile  'com.umeng.umsdk:share-core:7.1.4'//分享核心库，必选
+//
+//    compile  'com.umeng.umsdk:share-qq:7.1.4'
+//    compile  'com.tencent.tauth:qqopensdk:3.51.2'//QQ官方SDK依赖库
+//    compile  'com.umeng.umsdk:share-wx:7.1.4'
+//    compile  'com.tencent.mm.opensdk:wechat-sdk-android-without-mta:6.6.5'//微信官方SDK依赖库
     implementation 'cn.jzvd:jiaozivideoplayer:7.6.0'
 
-    implementation 'com.qm.qmclass:qmclass:1.0.1'
+    implementation 'io.github.TengShiSource:TengShiLive_Android:2.0.2'
+//    implementation (name: "TengShiLive_v2.0.1", ext: "aar")
 
 }

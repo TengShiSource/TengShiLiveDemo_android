@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.alibaba.fastjson.JSONObject;
 import com.bumptech.glide.Glide;
 import com.qm.qmdemo.BuildConfig;
 import com.qm.qmdemo.R;
@@ -22,8 +23,6 @@ import com.qm.qmdemo.utils.SharedPreferencesUtils;
 import com.qm.qmdemo.utils.ToastUtil;
 import com.umeng.message.PushAgent;
 import com.umeng.message.UTrack;
-
-import org.json.JSONObject;
 
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -72,8 +71,8 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
         }else {
             userId.setText(getNonceStr());
             nickname.setText("未命名");
-            appId.setText("RMGF2JD1UY");
-            key.setText("8OCFTPB1F7");
+            appId.setText("TZIYUNOA4L");
+            key.setText("7YFJQQXZBP");
             back.setVisibility(View.GONE);
         }
 
@@ -101,7 +100,9 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
             String mkey=key.getText().toString();
             if (mappId!=null&&!mappId.equals("")){
                 if (mkey!=null&&!mkey.equals("")){
-                    getAppInfo(mappId,mkey);
+                    SharedPreferencesUtils.putData("appId",appId.getText().toString());
+                    SharedPreferencesUtils.putData("appSecret",key.getText().toString());
+                    getAppInfo();
                 }else {
                     ToastUtil.showToast1(this,"","密钥不能为空");
                 }
@@ -141,26 +142,25 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
 
         }
     }
-    private void getAppInfo(String mappId,String appSecret){
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("appId", mappId);
-        map.put("appSecret", appSecret);
-        String jsonObject=new JSONObject(map).toString();
-
-        OkHttpUtils.getInstance().PostWithJson(BuildConfig.SERVER_URL+"/app/getAppInfo",jsonObject,new MyCallBack<BaseResponse>() {
+    private void getAppInfo(){
+        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/app/getAppInfo",new MyCallBack<BaseResponse<JSONObject>>() {
             @Override
             public void onLoadingBefore(Request request) {
 
             }
 
             @Override
-            public void onSuccess(BaseResponse result) {
+            public void onSuccess(BaseResponse<JSONObject> result) {
                 if (result.getCode()==200){
                     SharedPreferencesUtils.putData("appId",appId.getText().toString());
                     SharedPreferencesUtils.putData("appSecret",key.getText().toString());
+                    SharedPreferencesUtils.putData("appName",result.getData().get("appName").toString());
+                    SharedPreferencesUtils.putData("appLogo",result.getData().get("appLogo").toString());
                     SharedPreferencesUtils.putData("isHaveAPP",true);
                     ToastUtil.showToast1(SetActivity.this,"","测试成功");
-                }else if (result.getCode()==500){
+                }else {
+                    SharedPreferencesUtils.putData("appId","");
+                    SharedPreferencesUtils.putData("appSecret","");
                     SharedPreferencesUtils.putData("isHaveAPP",false);
                     ToastUtil.showToast1(SetActivity.this,"",result.getMsg());
                 }
@@ -169,7 +169,7 @@ public class SetActivity extends AppCompatActivity implements View.OnClickListen
 
             @Override
             public void onFailure(Request request, Exception e) {
-                ToastUtil.showToast1(SetActivity.this,"",e.toString());
+
             }
 
             @Override

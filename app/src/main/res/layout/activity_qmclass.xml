@@ -43,8 +43,8 @@
         android:gravity="center"
         android:layout_marginTop="@dimen/dp_80"
         android:orientation="vertical">
-        <com.qm.qmclass.utils.RoundImageView
-            android:id="@+id/teacher_icon"
+        <com.qm.qmdemo.utils.RoundImageView
+            android:id="@+id/demo_icon"
             app:roundHeight="@dimen/dp_35"
             app:roundWidth="@dimen/dp_35"
             android:scaleType="fitXY"
@@ -52,6 +52,7 @@
             android:layout_height="@dimen/dp_70"
             android:src="@mipmap/ic_new"/>
         <TextView
+            android:id="@+id/demoName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="@dimen/sp_25"

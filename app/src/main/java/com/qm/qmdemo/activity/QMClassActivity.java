@@ -1,7 +1,13 @@
 package com.qm.qmdemo.activity;
 
+import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -14,8 +20,10 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 
+import com.bumptech.glide.Glide;
 import com.qm.qmclass.qmmanager.QMClassManager;
 import com.qm.qmdemo.BaseApp;
 import com.qm.qmdemo.BuildConfig;
@@ -23,6 +31,8 @@ import com.qm.qmdemo.R;
 import com.qm.qmdemo.okhttp.BaseResponse;
 import com.qm.qmdemo.okhttp.MyCallBack;
 import com.qm.qmdemo.okhttp.OkHttpUtils;
+import com.qm.qmdemo.utils.DialogUtil;
+import com.qm.qmdemo.utils.RoundImageView;
 import com.qm.qmdemo.utils.SharedPreferencesUtils;
 import com.qm.qmdemo.utils.ToastUtil;
 
@@ -34,6 +44,9 @@ import okhttp3.Response;
  * demo主页
  */
 public class QMClassActivity extends AppCompatActivity implements View.OnClickListener {
+//    private TextView name;
+    private RoundImageView demoIcon;
+    private TextView demoName;
     private TextView userId;
     private TextView name;
     private ImageView share;
@@ -54,6 +67,9 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
     private boolean isHaveTPwd=false;
     private QMClassManager qmClassManager;
     private int courseSta=-1;
+    private Long id;
+    private String appPath;
+    private int forceFlag;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,6 +78,8 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
 
         qmClassManager= BaseApp.getQMClassManager();
 
+        demoIcon= (RoundImageView)findViewById(R.id.demo_icon);
+        demoName= (TextView)findViewById(R.id.demoName);
         userId= (TextView)findViewById(R.id.userId);
         name= (TextView)findViewById(R.id.name);
         share= (ImageView)findViewById(R.id.share);
@@ -85,6 +103,8 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
         historyCourse= (LinearLayout)findViewById(R.id.historyCourse);
         historyCourse.setOnClickListener(this);
 
+        demoName.setText(SharedPreferencesUtils.getString("appName",""));
+        Glide.with(this).load(SharedPreferencesUtils.getString("appLogo","")).skipMemoryCache(true).into(demoIcon);
         classBegins.setVisibility(View.GONE);
         teacherPwd.setVisibility(View.GONE);
         teacherBn.setVisibility(View.VISIBLE);
@@ -110,6 +130,7 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
                 }
             }
         });
+        SharedPreferencesUtils.putData("userRole","t");
         radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -139,6 +160,8 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
                 }
             }
         });
+
+        getVersion();
     }
 
     @Override
@@ -276,6 +299,110 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
 
             }
         });
+    }
+
+    private void getVersion() throws JSONException {
+        int versionCode=getVersionCode();
+        OkHttpUtils.getInstance().Get(BuildConfig.SERVER_URL+"/app/version?versionCode="+versionCode+"&appType=1", new MyCallBack<BaseResponse<JSONObject>>() {
+            @Override
+            public void onLoadingBefore(Request request) {
+
+            }
+
+            @Override
+            public void onSuccess(BaseResponse<JSONObject> result) {
+                if (result.getCode()==200&&result.getData()!=null){
+                    JSONObject courseParam = result.getData();
+                    if (courseParam.getInteger("versionCode")>versionCode){
+                        appPath=courseParam.get("appPath").toString();
+                        forceFlag=courseParam.getInteger("forceFlag");
+                        showUpdataDialog();
+                    }
+
+
+                }
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+
+            }
+
+            @Override
+            public void onError(Response response) {
+
+            }
+        });
+
+
+    }
+
+    private int getVersionCode() {
+        PackageManager pm = getPackageManager();
+        //版本号都在里面,0代表基本信息
+        try {
+            PackageInfo packageInfo = pm.getPackageInfo(QMClassActivity.this.getPackageName(),0);
+            //获取对应版本名称
+            return packageInfo.versionCode;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    protected void showUpdataDialog() {
+        if (forceFlag==1){
+            DialogUtil.showAlertDialog(this, 0, "版本更新", "快来安装新版本吧！",
+                    "立即更新", "", false, new DialogUtil.AlertDialogBtnClickListener() {
+                        @Override
+                        public void clickPositive() {
+                            //positive
+                            downLoadApk();
+                        }
+                        @Override
+                        public void clickNegative() {
+                            //negative
+                        }
+                    });
+        }else {
+            DialogUtil.showAlertDialog(this, 0, "版本更新", "快来安装新版本吧！",
+                    "立即更新", "稍后再说", true, new DialogUtil.AlertDialogBtnClickListener() {
+                        @Override
+                        public void clickPositive() {
+                            //positive
+                            downLoadApk();
+                        }
+                        @Override
+                        public void clickNegative() {
+                            //negative
+                        }
+                    });
+        }
+    }
+
+    protected void downLoadApk() {
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(appPath));
+        // 设置允许使用的网络类型，这里是移动网络和wifi都可以
+        request.setAllowedNetworkTypes(request.NETWORK_MOBILE | request.NETWORK_WIFI);
+        //设置是否允许漫游
+        request.setAllowedOverRoaming(true);
+        //设置文件类型
+        request.setMimeType("application/vnd.android.package-archive");
+        //显示模式
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        //设置通知栏的标题
+        request.setTitle("下载");
+        //设置通知栏的message
+        request.setDescription("正在下载.....");
+        //设置文件存放目录
+        request.setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS,"update.apk");
+        //下载可以扫描到
+        request.allowScanningByMediaScanner();
+        request.setVisibleInDownloadsUi(true);
+        //获取系统服务
+        DownloadManager downloadManager= (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        //进行下载
+        id = downloadManager.enqueue(request);
     }
 
     @Override
