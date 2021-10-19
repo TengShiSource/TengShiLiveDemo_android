@@ -212,17 +212,29 @@ public class QMClassActivity extends AppCompatActivity implements View.OnClickLi
                         courseSta=courseParam.getInteger("status");
                         courseStatus.setText("已结束");
                     }
+
                     if(courseParam.get("teacherPwd").toString().equals("")||courseParam.get("teacherPwd").toString()==null){
                         isHaveTPwd=false;
                         teacherPwd.setVisibility(View.GONE);
                     }else {
                         isHaveTPwd=true;
-                        teacherPwd.setVisibility(View.VISIBLE);
+                        if (SharedPreferencesUtils.getData("userRole","t").equals("t")) {
+                            teacherPwd.setVisibility(View.VISIBLE);
+                        }else {
+                            teacherPwd.setVisibility(View.GONE);
+                        }
                     }
+
                     if(courseParam.get("studentPwd").toString().equals("")||courseParam.get("studentPwd").toString()==null){
                         isHaveSPwd=false;
+                        studentPwd.setVisibility(View.GONE);
                     }else {
                         isHaveSPwd=true;
+                        if (SharedPreferencesUtils.getData("userRole","t").equals("s")) {
+                            studentPwd.setVisibility(View.VISIBLE);
+                        }else {
+                            studentPwd.setVisibility(View.GONE);
+                        }
                     }
 
                 }else {

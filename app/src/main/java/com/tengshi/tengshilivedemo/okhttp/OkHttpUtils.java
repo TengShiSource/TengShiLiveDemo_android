@@ -205,7 +205,12 @@ public class OkHttpUtils {
             @Override
             public void onResponse(Call call, final Response response) {
                 if (response.isSuccessful()) {
-                    String resultStr = response.body().string();
+                    String resultStr = null;
+                    try {
+                        resultStr = response.body().string();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     if (callBack.mType == String.class) {
                         // 如果想要返回字符串 直接返回就行
                         String finalResultStr = resultStr;

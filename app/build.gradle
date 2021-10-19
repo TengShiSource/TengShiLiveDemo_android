@@ -94,7 +94,7 @@ dependencies {
 //    compile  'com.tencent.mm.opensdk:wechat-sdk-android-without-mta:6.6.5'//微信官方SDK依赖库
     implementation 'cn.jzvd:jiaozivideoplayer:7.6.0'
 
-    implementation 'io.github.TengShiSource:TengShiLive_Android:2.0.2'
-//    implementation (name: "TengShiLive_v2.0.1", ext: "aar")
+//    implementation 'io.github.TengShiSource:TengShiLive_Android:2.0.2'
+    implementation (name: "TengShiLive-debug", ext: "aar")
 
 }

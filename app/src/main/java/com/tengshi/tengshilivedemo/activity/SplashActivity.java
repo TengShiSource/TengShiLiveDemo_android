@@ -22,7 +22,7 @@ private ImageView ivQidong;
         getSupportActionBar().hide();
         setContentView(R.layout.activity_splash);
         ivQidong=(ImageView) findViewById(R.id.iv_qidong);
-        Glide.with(this).load(R.mipmap.qidong).skipMemoryCache(true).into(ivQidong);
+        Glide.with(this).load(R.mipmap.newqidong).skipMemoryCache(true).into(ivQidong);
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {

@@ -47,7 +47,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler{
     }
 
     private String logFilePath = Environment.getExternalStorageDirectory() + File.separator + "Android" +
-            File.separator + "data" + File.separator + "com.qm.qmdemo" + File.separator + "crashLog";
+            File.separator + "data" + File.separator + "com.tengshi.tengshilivedemo" + File.separator + "crashLog";
 
     private void saveThrowableMessage(String errorMessage) {
         if (TextUtils.isEmpty(errorMessage)) {
@@ -73,7 +73,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler{
                     ByteArrayInputStream inputStream = new ByteArrayInputStream(errorMessage.getBytes());
                     outputStream = new FileOutputStream(new File(file, System.currentTimeMillis() + ".txt"));
                     int len = 0;
-                    byte[] bytes = new byte[1024];
+                    byte[] bytes = new byte[errorMessage.getBytes().length];
                     while ((len = inputStream.read(bytes)) != -1) {
                         outputStream.write(bytes, 0, len);
                     }

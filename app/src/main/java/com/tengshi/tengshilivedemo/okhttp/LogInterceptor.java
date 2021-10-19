@@ -2,6 +2,7 @@ package com.tengshi.tengshilivedemo.okhttp;
 
 import android.util.Log;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 
 import okhttp3.Headers;
@@ -17,7 +18,7 @@ import okio.BufferedSource;
 
 public class LogInterceptor implements Interceptor {
     @Override
-    public Response intercept(Chain chain) {
+    public Response intercept(Chain chain) throws IOException{
         Request request = chain.request();
         Response response = chain.proceed(request);
         printInfo(request, response);

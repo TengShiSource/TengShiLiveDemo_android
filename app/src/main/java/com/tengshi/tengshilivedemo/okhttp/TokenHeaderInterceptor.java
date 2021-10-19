@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 import com.tengshi.tengshilivedemo.utils.SharedPreferencesUtils;
 
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -16,7 +17,7 @@ import okhttp3.Response;
 
 public class TokenHeaderInterceptor implements Interceptor {
     @Override
-    public Response intercept(Chain chain) {
+    public Response intercept(Chain chain) throws IOException {
         String appKey= SharedPreferencesUtils.getString("appId","");
         String appSecret= SharedPreferencesUtils.getString("appSecret","");
         String timestamp = String.valueOf(System.currentTimeMillis());
