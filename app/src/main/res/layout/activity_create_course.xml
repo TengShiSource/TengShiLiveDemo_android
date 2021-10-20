@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.tengshi.tengshilivedemo.activity.CreateCourseActivity">
+    tools:context="com.qm.qmdemo.activity.CreateCourseActivity">
     <ImageView
         android:id="@+id/back"
         android:layout_width="@dimen/dp_25"

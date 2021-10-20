@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.utils;
+package com.qm.qmdemo.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;

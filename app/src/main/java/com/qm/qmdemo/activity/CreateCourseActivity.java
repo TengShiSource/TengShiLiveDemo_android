@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.activity;
+package com.qm.qmdemo.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -13,13 +13,13 @@ import android.widget.RadioGroup;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
-import com.tengshi.tengshilivedemo.BuildConfig;
-import com.tengshi.tengshilivedemo.R;
-import com.tengshi.tengshilivedemo.okhttp.BaseResponse;
-import com.tengshi.tengshilivedemo.okhttp.MyCallBack;
-import com.tengshi.tengshilivedemo.okhttp.OkHttpUtils;
-import com.tengshi.tengshilivedemo.utils.SharedPreferencesUtils;
-import com.tengshi.tengshilivedemo.utils.ToastUtil;
+import com.qm.qmdemo.BuildConfig;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.okhttp.BaseResponse;
+import com.qm.qmdemo.okhttp.MyCallBack;
+import com.qm.qmdemo.okhttp.OkHttpUtils;
+import com.qm.qmdemo.utils.SharedPreferencesUtils;
+import com.qm.qmdemo.utils.ToastUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

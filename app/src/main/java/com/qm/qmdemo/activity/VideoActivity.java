@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.activity;
+package com.qm.qmdemo.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -10,10 +10,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.tengshi.tengshilivedemo.R;
-import com.tengshi.tengshilivedemo.adpter.PartAdpter;
-import com.tengshi.tengshilivedemo.model.CourseVideoInfo;
-import com.tengshi.tengshilivedemo.utils.RoundImageView;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.adpter.PartAdpter;
+import com.qm.qmdemo.model.CourseVideoInfo;
+import com.qm.qmdemo.utils.RoundImageView;
 
 import java.util.List;
 

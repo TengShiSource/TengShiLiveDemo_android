@@ -43,7 +43,7 @@
         android:gravity="center"
         android:layout_marginTop="@dimen/dp_80"
         android:orientation="vertical">
-        <com.tengshi.tengshilivedemo.utils.RoundImageView
+        <com.qm.qmdemo.utils.RoundImageView
             android:id="@+id/demo_icon"
             app:roundHeight="@dimen/dp_35"
             app:roundWidth="@dimen/dp_35"

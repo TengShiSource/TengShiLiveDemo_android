@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.adpter;
+package com.qm.qmdemo.adpter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,9 +8,9 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.tengshi.tengshilivedemo.R;
-import com.tengshi.tengshilivedemo.model.CourseVideoInfo;
-import com.tengshi.tengshilivedemo.utils.RoundImageView;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.model.CourseVideoInfo;
+import com.qm.qmdemo.utils.RoundImageView;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

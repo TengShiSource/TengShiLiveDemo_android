@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tengshi.tengshilivedemo">
+    package="com.qm.qmdemo">
     <!-- 以下为需要的基本权限，需要自行添加至您的AndroidManifest文件中 start -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -16,7 +16,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:name="com.tengshi.tengshilivedemo.BaseApp"
+        android:name="com.qm.qmdemo.BaseApp"
         android:allowBackup="true"
         android:icon="@mipmap/app_icon"
         android:label="@string/app_name"
@@ -24,17 +24,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.tengshi.tengshilivedemo.activity.VideoActivity"
+        <activity android:name="com.qm.qmdemo.activity.VideoActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:screenOrientation="portrait"/>
-        <activity android:name="com.tengshi.tengshilivedemo.activity.HistoryCourseActivity" />
-        <activity android:name="com.tengshi.tengshilivedemo.activity.IconActivity" />
-        <activity android:name="com.tengshi.tengshilivedemo.activity.QMClassActivity" android:screenOrientation="portrait"/>
-        <activity android:name="com.tengshi.tengshilivedemo.activity.ShareActivity" />
-        <activity android:name="com.tengshi.tengshilivedemo.activity.SetActivity" />
-        <activity android:name="com.tengshi.tengshilivedemo.activity.CreateCourseActivity" />
+        <activity android:name="com.qm.qmdemo.activity.HistoryCourseActivity" />
+        <activity android:name="com.qm.qmdemo.activity.IconActivity" />
+        <activity android:name="com.qm.qmdemo.activity.QMClassActivity" android:screenOrientation="portrait"/>
+        <activity android:name="com.qm.qmdemo.activity.ShareActivity" />
+        <activity android:name="com.qm.qmdemo.activity.SetActivity" />
+        <activity android:name="com.qm.qmdemo.activity.CreateCourseActivity" />
         <activity
-            android:name="com.tengshi.tengshilivedemo.activity.SplashActivity"
+            android:name="com.qm.qmdemo.activity.SplashActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

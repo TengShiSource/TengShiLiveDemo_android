@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.model;
+package com.qm.qmdemo.model;
 
 import java.io.Serializable;
 import java.util.List;

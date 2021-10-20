@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.activity;
+package com.qm.qmdemo.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -9,14 +9,14 @@ import android.widget.ImageView;
 import android.widget.ListView;
 
 
-import com.tengshi.tengshilivedemo.BuildConfig;
-import com.tengshi.tengshilivedemo.R;
-import com.tengshi.tengshilivedemo.adpter.VideoAdpter;
-import com.tengshi.tengshilivedemo.model.CourseVideoInfo;
-import com.tengshi.tengshilivedemo.okhttp.BaseResponse;
-import com.tengshi.tengshilivedemo.okhttp.MyCallBack;
-import com.tengshi.tengshilivedemo.okhttp.OkHttpUtils;
-import com.tengshi.tengshilivedemo.utils.SharedPreferencesUtils;
+import com.qm.qmdemo.BuildConfig;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.adpter.VideoAdpter;
+import com.qm.qmdemo.model.CourseVideoInfo;
+import com.qm.qmdemo.okhttp.BaseResponse;
+import com.qm.qmdemo.okhttp.MyCallBack;
+import com.qm.qmdemo.okhttp.OkHttpUtils;
+import com.qm.qmdemo.utils.SharedPreferencesUtils;
 
 import java.util.List;
 

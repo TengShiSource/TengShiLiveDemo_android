@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.utils;
+package com.qm.qmdemo.utils;
 
 import android.app.Activity;
 import android.view.LayoutInflater;
@@ -8,7 +8,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 
-import com.tengshi.tengshilivedemo.R;
+import com.qm.qmdemo.R;
 
 
 public class DialogUtil {

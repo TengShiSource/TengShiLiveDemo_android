@@ -1,9 +1,9 @@
-package com.tengshi.tengshilivedemo.utils;
+package com.qm.qmdemo.utils;
 
 import android.content.Context;
 import android.util.Log;
 
-import com.tengshi.tengshilivedemo.Constants;
+import com.qm.qmdemo.Constants;
 import com.taobao.accs.ACCSClient;
 import com.taobao.accs.AccsClientConfig;
 import com.taobao.agoo.TaobaoRegister;

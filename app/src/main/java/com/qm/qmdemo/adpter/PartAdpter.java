@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.adpter;
+package com.qm.qmdemo.adpter;
 
 import android.app.Activity;
 import android.view.LayoutInflater;
@@ -7,8 +7,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.tengshi.tengshilivedemo.R;
-import com.tengshi.tengshilivedemo.model.CourseVideoInfo;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.model.CourseVideoInfo;
 
 import java.util.List;
 

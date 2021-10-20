@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo;
+package com.qm.qmdemo;
 
 /**
  * 常量定义类

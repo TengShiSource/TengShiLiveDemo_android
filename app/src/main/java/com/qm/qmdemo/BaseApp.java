@@ -1,27 +1,12 @@
-package com.tengshi.tengshilivedemo;
+package com.qm.qmdemo;
 
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.text.TextUtils;
-import android.util.Log;
 
 import com.qm.qmclass.qmmanager.QMClassManager;
-import com.tengshi.tengshilivedemo.utils.CrashHandler;
-import com.tengshi.tengshilivedemo.utils.PushHelper;
-import com.tengshi.tengshilivedemo.utils.SharedPreferencesUtils;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.Writer;
+import com.qm.qmdemo.utils.PushHelper;
+import com.qm.qmdemo.utils.SharedPreferencesUtils;
 
 
 /**

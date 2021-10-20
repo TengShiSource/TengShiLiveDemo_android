@@ -5,7 +5,7 @@ android {
     buildToolsVersion "29.0.2"
 
     defaultConfig {
-        applicationId "com.tengshi.tengshilivedemo"
+        applicationId "com.qm.qmdemo"
         minSdkVersion 21
         targetSdkVersion 28
         versionCode 1

@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.activity;
+package com.qm.qmdemo.activity;
 
 import android.app.DownloadManager;
 import android.content.Context;
@@ -25,16 +25,16 @@ import com.alibaba.fastjson.JSONObject;
 
 import com.bumptech.glide.Glide;
 import com.qm.qmclass.qmmanager.QMClassManager;
-import com.tengshi.tengshilivedemo.BaseApp;
-import com.tengshi.tengshilivedemo.BuildConfig;
-import com.tengshi.tengshilivedemo.R;
-import com.tengshi.tengshilivedemo.okhttp.BaseResponse;
-import com.tengshi.tengshilivedemo.okhttp.MyCallBack;
-import com.tengshi.tengshilivedemo.okhttp.OkHttpUtils;
-import com.tengshi.tengshilivedemo.utils.DialogUtil;
-import com.tengshi.tengshilivedemo.utils.RoundImageView;
-import com.tengshi.tengshilivedemo.utils.SharedPreferencesUtils;
-import com.tengshi.tengshilivedemo.utils.ToastUtil;
+import com.qm.qmdemo.BaseApp;
+import com.qm.qmdemo.BuildConfig;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.okhttp.BaseResponse;
+import com.qm.qmdemo.okhttp.MyCallBack;
+import com.qm.qmdemo.okhttp.OkHttpUtils;
+import com.qm.qmdemo.utils.DialogUtil;
+import com.qm.qmdemo.utils.RoundImageView;
+import com.qm.qmdemo.utils.SharedPreferencesUtils;
+import com.qm.qmdemo.utils.ToastUtil;
 
 import java.util.HashMap;
 

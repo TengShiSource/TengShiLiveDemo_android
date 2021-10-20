@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.tengshi.tengshilivedemo.activity.VideoActivity">
+    tools:context="com.qm.qmdemo.activity.VideoActivity">
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_50"
@@ -43,7 +43,7 @@
             android:layout_marginTop="@dimen/dp_10"
             android:gravity="center_vertical"
             android:orientation="horizontal">
-            <com.tengshi.tengshilivedemo.utils.RoundImageView
+            <com.qm.qmdemo.utils.RoundImageView
                 android:id="@+id/icon"
                 app:roundHeight="@dimen/dp_25"
                 app:roundWidth="@dimen/dp_25"

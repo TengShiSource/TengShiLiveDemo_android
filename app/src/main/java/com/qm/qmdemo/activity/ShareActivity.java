@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.activity;
+package com.qm.qmdemo.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.tengshi.tengshilivedemo.R;
+import com.qm.qmdemo.R;
 
 /**
  * 分享

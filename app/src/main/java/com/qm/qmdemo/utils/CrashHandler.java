@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.utils;
+package com.qm.qmdemo.utils;
 
 import android.os.Environment;
 import android.text.TextUtils;

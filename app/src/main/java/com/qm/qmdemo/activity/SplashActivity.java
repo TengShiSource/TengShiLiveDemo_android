@@ -1,4 +1,4 @@
-package com.tengshi.tengshilivedemo.activity;
+package com.qm.qmdemo.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -8,8 +8,8 @@ import android.os.Handler;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.tengshi.tengshilivedemo.R;
-import com.tengshi.tengshilivedemo.utils.SharedPreferencesUtils;
+import com.qm.qmdemo.R;
+import com.qm.qmdemo.utils.SharedPreferencesUtils;
 
 /**
  * 启动页

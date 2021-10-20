@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.tengshi.tengshilivedemo.activity.ShareActivity">
+    tools:context="com.qm.qmdemo.activity.ShareActivity">
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_50"
